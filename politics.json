@@ -1,0 +1,244 @@
+{
+    "client":{
+        "tupe":{
+            "home":{"update": false,"view": "video","name": "Главная","visible": true},
+            "cabinet":{"update": false,"name": "Кабинет","visible": false},
+            "pages":{"access": "params","name": "Документация","visible": true,"attachments": "1"},
+            "player":{"update":true,"name":"Плеер","visible":true},
+            "tikets":{"update":false,"name":"Тикеты","visible":true}
+        },
+        "methods":{
+            "getVideo": true,
+            "activadedSet": true,
+
+            "search": true,
+            "translations": true,
+            "updates": true,
+            "kpids": true,
+            
+            "videos.dataFilm": true,
+
+            "tikets.get": true,
+            "tikets.getId": true,
+            "tikets.statPut": true,
+            "tikets.add": true,
+            "tikets.addMessage":true,
+            "tikets.addCent":true,
+            "tikets.getNew":true,
+            "tikets.read":true,
+
+            "domains.add":true,
+            "domains.delete":true,
+            "domains.get":true,
+            "domains.updatePlayer":true,
+            "domains.setBlack":true,
+
+            "users.info": true,
+            "users.putPasword": true,
+            "users.putCent": true,
+            "users.selectDomain": true,
+
+            "articles.get": true,
+            "articles.getId": true,
+
+            "system.getMessage": true,
+
+            "stats.get": true
+        }
+    },
+
+
+    "redactor":{
+        "tupe":{
+            "home":{"update":true,"view":"video","name":"Видео","visible":true},
+            "cabinet":{"update":true,"name":"Кабинет","visible":false},
+            "pages":{"name":"Документация","visible":true,"attachments":null},
+            "player":{"update":true,"name":"Плеер","visible":true},
+            "tikets":{ "update":false,"name":"Тикеты", "visible":true }
+        },
+        "methods":{
+            "getVideo": true,
+            "activadedSet": true,
+            "updateVideoDB": true,
+            "updateVideo": true,
+            "addVideoDB": true,
+
+            "search": true,
+            "translations": true,
+            "updates": true,
+            "kpids": true,
+
+            "tikets.get": true,
+            "tikets.getId": true,
+            "tikets.statPut": true,
+            "tikets.add": true,
+            "tikets.addMessage":true,
+            "tikets.addCent":true,
+            "tikets.getNew":true,
+            "tikets.read":true,
+
+            "domains.add":true,
+            "domains.delete":true,
+            "domains.get":true,
+            "domains.updatePlayer":true,
+            "domains.setBlack":true,
+
+            "videos.info": true,
+            "videos.dataFilm": true,
+            "videos.addKinoPoisk": true,
+
+            "users.info": true,
+            "users.putPasword": true,
+            "users.putCent": true,
+            "users.selectDomain": true,
+
+            "articles.get": true,
+            "articles.getId": true,
+            "articles.add": true,
+            "articles.update": true,
+            "articles.delete": true,
+
+            "system.getMessage": true
+        }
+    },
+
+
+    "managing":{
+        "tupe":{
+            "home":{"update":false,"name":"Главная","visible":true},
+            "cabinet":{"update":true,"name":"Кабинет","visible":false},
+            "pages":{"access":"params","name":"Документация","visible":true,"attachments":"1"},
+            "tikets":{ "update":true,"name":"Тикеты", "visible":true }
+        },
+        "methods":{
+            "getVideo": true,
+            "activadedSet": true,
+
+            "search": true,
+            "translations": true,
+            "updates": true,
+            "kpids": true,
+
+            "videos.dataFilm": true,
+
+            "tikets.get": true,
+            "tikets.getId": true,
+            "tikets.statPut": true,
+            "tikets.add": true,
+            "tikets.addMessage":true,
+            "tikets.addCent":true,
+            "tikets.getNew":true,
+            "tikets.read":true,
+
+            "domains.add":true,
+            "domains.delete":true,
+            "domains.get":true,
+            "domains.updatePlayer":true,
+            "domains.complit":true,
+            "domains.notComplit":true,
+            "domains.setBlack":true,
+
+            "users.info": true,
+            "users.putPasword": true,
+            "users.putCent": true,
+            "users.putStatusCent": true,
+            "users.selectDomain": true,
+
+            "articles.get": true,
+            "articles.getId": true,
+
+            "system.getMessage": true
+        }
+    },
+
+
+    "administrator":{
+        "tupe":{
+            "home":{"update":true,"name":"Главная","visible":true},
+            "cabinet":{"update":true,"name":"Кабинет","visible":false},
+            "pages":{"name":"Документация","visible":true,"attachments":null},
+            "video":{"update":true,"name":"Видео","visible":true},
+            "player":{"update":true,"name":"Плеер","visible":true},
+            "tikets":{ "update":true,"name":"Тикеты", "visible":true },
+
+            "users":{ "update":true,"name":"Пользователи", "visible":true },
+
+            "translations":{ "update":true,"name":"Переводы", "visible":true }
+        },
+        "methods":{
+            "getVideo": true,
+            "updateVideoDB": true,
+            "activadedSet": true,
+            "parseConect": true,
+            "updateVideo": true,
+            "addVideoDB": true,
+
+            "search": true,
+            "translations": true,
+            "updates": true,
+            "kpids": true,
+
+            "tikets.get": true,
+            "tikets.getId": true,
+            "tikets.statPut": true,
+            "tikets.add": true,
+            "tikets.addMessage":true,
+            "tikets.addCent":true,
+            "tikets.getNew":true,
+            "tikets.read":true,
+
+            "domains.add": true,
+            "domains.delete": true,
+            "domains.get": true,
+            "domains.updatePlayer": true,
+            "domains.complit": true,
+            "domains.notComplit":true,
+            "domains.setBlack":true,
+
+            "users.get": true,
+            "users.putStatus": true,
+            "users.add": true,
+            "users.update": true,
+            "users.info": true,
+            "users.infoId": true,
+            "users.putPasword": true,
+            "users.putCent": true,
+            "users.putStatusCent": true,
+            "users.selectDomain": true,
+
+            "videos.info": true,
+            "videos.dataFilm": true,
+            "videos.addKinoPoisk": true,
+            "videos.translations": true,
+            "videos.addVideo": true,
+            "videos.voiceManage": true,
+            "videos.addFile": true,
+            "videos.deleteFile": true,
+
+            "stats.get": true,
+
+            "ads.get": true,
+            "ads.add": true,
+            "ads.upload": true,
+            "ads.delete": true,
+            "ads.update": true,
+            "ads.on": true,
+            "ads.getSetings": true,
+            "ads.saveSetings": true,
+
+            "articles.get": true,
+            "articles.getId": true,
+            "articles.add": true,
+            "articles.update": true,
+            "articles.delete": true,
+
+            "system.getMessage": true,
+            "system.addMessage": true,
+            "system.deleteMessage": true,
+
+            "translations.search": true,
+            "translations.update": true
+            
+        }
+    }
+}

@@ -1,0 +1,112 @@
+<main>
+    <div class="main">
+        <!-- <component-header :data="data.header"></component-header> -->
+        <slot></slot>
+        
+        <div class="main__content">
+
+
+            <div class="cabinet__head">
+                <h2 class="cabinet__title">{{ data.login }}</h2>
+                <span class="cabinet__title-farm">{{ data.tupe }}</span>
+            </div>
+
+            <div class="cabinet__contener">
+
+                <div class="cabinet__box">
+                    <h3 class="cabinet__title-rang">Ключ API</h3>
+                    <input class="cabinet__input" type="text" disabled :value="api_key">
+                </div>
+
+                <div class="cabinet__box">
+                    <h3 class="cabinet__title-rang">Смена пароля</h3>
+
+                    <form v-on:submit="checkForm" action="" method="post" class="">
+
+                        <input 
+                            id="oldPassword" 
+                            type="password" 
+                            class="cabinet__input" 
+                            name="oldPassword" 
+                            placeholder="Старый пароль" 
+                            v-model="oldPassword"
+                        >
+                        <br>
+            
+                        <input 
+                            id="newPassword" 
+                            type="password" 
+                            class="cabinet__input" 
+                            name="newPassword" 
+                            placeholder="Новый пароль"
+                            v-model="newPassword"
+                        >
+                        <br>
+
+                        <input 
+                            id="password-confirm" 
+                            type="password" 
+                            class="cabinet__input" 
+                            name="passwordConfirmation" 
+                            placeholder="Повторите пароль" 
+                            v-model="passwordConfirmation"
+                        >
+                        <br>
+
+                        <div class="cabinet__error">{{ errorForm }}</div>
+            
+
+                        <input type="hidden" name="_token" :value="csrf_token">
+            
+                        <button class="button cabinet__button">Отправить</button>
+                    </form>
+
+                </div>
+
+                <div class="cabinet__box">
+
+                    <h3 class="cabinet__title-rang">Добавить домен</h3>
+                    <p class="cabinet__text-rang">
+                        Вставте в корень сайта фаил<br>
+                        <b>{{ api_key }}.txt</b>
+                    </p>
+                    <p class="cabinet__text-rang">
+                        Домен следует вводить без 
+                        <b>http://</b>, 
+                        <b>https://</b>, 
+                        <b>//</b>, 
+                        <b>www</b> и без 
+                        <b>/</b> на конце. <br>
+                        Например: <b>site.ru</b>
+                    </p>
+
+                    <input 
+                        id="domain" 
+                        type="text" 
+                        class="cabinet__input" 
+                        placeholder="Домен" 
+                        v-model="domain"
+                    >
+                    <button class="button cabinet__button" v-on:click="addDomain()">Добавить</button>
+
+                    <div class="cabinet__list-domains">
+                        <p v-for="(value, index) in data.listDomains" class="cabinet__list-domains-item">
+                            {{ value.name }} 
+                            <i class="cabinet__icons-btn fa fa-times" v-on:click="deleteDomain(value.id, index)" aria-hidden="true"></i>
+                        </p>
+                    </div>
+                    
+                    
+                </div>
+                <div class="cabinet__box">
+                    
+                </div>
+
+            </div>
+
+
+
+        </div>
+    </div>
+    
+</main>

@@ -1,0 +1,168 @@
+<main>
+
+    <!-- Modals -->
+    <div class="modal" v-show="modal">
+
+        <!-- New tiket -->
+        <div class="modal__form" v-show="modalPage.tiket">
+            <div class="close">
+                <div class="close__btn" v-on:click="closeModal()">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </div>
+            </div>
+
+            <input 
+                type="text" 
+                class="tikets-s__input" 
+                placeholder="Тема обращения" 
+                v-model="titleTiket"
+            >
+
+            <textarea 
+                class="tikets-s__input" 
+                cols="30" 
+                rows="10"
+                placeholder="Текст обращения" 
+                v-model="textTiket"
+            ></textarea>
+
+            <button class="button tikets-s__button-l" v-on:click="sendTiket()">Отправить</button>
+            
+        </div>
+        <!-- End new tiket -->
+
+        <!-- New tiket video -->
+        <div class="modal__form" v-show="modalPage.film">
+            <div class="close">
+                <div class="close__btn" v-on:click="closeModal()">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </div>
+            </div>
+
+            <input 
+                type="text" 
+                class="tikets-s__input" 
+                placeholder="Название фильма" 
+                v-model="titleTiket"
+            >
+
+            <textarea 
+                class="tikets-s__input" 
+                cols="30" 
+                rows="10"
+                placeholder="Текст обращения" 
+                v-model="textTiket"
+            ></textarea>
+
+            <button class="button tikets-s__button-l" v-on:click="sendTiketVideo()">Отправить</button>
+            
+        </div>
+        <!-- End new tiket video -->
+
+
+    </div>
+
+
+
+
+    <div class="main">
+
+        <!-- <component-header :data="data.header"></component-header> -->
+        <slot></slot>
+
+
+        <div class="main__content">
+
+            <div v-if="!tiketShow" class="tikets-s">
+                <div class="tikets-s__panel tikets-s__panel--center">
+                    <div class="tikets-s__button-plat" :class="{ activ: !pageTikets }" v-on:click="openPageTikets(false)">Активные тикеты</div>
+                    <div class="tikets-s__button-plat" :class="{ activ: pageTikets }" v-on:click="openPageTikets(true)">Закрытые тикеты</div>
+                </div>
+
+                <div class="tikets-s__panel">
+                    <div class="tikets-s__button-l button" v-on:click="getTikets('tiket')">Обращения</div>
+                    <div class="tikets-s__button-l button" v-on:click="getTikets('domain')">Домены</div>
+                    <div class="tikets-s__button-l button" v-on:click="getTikets('film')">Фильмы</div>
+
+                    <div class="tikets-s__button-r button" v-on:click="openModal('film')">Заказать фильм</div>
+                    <div class="tikets-s__button-r button" v-on:click="openModal('tiket')">Создать тикет</div>
+                </div>
+                
+                <div class="tikets-s__content">
+                    <div class="tikets-s__item" v-for="(value, index) in tiketsList" v-on:click="openTiket(value.id, index)">
+                        <h3 class="tikets-s__item-title">
+                            {{ value.title }} 
+                            <status-tiket :status="value.status"></status-tiket>
+                        </h3>
+                        <tupe-tiket :tupe="value.tupe"></tupe-tiket>
+                        <div class="tikets-s__item-prev-message">
+                            {{ value.message.name }}: {{ value.message.message }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div v-else class="tikets-s__tiket">
+                <div class="tikets-s__panel">
+                    <div class="tikets-s__button-l button" v-on:click="closeTiket()">Назад</div>
+                    <div class="tikets-s__button-r button" v-on:click="statusCloseTiket()">Закрыть тикет</div>
+
+                    <template v-if="data.update">
+                        <div 
+                            v-if="tiketsList[tiketIndex].status != 4" 
+                            class="tikets-s__button-r button" 
+                            v-on:click="statusRassmotrTiket()"
+                        >Рассмотрение</div>
+
+                        <div 
+                            v-if="tiketsList[tiketIndex].status != 4 && tiketsList[tiketIndex].tupe == 'domain'" 
+                            class="tikets-s__button-r button" 
+                            v-on:click="statusNotDomain()"
+                        >Отклонить</div>
+                        <div 
+                            v-if="tiketsList[tiketIndex].status != 4 && tiketsList[tiketIndex].tupe == 'domain'" 
+                            class="tikets-s__button-r button" 
+                            v-on:click="statusYesDomain()"
+                        >Принять</div>
+                    </template>
+
+                </div>
+                <div class="tikets-s__messages">
+
+                    <h3 class="tikets-s__item-title">
+                        {{ tiketsList[tiketIndex].title }} 
+                        <status-tiket :status="tiketsList[tiketIndex].status"></status-tiket>
+                    </h3>
+
+                    <tupe-tiket :tupe="tiketsList[tiketIndex].tupe"></tupe-tiket>
+
+                    <div class="tikets-s__mes-item" v-for="(value, index) in tiketMessages">
+                        <span class="tikets-s__mes-item-name">{{ value.name }}</span>
+                        <span class="tikets-s__item-tupe">{{ value.created_at }}</span>
+                        <div>{{ value.message }}</div>
+                    </div>
+
+
+                    <div v-if="tiketsList[tiketIndex].status != 4">
+                        <textarea 
+                            class="tikets-s__input" 
+                            cols="30" 
+                            rows="10"
+                            placeholder="Сообщение" 
+                            v-model="textMessage"
+                        ></textarea>
+
+                        <button class="button tikets-s__button-l" v-on:click="sendMessage()">Отправить</button>
+                    </div>
+
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+    
+</main>

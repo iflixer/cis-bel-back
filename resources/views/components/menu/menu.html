@@ -1,0 +1,50 @@
+<menu>
+
+    <div class="menu__head">
+        <h1 class="menu__h1">Kholobok.biz</h1>
+        <p class="menu__p">Видео контент</p>
+    </div>
+
+    <ul class="menu__list">
+
+        <!-- <li class="menu__item active">
+            <a href="#" class="menu__href">
+                <div class="menu__icon home"></div>
+                <span class="menu__name">Главная</span>
+            </a>
+        </li> -->
+
+
+        <li v-for="(value, name) in data" v-if="value.visible" class="menu__item">
+
+            <template v-if="value.attachments">
+                <div :title="value.name" class="menu__href">
+                    <div class="menu__icon" :class="name"></div>
+                    <span class="menu__name">{{ value.name }}</span>
+                </div>
+            </template>
+
+            <template v-else>
+                <a :href=" '/' + name " :title="value.name" class="menu__href">
+                    <div class="menu__icon" :class="name"></div>
+                    <span class="menu__name">{{ value.name }}</span>
+                </a>
+            </template>
+
+        </li>
+
+    </ul>
+
+
+    <!-- @click="isOpen = !isOpen" -->
+    
+    <!-- <ul v-if="item.children">
+        
+        <li v-for="{ url, name, index } in item.children" :key="index">
+            <a :href="url" :title="name">{{ name }}
+        </li> 
+        
+    </ul> -->
+
+
+</menu>

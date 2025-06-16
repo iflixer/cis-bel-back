@@ -1,0 +1,23 @@
+<div :class=" 'message-'+ value.tupe " class="message">
+    <div class="message__contener">
+        <i class="fa fa-info-circle" aria-hidden="true"></i>
+
+        <template v-if="value.data != null">
+            <span class="message__content">{{ value.message }} 
+                <a href="#" v-on:click="putActivated(value.data.link, index)" >
+                    {{ value.data.title }}
+                </a>
+            </span>
+        </template>
+
+        <template v-else>
+            <span class="message__content">{{ value.message }}</span>
+        </template>
+
+    
+        <div class="message__close" v-on:click="deleteMesage(index)">
+            <i class="fa fa-times" aria-hidden="true"></i>
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,1368 @@
+<main>
+    <div class="main">
+        <slot></slot>
+        <div class="main__content">
+
+
+
+            <div class="player-list" v-if="!updatePlayer">
+
+                <div v-for="(value, index) in list" class="player-list__item">
+                    <div class="player-list__item-content" v-on:click="playerUp(value)">
+                        <p class="player-list__title">{{ value.name }}</p>
+                        <div class="player-list__player">
+
+                            <div class="" style="width:100%; height: 130px; overflow: hidden;position: relative;">
+                                <div :id="`player${value.id}`" style="width:200%; height:260px; transform: scale(0.5) translate(-50%,-50%);position: relative;"></div>
+                                <div class="" style="width:100%; height: 100%;position: absolute;top:0;left:0;"></div>
+                            </div>
+
+                        </div>
+                    </div>
+                    
+                </div>
+
+            </div>
+
+
+
+
+
+
+            <div class="player-form" v-show="updatePlayer">
+                
+                <div class="player-update__out button" v-on:click="playerOut()">Назад</div>
+
+                <div class="player-update">
+
+
+                    
+                    <div class="player-update__colum">
+                        <div v-if="activPlayer != null">
+
+
+
+                            <!-- toolbar -->
+                            <div :class="{ 'player-update__form--show': forms.toolbar }" class="player-update__form">
+
+                                <h3 class="player-update__form-title" v-on:click="showForms('toolbar')">Панель управления</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Высота</p>
+                                    <input-namber classk="player-update__input" step="1" v-model="activPlayer.data.toolbar.h" />
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Градиент</p>
+                                    <input v-model="activPlayer.data.toolbar.gradient" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет</p>
+                                    <color-picker v-model="activPlayer.data.toolbar.color"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.toolbar.a">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.toolbar.margin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы внутри</p>
+                                    <input class="player-update__input" type="number" min="0" v-model="activPlayer.data.toolbar.leftandrightpadding">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.toolbar.position"></position-list>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Скрывать при воспроизвидении</p>
+                                    <input v-model="activPlayer.data.toolbar.hide" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                            </div>
+
+                            <!-- control_title -->
+                            <div :class="{ 'player-update__form--show': forms.control_title }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('control_title')">Заголовок</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить</p>
+                                    <input v-model="activPlayer.data.control_title.on" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет</p>
+                                    <color-picker v-model="activPlayer.data.control_title.color"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Текст</p>
+                                    <input class="player-update__input" type="text" v-model="activPlayer.data.control_title.title">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.control_title.position"></position-list>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер шрифта</p>
+                                    <input-namber classk="player-update__input" step="1" v-model="activPlayer.data.control_title.fontsize" />
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.control_title.margin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить фон</p>
+                                    <input v-model="activPlayer.data.control_title.bg" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.control_title.bgcolor"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы внутри</p>
+                                    <padding-input v-model="activPlayer.data.control_title.bgpadding"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_title.bga">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Закругление фона</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_title.bgo">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Название плейлиста</p>
+                                    <input v-model="activPlayer.data.control_title.showtitleplaylist" type="checkbox" class="player-update__checkbox">
+                                </div>
+                            </div>
+
+
+                            <!-- control_line -->
+                            <div :class="{ 'player-update__form--show': forms.control_line }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('control_line')">Линия времени</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить</p>
+                                    <input v-model="activPlayer.data.control_line.on" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить ширину</p>
+                                    <input v-model="activPlayer.data.control_line.customwidth" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.control_line.position"></position-list>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.control_line.margin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Высота</p>
+                                    <input class="player-update__input" type="number" min="0" v-model="activPlayer.data.control_line.h">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Ширина</p>
+                                    <input class="player-update__input" type="number" min="0" v-model="activPlayer.data.control_line.w">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_line.a">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет полосы</p>
+                                    <color-picker v-model="activPlayer.data.control_line.color"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Общий цвет полосы</p>
+                                    <color-picker v-model="activPlayer.data.control_line.colorbg"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность основной полосы</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_line.abg">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет загруженной части</p>
+                                    <color-picker v-model="activPlayer.data.control_line.colorload"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность загруженной части</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_line.aload">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет полосы перехода</p>
+                                    <color-picker v-model="activPlayer.data.control_line.colorover"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность полосы перехода</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_line.aover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить маркер</p>
+                                    <input v-model="activPlayer.data.control_line.handle" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер маркера</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_line.handlescale">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет маркера</p>
+                                    <color-picker v-model="activPlayer.data.control_line.handlecolor"></color-picker>
+                                </div>
+
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить фон</p>
+                                    <input v-model="activPlayer.data.control_line.bg" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.control_line.bgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы фона</p>
+                                    <padding-input v-model="activPlayer.data.control_line.bgpadding"></padding-input>
+                                </div>
+
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить маркер времени</p>
+                                    <input v-model="activPlayer.data.control_line.tip" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет</p>
+                                    <color-picker v-model="activPlayer.data.control_line.tipcolor"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.control_line.tipbgcolor"></color-picker>
+                                </div>
+
+                                
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Скругление</p>
+                                    <input-namber classk="player-update__input" step="1" v-model="activPlayer.data.control_line.tipbgrounding" />
+                                </div>
+
+                            </div>
+
+
+                            <!-- control_play -->
+                            <div :class="{ 'player-update__form--show': forms.control_play }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('control_play')">Кнопка плей на панели</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить</p>
+                                    <input v-model="activPlayer.data.control_play.on" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Иконка</p>
+                                    <icon-elements :data="activPlayer.data.control_play" :icons="icons.playIcons"></icon-elements>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки</p>
+                                    <color-picker v-model="activPlayer.data.control_play.iconscolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки при наведении</p>
+                                    <color-picker v-model="activPlayer.data.control_play.iconscolorover"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_play.a">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_play.aover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_play.scale">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_play.scaleover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.control_play.position"></position-list>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.control_play.margin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы иконки</p>
+                                    <padding-input v-model="activPlayer.data.control_play.iconmargin"></padding-input>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Иконка повторить</p>
+                                    <input v-model="activPlayer.data.control_play.iconsreplay" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить фон</p>
+                                    <input v-model="activPlayer.data.control_play.bg" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.control_play.bgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы фона</p>
+                                    <padding-input v-model="activPlayer.data.control_play.bgpadding"></padding-input>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_play.bga">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона при наведении</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_play.bgaover">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Скругление фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_play.bgo">
+                                </div>
+
+                            </div>
+
+                            
+
+
+                            <!-- control_mute -->
+                            <div :class="{ 'player-update__form--show': forms.control_mute }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('control_mute')">Кнопка звука</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить</p>
+                                    <input v-model="activPlayer.data.control_mute.on" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Иконка</p>
+                                    <icon-elements :data="activPlayer.data.control_mute" :icons="icons.muteIcons"></icon-elements>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки</p>
+                                    <color-picker v-model="activPlayer.data.control_mute.iconscolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки при наведении</p>
+                                    <color-picker v-model="activPlayer.data.control_mute.iconscolorover"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_mute.a">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_mute.aover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_mute.scale">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_mute.scaleover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.control_mute.position"></position-list>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.control_mute.margin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы иконки</p>
+                                    <padding-input v-model="activPlayer.data.control_mute.iconmargin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить фон</p>
+                                    <input v-model="activPlayer.data.control_mute.bg" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.control_mute.bgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы фона</p>
+                                    <padding-input v-model="activPlayer.data.control_mute.bgpadding"></padding-input>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_mute.bga">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона при наведении</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_mute.bgaover">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Скругление фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_mute.bgo">
+                                </div>
+
+                            </div>
+
+
+
+
+
+                            <!-- control_volume -->
+                            <div :class="{ 'player-update__form--show': forms.control_volume }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('control_volume')">Полоса звука</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить</p>
+                                    <input v-model="activPlayer.data.control_volume.on" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить ширину</p>
+                                    <input v-model="activPlayer.data.control_volume.customwidth" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Скрывать</p>
+                                    <input v-model="activPlayer.data.control_volume.hideoutmute" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.control_volume.position"></position-list>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.control_volume.margin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Высота</p>
+                                    <input class="player-update__input" type="number" min="0" v-model="activPlayer.data.control_volume.h">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Ширина</p>
+                                    <input class="player-update__input" type="number" min="0" v-model="activPlayer.data.control_volume.w">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_volume.a">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет полосы</p>
+                                    <color-picker v-model="activPlayer.data.control_volume.color"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Общий цвет полосы</p>
+                                    <color-picker v-model="activPlayer.data.control_volume.colorbg"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность основной полосы</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_volume.abg">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить маркер</p>
+                                    <input v-model="activPlayer.data.control_volume.handle" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер маркера</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_volume.handlescale">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет маркера</p>
+                                    <color-picker v-model="activPlayer.data.control_volume.handlecolor"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить фон</p>
+                                    <input v-model="activPlayer.data.control_volume.bg" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.control_volume.bgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы фона</p>
+                                    <padding-input v-model="activPlayer.data.control_volume.bgpadding"></padding-input>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Скругление фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_volume.bgo">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Увеличение высоты при наведении</p>
+                                    <input class="player-update__input"  type="number" min="0" step="0.1" v-model="activPlayer.data.control_volume.expand">
+                                </div>
+
+                            </div>
+
+                            <!-- control_time -->
+                            <div :class="{ 'player-update__form--show': forms.control_time }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('control_time')">Время</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить</p>
+                                    <input v-model="activPlayer.data.control_time.on" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Выделить</p>
+                                    <input v-model="activPlayer.data.control_time.bold" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер шрифта</p>
+                                    <input-namber classk="player-update__input" step="1" v-model="activPlayer.data.control_time.fontsize" />
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.control_time.margin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить фон</p>
+                                    <input v-model="activPlayer.data.control_time.bg" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.control_time.bgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы фона</p>
+                                    <padding-input v-model="activPlayer.data.control_time.bgpadding"></padding-input>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Скругление фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_time.bgo">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Инвертировать время</p>
+                                    <input v-model="activPlayer.data.control_time.inversetime" type="checkbox" class="player-update__checkbox">
+                                </div>
+                            </div>
+
+
+
+                            <!-- control_duration -->
+                            <div :class="{ 'player-update__form--show': forms.control_duration }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('control_duration')">Продолжительность</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить</p>
+                                    <input v-model="activPlayer.data.control_duration.on" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Разделитель</p>
+                                    <input class="player-update__input" type="text" v-model="activPlayer.data.control_duration.text">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер шрифта</p>
+                                    <input-namber classk="player-update__input" step="1" v-model="activPlayer.data.control_duration.fontsize" />
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.control_duration.margin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить фон</p>
+                                    <input v-model="activPlayer.data.control_duration.bg" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.control_duration.bgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы фона</p>
+                                    <padding-input v-model="activPlayer.data.control_duration.bgpadding"></padding-input>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Скругление фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_duration.bgo">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.control_duration.position"></position-list>
+                                </div>
+                            </div>
+
+
+                            <!-- control_buffer -->
+                            <div :class="{ 'player-update__form--show': forms.control_buffer }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('control_buffer')">Загрузка</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить</p>
+                                    <input v-model="activPlayer.data.control_buffer.on" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Иконка</p>
+                                    <icon-elements :data="activPlayer.data.control_buffer" :icons="icons.bufferIcons"></icon-elements>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет</p>
+                                    <color-picker v-model="activPlayer.data.control_buffer.color"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.control_buffer.position"></position-list>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_buffer.scale">
+                                </div>
+                            </div>
+
+                            <!-- control_settings -->
+                            <div :class="{ 'player-update__form--show': forms.control_settings }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('control_settings')">Настройки</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить</p>
+                                    <input v-model="activPlayer.data.control_settings.on" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Иконка</p>
+                                    <icon-elements :data="activPlayer.data.control_settings" :icons="icons.settingsIcons"></icon-elements>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки</p>
+                                    <color-picker v-model="activPlayer.data.control_settings.iconscolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки при наведении</p>
+                                    <color-picker v-model="activPlayer.data.control_settings.iconscolorover"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_settings.a">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_settings.aover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_settings.scale">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_settings.scaleover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.control_settings.position"></position-list>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.control_settings.margin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы иконки</p>
+                                    <padding-input v-model="activPlayer.data.control_settings.iconmargin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить фон</p>
+                                    <input v-model="activPlayer.data.control_settings.bg" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.control_settings.bgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы фона</p>
+                                    <padding-input v-model="activPlayer.data.control_settings.bgpadding"></padding-input>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_settings.bga">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона при наведении</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_settings.bgaover">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Скругление фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_settings.bgo">
+                                </div>
+                            </div>
+
+
+                            <!-- control_full -->
+                            <div :class="{ 'player-update__form--show': forms.control_full }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('control_full')">Кнопка полный экран</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить</p>
+                                    <input v-model="activPlayer.data.control_full.on" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Иконка</p>
+                                    <icon-elements :data="activPlayer.data.control_full" :icons="icons.fullIcons"></icon-elements>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки</p>
+                                    <color-picker v-model="activPlayer.data.control_full.iconscolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки при наведении</p>
+                                    <color-picker v-model="activPlayer.data.control_full.iconscolorover"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_full.a">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_full.aover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_full.scale">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_full.scaleover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.control_full.position"></position-list>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.control_full.margin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы иконки</p>
+                                    <padding-input v-model="activPlayer.data.control_full.iconmargin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить фон</p>
+                                    <input v-model="activPlayer.data.control_full.bg" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.control_full.bgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы фона</p>
+                                    <padding-input v-model="activPlayer.data.control_full.bgpadding"></padding-input>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_full.bga">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона при наведении</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_full.bgaover">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Скругление фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_full.bgo">
+                                </div>
+
+                            </div>
+
+                            <!-- control_start -->
+                            <div :class="{ 'player-update__form--show': forms.control_start }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('control_start')">Кнопка пуск</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить</p>
+                                    <input v-model="activPlayer.data.control_start.on" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Иконка</p>
+                                    <icon-elements :data="activPlayer.data.control_start" :icons="icons.startIcons"></icon-elements>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки</p>
+                                    <color-picker v-model="activPlayer.data.control_start.iconscolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки при наведении</p>
+                                    <color-picker v-model="activPlayer.data.control_start.iconscolorover"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_start.a">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_start.aover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_start.scale">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_start.scaleover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.control_start.position"></position-list>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.control_start.margin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы иконки</p>
+                                    <padding-input v-model="activPlayer.data.control_start.iconmargin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить фон</p>
+                                    <input v-model="activPlayer.data.control_start.bg" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.control_start.bgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы фона</p>
+                                    <padding-input v-model="activPlayer.data.control_start.bgpadding"></padding-input>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_start.bga">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона при наведении</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_start.bgaover">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Скругление фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_start.bgo">
+                                </div>
+                            </div>
+
+
+                            <!-- control_stop -->
+                            <div :class="{ 'player-update__form--show': forms.control_stop }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('control_stop')">Кнопка стоп</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить</p>
+                                    <input v-model="activPlayer.data.control_stop.on" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Иконка</p>
+                                    <icon-elements :data="activPlayer.data.control_stop" :icons="icons.stopIcons"></icon-elements>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки</p>
+                                    <color-picker v-model="activPlayer.data.control_stop.iconscolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки при наведении</p>
+                                    <color-picker v-model="activPlayer.data.control_stop.iconscolorover"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_stop.a">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_stop.aover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_stop.scale">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_stop.scaleover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.control_stop.position"></position-list>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.control_stop.margin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы иконки</p>
+                                    <padding-input v-model="activPlayer.data.control_stop.iconmargin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить фон</p>
+                                    <input v-model="activPlayer.data.control_stop.bg" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.control_stop.bgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы фона</p>
+                                    <padding-input v-model="activPlayer.data.control_stop.bgpadding"></padding-input>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_stop.bga">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона при наведении</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_stop.bgaover">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Скругление фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_stop.bgo">
+                                </div>
+                            </div>
+
+                            <!-- control_prev -->
+                            <div :class="{ 'player-update__form--show': forms.control_prev }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('control_prev')">Кнопка назад</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить</p>
+                                    <input v-model="activPlayer.data.control_prev.on" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Иконка</p>
+                                    <icon-elements :data="activPlayer.data.control_prev" :icons="icons.prevIcons"></icon-elements>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки</p>
+                                    <color-picker v-model="activPlayer.data.control_prev.iconscolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки при наведении</p>
+                                    <color-picker v-model="activPlayer.data.control_prev.iconscolorover"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_prev.a">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_prev.aover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_prev.scale">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_prev.scaleover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.control_prev.position"></position-list>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.control_prev.margin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы иконки</p>
+                                    <padding-input v-model="activPlayer.data.control_prev.iconmargin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить фон</p>
+                                    <input v-model="activPlayer.data.control_prev.bg" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.control_prev.bgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы фона</p>
+                                    <padding-input v-model="activPlayer.data.control_prev.bgpadding"></padding-input>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_prev.bga">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона при наведении</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_prev.bgaover">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Скругление фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_prev.bgo">
+                                </div>
+                            </div>
+
+                            <!-- control_next -->
+                            <div :class="{ 'player-update__form--show': forms.control_next }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('control_next')">Кнопка вперед</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить</p>
+                                    <input v-model="activPlayer.data.control_next.on" type="checkbox" class="player-update__checkbox">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Иконка</p>
+                                    <icon-elements :data="activPlayer.data.control_next" :icons="icons.nextIcons"></icon-elements>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки</p>
+                                    <color-picker v-model="activPlayer.data.control_next.iconscolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки при наведении</p>
+                                    <color-picker v-model="activPlayer.data.control_next.iconscolorover"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_next.a">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_next.aover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_next.scale">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_next.scaleover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.control_next.position"></position-list>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.control_next.margin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы иконки</p>
+                                    <padding-input v-model="activPlayer.data.control_next.iconmargin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить фон</p>
+                                    <input v-model="activPlayer.data.control_next.bg" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.control_next.bgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы фона</p>
+                                    <padding-input v-model="activPlayer.data.control_next.bgpadding"></padding-input>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_next.bga">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона при наведении</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_next.bgaover">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Скругление фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_next.bgo">
+                                </div>
+                            </div>
+
+                            <!-- settings -->
+                            <div :class="{ 'player-update__form--show': forms.settings }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('settings')">Список настроек</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет текста</p>
+                                    <color-picker v-model="activPlayer.data.settings.color"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.settings.bgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет текста активного пункта</p>
+                                    <color-picker v-model="activPlayer.data.settings.valuecolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона при наведении</p>
+                                    <color-picker v-model="activPlayer.data.settings.bgcolorover"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.settings.bga">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.settings.position"></position-list>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.settings.margin"></padding-input>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы внутри</p>
+                                    <padding-input v-model="activPlayer.data.settings.padding"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер шрифта</p>
+                                    <input-namber classk="player-update__input" step="1" v-model="activPlayer.data.settings.fontsize" />
+                                </div>
+
+                            </div>
+
+
+                            <!-- control_Uy0EN -->
+                            <div :class="{ 'player-update__form--show': forms.control_Uy0EN }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('control_Uy0EN')">Кнопка свернуть видео</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить</p>
+                                    <input v-model="activPlayer.data.control_Uy0EN.on" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки</p>
+                                    <color-picker v-model="activPlayer.data.control_Uy0EN.iconscolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет иконки при наведении</p>
+                                    <color-picker v-model="activPlayer.data.control_Uy0EN.iconscolorover"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_Uy0EN.a">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_Uy0EN.aover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_Uy0EN.scale">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер иконки при наведении</p>
+                                    <input class="player-update__input" type="number" min="0" step="0.1" v-model="activPlayer.data.control_Uy0EN.scaleover">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.control_Uy0EN.position"></position-list>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.control_Uy0EN.margin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы иконки</p>
+                                    <padding-input v-model="activPlayer.data.control_Uy0EN.iconmargin"></padding-input>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Включить фон</p>
+                                    <input v-model="activPlayer.data.control_Uy0EN.bg" type="checkbox" class="player-update__checkbox">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.control_Uy0EN.bgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы фона</p>
+                                    <padding-input v-model="activPlayer.data.control_Uy0EN.bgpadding"></padding-input>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_Uy0EN.bga">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность фона при наведении</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_Uy0EN.bgaover">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Скругление фона</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.control_Uy0EN.bgo">
+                                </div>
+                            </div>
+
+
+                            <!-- playlist -->
+                            <div :class="{ 'player-update__form--show': forms.playlist }" class="player-update__form">
+                                <h3 class="player-update__form-title" v-on:click="showForms('playlist')">Плейлист</h3>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона</p>
+                                    <color-picker v-model="activPlayer.data.playlist.dropbgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет текста</p>
+                                    <color-picker v-model="activPlayer.data.playlist.dropcolor"></color-picker>
+                                </div>
+                                
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона списка</p>
+                                    <color-picker v-model="activPlayer.data.playlist.bgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет текста списка</p>
+                                    <color-picker v-model="activPlayer.data.playlist.color"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет текста выбранного пункта</p>
+                                    <color-picker v-model="activPlayer.data.playlist.valuecolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона прочитанного пункта</p>
+                                    <color-picker v-model="activPlayer.data.playlist.historybgcolor"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона списка при наведении</p>
+                                    <color-picker v-model="activPlayer.data.playlist.bgcolorover"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет фона выбранного пункта</p>
+                                    <color-picker v-model="activPlayer.data.playlist.playbgcolor"></color-picker>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Цвет текста прочитанного пункта</p>
+                                    <color-picker v-model="activPlayer.data.playlist.historycolor"></color-picker>
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Отступы</p>
+                                    <padding-input v-model="activPlayer.data.playlist.margin"></padding-input>
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Прозрачность</p>
+                                    <input class="player-update__input"  type="number" min="0" max="1" step="0.1" v-model="activPlayer.data.playlist.bga">
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Скругление</p>
+                                    <input class="player-update__input"  type="number" min="0" v-model="activPlayer.data.playlist.rounding">
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер шрифта</p>
+                                    <input-namber classk="player-update__input" step="1" v-model="activPlayer.data.playlist.headfontsize" />
+                                </div>
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Размер шрифта для списка</p>
+                                    <input-namber classk="player-update__input" step="1" v-model="activPlayer.data.playlist.fontsize" />
+                                </div>
+
+                                <div class="player-update__form-content">
+                                    <p class="panels__text">Положение</p>
+                                    <position-list v-model="activPlayer.data.playlist.position"></position-list>
+                                </div>
+
+
+                            </div>
+                            
+                            
+                        </div>
+                    </div>
+
+                    <div class="player-update__colum" id="playerbildercontent">
+                        <div id="playerbilder" ref="playerbilder" style="width:100%;height:300px;" v-once></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+        </div>
+    </div>
+</main>

@@ -1,0 +1,61 @@
+
+
+.display__string-color--blue{
+    display: inline-block;
+    padding: 2px 4px;
+    border-radius: 3px;
+    color: #fff;
+    font-weight: normal;
+    font-family: 'Montserrat-Regular';
+    font-size: 12px;
+
+    background: #3ca6e4;
+}
+
+.display__string-color--yellow{
+    display: inline-block;
+    padding: 2px 4px;
+    border-radius: 3px;
+    color: #fff;
+    font-weight: normal;
+    font-family: 'Montserrat-Regular';
+    font-size: 12px;
+    
+    background: #f1b22a;
+}
+
+.display__string-color--red{
+    display: inline-block;
+    padding: 2px 4px;
+    border-radius: 3px;
+    color: #fff;
+    font-weight: normal;
+    font-family: 'Montserrat-Regular';
+    font-size: 12px;
+    
+    background: #ec5e5e;
+}
+
+.display__string-color--gray{
+    display: inline-block;
+    padding: 2px 4px;
+    border-radius: 3px;
+    color: #fff;
+    font-weight: normal;
+    font-family: 'Montserrat-Regular';
+    font-size: 12px;
+
+    background: #cecece;
+}
+
+.display__string-color--grin{
+    display: inline-block;
+    padding: 2px 4px;
+    border-radius: 3px;
+    color: #fff;
+    font-weight: normal;
+    font-family: 'Montserrat-Regular';
+    font-size: 12px;
+
+    background: #1bd361;
+}

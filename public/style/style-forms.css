@@ -1,0 +1,127 @@
+
+
+
+.form{
+    width: 100%;
+    display: flex;
+}
+
+
+
+.form__input{
+    display: inline-block;
+    width: 100%;
+    padding: 8px 15px;
+    outline: none;
+    border-radius: 4px;
+    border: 1px solid #cacaca;
+    background: #fff;
+    margin-bottom: 10px;
+    font: 400 13.3333px Arial;
+}
+
+
+.form__chek{}
+
+
+.form__grid-2{
+    width: 50%;
+    padding: 10px;
+}
+
+
+
+
+
+
+
+.form__cheked{
+    display: inline-block;
+    position: relative;
+    top: -2px;
+}
+.form__cheked-input{
+    display: none;
+}
+.form__cheked-label{
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    border: 1px solid #c3c6c9;
+    border-radius: 5px;
+    position: relative;
+    cursor: pointer;
+    vertical-align: top;
+    position: relative;
+    top: 0px;
+}
+
+.form__cheked-label > div{
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    top: 4px;
+    left: 4px;
+    background: #d3d6d8;
+    border-radius: 3px;
+    display: none;
+}
+.form__cheked-input:checked + .form__cheked-label > div{
+    display: block;
+}
+
+
+
+
+
+.element-form{
+    position: relative;
+    border: 1px solid #c3c6c9;
+    border-radius: 5px;
+    padding: 8px 10px;
+    margin-bottom: 25px;
+    display: flex;
+    flex-wrap: wrap;
+}
+.element-form--error{
+    border: 1px solid #ca0505;
+}
+.element-form__contener{
+    margin-top: 10px;
+    width: 100%;
+}
+.element-form__label{
+    position: absolute;
+    background: #fff;
+    color: #8b9094;
+    top: -12px;
+    left: 10px;
+    font-size: 13px;
+    padding: 0 5px;
+}
+.element-form__label-req{
+    color: #ca0505;
+}
+
+.element-form__input{
+    height: 20px;
+    line-height: 20px;
+    width: calc( 100% - 20px );
+    outline: none;
+    border: none;
+    background: #fff;
+    font: 400 13.3333px Arial;
+}
+
+.element-form__button{
+    width: 20px;
+    height: 20px;
+    background: #40c173;
+    color: #fff;
+    border-radius: 3px;
+    padding: 2px 3px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+

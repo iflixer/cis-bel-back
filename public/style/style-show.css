@@ -1,0 +1,87 @@
+@font-face{
+    font-family: 'Montserrat-Regular';
+    src: url('Montserrat-Regular.ttf');
+}
+
+@font-face{
+    font-family: 'Montserrat-Medium';
+    src: url('Montserrat-Medium.ttf');
+}
+
+@font-face{
+    font-family: 'Montserrat-ExtraBold';
+    src: url('Montserrat-ExtraBold.ttf');
+}
+
+@font-face{
+    font-family: 'Montserrat-Bold';
+    src: url('Montserrat-Bold.ttf');
+}
+
+@font-face{
+    font-family: 'Montserrat-Light';
+    src: url('Montserrat-Light.ttf');
+}
+
+@font-face{
+    font-family: 'Montserrat-Black';
+    src: url('Montserrat-Black.ttf');
+} 
+
+body, body *{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: 'Montserrat-Regular';
+    
+    color: #fff;
+}
+
+
+body{
+    overflow: hidden;
+}
+
+#player{
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 100vw;
+    height: 100vh;
+
+    background: #000;
+
+    z-index: 8;
+}
+
+.panel{
+    position: relative;
+    z-index: 9;
+    padding: 15px;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out 1s;
+}
+.panel.hover{
+    opacity: 1;
+    transition: opacity 0s ease-in-out;
+}
+
+select{
+    display: inline-block;
+    max-width: 200px;
+    background-color: transparent;
+    outline: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+option{
+    background: #000;/*transparent;*/
+}
+
+
+
+
+
+
+

@@ -1,0 +1,159 @@
+
+@font-face{
+    font-family: 'ProximaNova-Regular';
+    src: url('ProximaNova-Regular.ttf');
+}
+
+@font-face{
+    font-family: 'ProximaNova-Bold';
+    src: url('ProximaNova-Bold.ttf');
+}
+
+@font-face{
+    font-family: 'ProximaNova-Light';
+    src: url('ProximaNova-Light.ttf');
+}
+
+@font-face{
+    font-family: 'ProximaNova-Black';
+    src: url('ProximaNova-Black.ttf');
+}
+
+
+
+body, body *{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+body{
+    background: #202125;
+}
+
+
+
+
+.block{
+    width: 100%;
+    overflow: hidden;
+}
+
+.contener{
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 9;
+}
+
+h1{
+    color: #fff;
+    font-family: 'ProximaNova-Black';
+    font-weight: normal;
+    font-size: 75px;
+    padding-top: 300px;
+    text-transform: uppercase;
+    line-height: 65px;
+}
+
+
+.landing-heder{
+    width: 100%;
+    padding: 20px 35px;
+
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+
+    overflow: hidden;
+}
+.landing-heder .logo{
+    color:#fff;
+    float: left;
+    font-family: 'ProximaNova-Black';
+    font-size: 22px;
+    padding: 0 20px;
+}
+
+.landing-heder .panel{
+    float: right;
+}
+.landing-heder .panel a{
+    font-family: 'ProximaNova-Light';
+    color: #fff;
+    font-size: 16px;
+    text-decoration: none;
+    line-height: 30px;
+}
+
+
+
+
+.block1{
+    min-height: 1000px;
+    position: relative;
+}
+
+.block1 .images{
+
+    width: 1200px;
+    height: 600px;
+
+    position: absolute;
+    top: 150px;
+    left: 35%;
+
+    z-index: 8;
+}
+.block1 .images div{
+    display: inline-block;
+    width: 300px;
+    height: 100%;
+    margin-left: 50px;
+    border-radius: 3px;
+}
+
+.block1 .images .image1{
+    background: url(../img/filmz.ru_f_118569.jpg) no-repeat 55% 50%/cover;
+}
+.block1 .images .image2{
+    background: url(../img/s1200.webp) no-repeat 55% 50%/cover;
+}
+.block1 .images .image3{
+    background: url(../img/007.jpg) no-repeat 55% 50%/cover;
+}
+
+.block1 p{
+    color: #fff;
+    font-family: 'ProximaNova-Light';
+    font-size: 16px;
+    padding-top: 10px;
+    padding-bottom: 50px;
+}
+
+.block1 a{
+    display: inline-block;
+    font-size: 18px;
+    font-family: 'ProximaNova-Black';
+    color:#fff;
+    padding: 10px 25px;
+    border-radius: 4px;
+    background: #27d98d;
+    text-transform: uppercase;
+    text-decoration: none;
+}
+
+
+footer{
+    background: #202020;
+    overflow: hidden;
+    color:#fff;
+    font-family: 'ProximaNova-Light';
+    padding: 40px 35px;
+    font-size: 14px;
+}
+
+.landing-footer div:first-child{
+    float: left;
+}
+.landing-footer div:last-child{
+    float: right;
+}
+

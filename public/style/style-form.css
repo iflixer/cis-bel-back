@@ -1,0 +1,149 @@
+
+@font-face{
+    font-family: 'ProximaNova-Regular';
+    src: url('ProximaNova-Regular.ttf');
+}
+
+@font-face{
+    font-family: 'ProximaNova-Bold';
+    src: url('ProximaNova-Bold.ttf');
+}
+
+@font-face{
+    font-family: 'ProximaNova-Light';
+    src: url('ProximaNova-Light.ttf');
+}
+
+@font-face{
+    font-family: 'ProximaNova-Black';
+    src: url('ProximaNova-Black.ttf');
+}
+
+
+
+body, body *{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+
+.form-main{
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    resize: both;
+    background: #f3f3f3;
+}
+
+.form-in{
+    background: #fff;
+    padding: 30px;
+    width: 320px;
+    box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.08);
+    resize: both;
+    border-radius: 3px;
+
+    text-align: center;
+}
+
+
+
+
+.form-in input{
+    width:100%;
+    display: block;
+    padding: 8px 10px;
+    font-size: 18px;
+    font-family: 'ProximaNova-Light';
+    margin-bottom: 15px;
+    border-radius: 4px;
+    border: 1px solid #dbdbdb;
+    outline: none;
+}
+.form-in input:first-of-type{
+    margin-top: 20px;
+}
+.form-in input:focus{
+    border: 1px solid #6cdaaa;
+}
+.form-in button{
+    width: 100%;
+    display: block;
+    font-size: 17px;
+    font-family: 'ProximaNova-Black';
+    color:#fff;
+    padding: 10px 25px;
+    border-radius: 4px;
+    background: #27d88b; /*27d98d;*/
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    outline: none;
+}
+.form-in button:active{
+    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
+    transform: scale(1.01);
+}
+
+
+.form-in a{
+    display: inline-block;
+
+    
+    color: #202125;
+    font-family: 'ProximaNova-Light';
+    padding: 20px 0 10px 0;
+    margin: 0 10px;
+    text-decoration: none;
+    position: relative;
+}
+
+.form-in a:hover:before{
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 1px;
+    bottom: 10px;
+    left: 0;
+    background: #202125;
+}
+
+.form-in h1{
+    padding: 10px 0 10px 0;
+    
+}
+.form-in h1 a{
+    text-align: center;
+    font-family: 'ProximaNova-Black';
+    color: #37383b;
+    font-size: 20px;
+    line-height: 20px;
+    
+}
+
+.form-in p{
+    text-align: center;
+    color: #4b4c50;
+    font-family: 'ProximaNova-Light';
+    font-size: 16px;
+    
+}
+
+.error-form-login{
+    font-size: 12px;
+    position: relative;
+    padding: 5px 10px;
+
+    margin-top: 5px;
+    border: 1px solid transparent;
+    border-radius: .25rem;
+
+    color: #721c24;
+    background-color: #f8d7da79;
+    border-color: #f5c6cb;
+
+    font-family: 'ProximaNova-Bold';
+}

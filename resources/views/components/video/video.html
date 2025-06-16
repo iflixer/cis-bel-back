@@ -1,0 +1,497 @@
+<main>
+
+
+    <!-- Modals -->
+    <div class="modal" v-show="modal">
+
+        <!-- Show video -->
+        <div class="modal__form" v-show="modalPage.film">
+            <div class="close">
+                <div class="close__btn" v-on:click="closeModal()">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </div>
+            </div>
+            <iframe :src=" 'https://kholobok.biz/show/' + filmId " frameborder="0" width="610" height="370"></iframe>
+        </div>
+        <!-- End show video -->
+
+
+        <!-- Add video -->
+        <div class="modal__form" v-show="modalPage.add">
+            <div class="close">
+                <div class="close__btn" v-on:click="closeModal()">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </div>
+            </div> 
+
+            <!-- <form action="http://mng.zerocdn.com/api/v2/users/files.json?username=johnlegon&api_key=mB19SrYdROqY" enctype="multipart/form-data" method="post">
+                <input type="hidden" name="folder" value="10720268">
+                <input type="file" name="file">
+                <input type="submit" value="загрузить">
+            </form> -->
+        </div>
+        <!-- End add video -->
+
+
+        <!-- Show info -->
+        <div class="modal__form" v-show="modalPage.info">
+            <div class="close">
+                <div class="close__btn" v-on:click="closeModal()">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </div>
+            </div>
+
+
+            
+            <div class="modal__info-film" v-if="filmIndex != null">
+
+                <div class="modal__info-film-image">
+                    <img :src="videos[filmIndex].img" alt="" class="modal__info-film-img">
+
+                    <button class="button" v-on:click="updateFilmSave()" v-if="updateFilmFlag">Сохранить</button>
+                    <button class="button" v-on:click="updateFilm()" v-else-if="data.update">Редактировать</button>
+
+                    <div v-if="updateFilmFlag">
+                        <div class="modal__info-film-text">
+                            <p class="modal__info-film-title-tupe">Блокировка</p>
+                        </div>
+                        <div class="modal__info-film-text">
+                            <div>
+                                <div class="cheked">
+                                    <input class="cheked__input" type="checkbox" v-model="updateFilmData.lock.RU" name="" id="chekedContryRu">
+                                    <label class="cheked__label" for="chekedContryRu"><div></div></label>
+                                </div>
+                                Россия
+                            </div>
+                        </div>
+                        <div class="modal__info-film-text">
+                            <div>
+                                <div class="cheked">
+                                    <input class="cheked__input" type="checkbox" v-model="updateFilmData.lock.UA" name="" id="chekedContryUa">
+                                    <label class="cheked__label" for="chekedContryUa"><div></div></label>
+                                </div>
+                                Украина
+                            </div>
+                        </div>
+
+                        <div class="modal__info-film-text">
+                            <div>
+                                <div class="cheked">
+                                    <input class="cheked__input" type="checkbox" v-model="updateFilmData.lock.SNG" name="" id="chekedContrySng">
+                                    <label class="cheked__label" for="chekedContrySng"><div></div></label>
+                                </div>
+                                СНГ
+                            </div>
+                        </div>
+                        <div class="modal__info-film-text">
+                            <div>
+                                <div class="cheked">
+                                    <input class="cheked__input" type="checkbox" v-model="updateFilmData.lock.FULL" name="" id="chekedContryFull">
+                                    <label class="cheked__label" for="chekedContryFull"><div></div></label>
+                                </div>
+                                Полная
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                <div class="modal__info-film-contener">
+
+                    <div class="modal__info-film-text" v-if="updateFilmFlag">
+                        <div class="modal_info-coll-4">
+                            <p class="modal__info-film-title-tupe">Изображение</p>
+                            <input class="panels__input modal__input" type="text" v-model="updateFilmData.img">
+                        </div>
+                    </div>
+
+                    <div class="modal__info-film-text">
+                        <div class="modal_info-coll-4">
+                            <p class="modal__info-film-title-tupe">Название</p>
+                            <input class="panels__input modal__input" type="text" v-if="updateFilmFlag" v-model="updateFilmData.ru_name">
+                            <p class="modal__info-film-tupe" v-else>{{ videos[filmIndex].ru_name }}</p>
+                        </div>
+                    </div>
+                    <div class="modal__info-film-text">
+                        <div class="modal_info-coll-4">
+                            <p class="modal__info-film-title-tupe">Оригинальное название</p>
+                            <input class="panels__input modal__input" type="text" v-if="updateFilmFlag" v-model="updateFilmData.name">
+                            <p class="modal__info-film-tupe" v-else>{{ videos[filmIndex].name }}</p>
+                        </div>
+                    </div>
+                    <div class="modal__info-film-text">
+                        <div class="modal_info-coll-4">
+                            <p class="modal__info-film-title-tupe">Страна</p>
+                            <input class="panels__input modal__input" type="text" v-if="updateFilmFlag" v-model="updateFilmData.country">
+                            <p class="modal__info-film-tupe" v-else>{{ videos[filmIndex].country }}</p>
+                        </div>
+                    </div>
+                    <div class="modal__info-film-text">
+                        <div class="modal_info-coll-4">
+                            <p class="modal__info-film-title-tupe">Год</p>
+                            <input class="panels__input modal__input" type="text" v-if="updateFilmFlag" v-model="updateFilmData.year">
+                            <p class="modal__info-film-tupe" v-else>{{ videos[filmIndex].year }}</p>
+                        </div>
+                    </div>
+                    <div class="modal__info-film-text">
+                        <div class="modal_info-coll-4">
+                            <p class="modal__info-film-title-tupe">Жанры</p>
+                            <textarea class="panels__input modal__input" rows="2" v-if="updateFilmFlag" v-model="updateFilmData.genre"></textarea>
+                            <p class="modal__info-film-tupe" v-else>{{ videos[filmIndex].genre }}</p>
+                        </div>
+                    </div>
+                    <div class="modal__info-film-text">
+                        <div class="modal_info-coll-2">
+                            <p class="modal__info-film-title-tupe">Кинопоиск</p>
+                            <p class="modal__info-film-tupe">
+                                <a :href=" 'https://www.kinopoisk.ru/film/' + videos[filmIndex].kinopoisk " target="_blank" class="modal__info-film-tupe-link">
+                                    {{ videos[filmIndex].kinopoisk }}
+                                </a>
+                            </p>
+                        </div>
+                        <div class="modal_info-coll-2">
+                            <p class="modal__info-film-title-tupe">IMDb</p>
+                            <p class="modal__info-film-tupe">
+                                <a :href=" 'https://www.imdb.com/title/' + videos[filmIndex].imdb " target="_blank" class="modal__info-film-tupe-link">
+                                    {{ videos[filmIndex].imdb }}
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="modal__info-film-text">
+                        <div class="modal_info-coll-4">
+                            <p class="modal__info-film-title-tupe">Описание</p>
+                            <textarea class="panels__input modal__input" rows="8" v-if="updateFilmFlag" v-model="updateFilmData.description"></textarea>
+                            <p class="modal__info-film-tupe modal__info-film-diskript" v-else>{{ videos[filmIndex].description }}</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <!-- End show info -->
+
+        <!-- Tiket video -->
+        <div class="modal__form" v-show="modalPage.tiket">
+            <div class="close">
+                <div class="close__btn" v-on:click="closeModal()">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </div>
+            </div>
+
+            <input 
+                type="text" 
+                class="tikets-s__input" 
+                placeholder="Тема обращения" 
+                v-model="tiket.title"
+            >
+
+            <textarea 
+                class="tikets-s__input" 
+                cols="30" 
+                rows="10"
+                placeholder="Текст обращения" 
+                v-model="tiket.text"
+            ></textarea>
+
+            <button class="button tikets-s__button-l" v-on:click="sendTiket()">Отправить</button>
+
+        </div>
+        <!-- End tiket video -->
+
+    </div>
+    <!-- End modals -->
+
+
+    <!-- Panels -->
+    <section class="panels">
+
+
+        <!-- Update video bd -->
+        <div class="panels__panel" v-if="data.update">
+            <span class="panels__title">Загрузка с VideoDB</span>
+            <p class="panels__info" v-if="next">Требуется загрузка</p>
+            <div>
+                
+                <p class="panels__text">Загруженно: {{ data.videodb.count_vdb }} фаилов</p>
+                <p class="panels__text">Шагов: <input class="panels__input-let" type="text" v-model="steps"> < 6 </p>
+            </div>
+            <div class="panels__progress-bar">
+                <div v-if="preolaoded">
+                    <div class="panels__progress-text">
+                        {{ progress }}%
+                        <div class="preolaoded">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                    <!-- <div class="panels__progress-text">updateOffset {{ updateOffset }}</div> -->
+                    <div class="panels__progress">
+                        <div class="panels__progress-item" :style=" 'width:'+ progress +'%' "></div>
+                    </div>
+                </div>
+            </div>
+            <button class="button" v-on:click="clickBtnVDB()">Загрузить</button>
+
+            <button class="button" v-on:click="clickBtnUpdateVDB()">Обновить</button>
+            <div>
+                <p class="panels__text">Стартовая точка: <input class="panels__input-let" type="text" v-model.number="updateUpOffset"></p>
+            </div>
+            <div class="panels__progress-bar">
+                <div v-if="preolaodedUp">
+                    <div class="panels__progress-text">
+                        {{ progressUp }}% / {{ stepsUp }}
+                        <div class="preolaoded">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                    <div class="panels__progress">
+                        <div class="panels__progress-item" :style=" 'width:'+ progressUp +'%' "></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- End update video bd -->
+
+
+
+
+        <div class="panels__panel">
+            <button class="button" v-on:click="addFilm()">Добавить</button>
+        </div>
+
+
+
+
+        <!-- Search -->
+        <div class="panels__panel">
+            <span class="panels__title">Поиск</span>
+            <input class="panels__input" type="text" v-model="search" placeholder="Что искать ?">
+        </div>
+        <!-- End search -->
+
+        <!-- Year -->
+        <div class="panels__panel">
+            <span class="panels__title">Год</span>
+
+            <div class="panels__list " :class="{ 'panels__list--more': panelYears }">
+
+                <div class="panels__list-item" v-for="(rang, index) in range">
+                    <div class="cheked">
+                        <input 
+                            class="cheked__input" 
+                            type="radio" 
+                            name="rang" 
+                            :value="index"
+                            v-model="rangeId"
+                            :id=" 'chekRange'+ index">
+                        <label 
+                            class="cheked__label" 
+                            :for=" 'chekRange'+ index">
+                        <div></div></label>
+                    </div>
+                    <span class="panels__list-item-text">{{ rang.name }}</span>
+                </div>
+
+            </div>
+
+            <a class="panels__button-link" v-on:click.prevent="panelYears = !panelYears" href="#">
+                <span v-if="panelYears">Скрыть</span>
+                <span v-else>Показать</span>
+            </a>
+        </div>
+        <!-- End year -->
+
+
+        <!-- Genres -->
+        <div class="panels__panel">
+            <span class="panels__title">Жанры</span>
+
+            <div class="panels__list " :class="{ 'panels__list--more': panelGenres }">
+
+                <div class="panels__list-item" v-for="(genre, index) in genres">
+                    <div class="cheked">
+                        <input 
+                            class="cheked__input" 
+                            type="checkbox" 
+                            v-model="genre.show"
+                            :id=" 'chekGenres'+ index">
+                        <label 
+                            class="cheked__label" 
+                            :for=" 'chekGenres'+ index">
+                        <div></div></label>
+                    </div>
+                    <span class="panels__list-item-text">{{ genre.name }}</span>
+                </div>
+
+            </div>
+
+            <a class="panels__button-link" v-on:click.prevent="panelGenres = !panelGenres" href="#">
+                <span v-if="panelGenres">Скрыть</span>
+                <span v-else>Показать</span>
+            </a>
+        </div>
+        <!-- End genres -->
+
+
+        <!-- Countries -->
+        <div class="panels__panel">
+            <span class="panels__title">Страны</span>
+
+            <div class="panels__list" :class="{ 'panels__list--more': panelCountries }">
+            
+                <div class="panels__list-item" v-for="(country, index) in countries">
+                    <div class="cheked">
+                        <input 
+                            class="cheked__input" 
+                            type="checkbox" 
+                            v-model="country.show"
+                            :id=" 'chekCountries'+ index">
+                        <label 
+                            class="cheked__label" 
+                            :for=" 'chekCountries'+ index">
+                        <div></div></label>
+                    </div>
+                    <span class="panels__list-item-text">{{ country.name }}</span>
+                </div>
+                
+            </div>
+
+            <a class="panels__button-link" v-on:click.prevent="panelCountries = !panelCountries" href="#">
+                <span v-if="panelCountries">Скрыть</span>
+                <span v-else>Показать</span>
+            </a>
+        </div>
+        <!-- End countries -->
+        
+        <div class="panels__grup-button">
+            <button class="button button--coll1" v-on:click="filterClear()"><i class="fa fa-trash" aria-hidden="true"></i></button>
+            <button class="button button--coll3" v-on:click="videosGet()">Искать</button>
+        </div>
+        
+
+
+        <!-- 
+        <div class="panels__panel">
+            <span class="panels__title">Поиск</span>
+
+            <div class="select-box">
+                <div class="select-box__current" tabindex="1">
+                    <div class="select-box__value">
+                        <input class="select-box__input" type="radio" id="0" value="1" name="Ben" checked="checked">
+                        <p class="select-box__input-text">Все жанры</p>
+                    </div>
+                    <div class="select-box__value">
+                        <input class="select-box__input" type="radio" id="1" value="2" name="Ben">
+                        <p class="select-box__input-text">Боевик</p>
+                    </div>
+                    <div class="select-box__value">
+                        <input class="select-box__input" type="radio" id="2" value="3" name="Ben">
+                        <p class="select-box__input-text">Комедия</p>
+                    </div>
+                    <div class="select-box__value">
+                        <input class="select-box__input" type="radio" id="3" value="4" name="Ben">
+                        <p class="select-box__input-text">Мелодрамма</p>
+                    </div>
+                    <div class="select-box__value">
+                        <input class="select-box__input" type="radio" id="4" value="5" name="Ben">
+                        <p class="select-box__input-text">Военное</p>
+                    </div>
+                    <img class="select-box__icon" src="https://cdn.onlinewebfonts.com/svg/img_295694.svg" alt="Arrow Icon" aria-hidden="true">
+                </div>
+                <ul class="select-box__list">
+                    <li><label class="select-box__option" for="0" aria-hidden="aria-hidden">Все жанры</label></li>
+                    <li><label class="select-box__option" for="1" aria-hidden="aria-hidden">Боевик</label></li>
+                    <li><label class="select-box__option" for="2" aria-hidden="aria-hidden">Комедия</label></li>
+                    <li><label class="select-box__option" for="3" aria-hidden="aria-hidden">Мелодрамма</label></li>
+                    <li><label class="select-box__option" for="4" aria-hidden="aria-hidden">Военное</label></li>
+                </ul>
+            </div>
+        </div> 
+        -->
+
+    </section>
+    <!-- End panels -->
+
+
+
+    <!-- Main -->
+    <div class="main">
+        
+        <!-- Header -->
+        <slot></slot>
+        <!-- End header -->
+
+        <div class="main__content">
+            <section class="articles">
+
+                <!-- Head video -->
+                <div class="articles__head">
+                    <div class="articles__head-1"></div>
+                    <p class="articles__head-2">Тип</p>
+                    <p class="articles__head-3">Название</p>
+                    <p class="articles__head-4">Качество</p>
+                    <p class="articles__head-5">Озвучка</p>
+                    <p class="articles__head-6">КиноПоиск</p>
+                    <p class="articles__head-7">Код</p>
+                </div>
+                <!-- End head video -->
+
+                <div class="articles__scrol" ref="articles__scrol">
+
+                    <!-- For video -->
+                    <div v-for="(value, name) in videos" class="articles__item">
+
+                        <div class="articles__item-part articles__head-1">
+                            <div class="cheked" v-if="data.update">
+                                <input class="cheked__input" type="checkbox" name="" :id=" 'chek' + value.id ">
+                                <label class="cheked__label" :for=" 'chek' + value.id "><div></div></label>
+                            </div>
+                            <a href="#" v-on:click.prevent="showInfo(name)"><i class="fa fa-info-circle" aria-hidden="true"></i></a>
+                        </div>
+
+                        <p class="articles__item-part articles__head-2">
+                            <span class="element-cont" v-if=" value.tupe == 'movie' ">фильм</span>
+                            <span class="element-cont" v-else>сериал</span>
+                        </p>
+
+                        <p class="articles__item-part articles__head-3">{{ value.ru_name }}</p>
+                        
+                        <p class="articles__item-part articles__head-4">
+                            <span class="element-cont">{{ value.quality }}</span>
+                        </p>
+
+                        <p class="articles__item-part articles__head-5">{{ value.translation }}</p>
+
+                        <p class="articles__item-part articles__head-6">
+                            <span class="element-cont">{{ value.kinopoisk }}</span>
+                        </p>
+
+                        <p class="articles__item-part articles__head-7">
+                            <a href="#" v-on:click.prevent="showFilm(value.id)" title="Просмотр"><i class="fa fa-film" aria-hidden="true"></i></a>
+                            <a href="#" v-on:click.prevent="copyAdress(value.id)" title="Скопировать"><i class="fa fa-code" aria-hidden="true"></i></a>
+                            <a href="#" v-on:click.prevent="openTiket(value.id, value.ru_name)" title="Обновление/Ошибка"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i></a>
+                        </p>
+                    </div>
+                    <!-- End for video -->
+
+                </div>
+
+                <!-- Pagination -->
+                <div class="articles__pagination">
+                    <div v-for="value in paginations" v-if="value.look" class="articles__pagin-item articles__pagin-item--look">{{ value.content }}</div>
+                    <div v-else v-on:click="videosGet(value.page)" class="articles__pagin-item">{{ value.content }}</div>
+                </div>
+                <!-- End pagination -->
+
+            </section>
+        </div>
+
+    </div>
+    <!-- End main -->
+    
+</main>

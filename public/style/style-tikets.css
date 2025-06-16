@@ -1,0 +1,120 @@
+.tikets-s{
+    padding: 0 10px;
+}
+
+.tikets-s__panel{
+    overflow: hidden;
+    padding: 10px 0;
+}
+.tikets-s__panel--center{
+    text-align: center;
+}
+.tikets-s__tiket{
+    padding: 0 10px;
+}
+
+.tikets-s__button-r{
+    width:auto;
+    display: inline-block;
+    float: right;
+    margin-left: 10px;
+}
+.tikets-s__button-l{
+    width:auto;
+    display: inline-block;
+    float: left;
+    margin-right: 10px;
+}
+.tikets-s__button-plat{
+    width:auto;
+    display: inline-block;
+    text-align: center;
+    color: #000000;
+    line-height: 34px;
+    padding: 0 15px;
+    font-size: 13px;
+    font-family: 'Montserrat-Regular';
+    letter-spacing: 0.06em;
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    outline: none;
+}
+.tikets-s__button-plat.activ{
+    box-shadow: 0 2px 0 #40c173;
+}
+
+
+
+.tikets-s__input{
+    display: inline-block;
+    width: 100%;
+    padding: 8px 15px;
+    outline: none;
+    border-radius: 4px;
+    border: 1px solid #cacaca;
+    background: #fff;
+    margin-bottom: 10px;
+    font: 400 13.3333px Arial;
+}
+
+
+.tikets-s__item{
+    border: 1px solid #d3d3d3;
+    padding: 15px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    position: relative;
+}
+.tikets-s__item:before{
+    content:"";
+    position: absolute;
+    width:0;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: #40c173;
+    transition: width 0.1s ease-in-out;
+}
+.tikets-s__item:hover:before{
+    width: 5px;
+}
+.tikets-s__item-title{
+    font-size: 20px;
+    font-family: 'Montserrat-Bold';
+}
+.tikets-s__stat{
+    display: inline-block;
+}
+.tikets-s__item-stat{
+    display: inline-block;
+    padding: 2px 4px;
+    border-radius: 3px;
+    color: #fff;
+    font-weight: normal;
+    font-family: 'Montserrat-Regular';
+    font-size: 12px;
+    background: #cecece;
+}
+.tikets-s__item-stat--blue{background: #3ca6e4;}
+.tikets-s__item-stat--yellow{background: #f1b22a;}
+.tikets-s__item-stat--red{background: #ec5e5e;}
+
+.tikets-s__item-tupe{
+    font-size: 14px; 
+    color: #979797;
+    padding-bottom: 10px;
+}
+.tikets-s__item-prev-message{}
+
+
+
+.tikets-s__mes-item{
+    padding: 15px 0;
+    margin: 5px 0;
+}
+.tikets-s__mes-item-name{
+    font-size: 16px;
+    font-family: 'Montserrat-Medium';
+}

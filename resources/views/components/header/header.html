@@ -1,0 +1,37 @@
+<header class="header">
+
+    
+
+    <div class="header__content">
+        <h2 class="header__title">{{ data.url.name }}</h2>
+        <ul class="header__menu">
+
+            <li class="header__item"></li>
+
+            <li class="header__item">
+                <a class="header__item-name" href="/cabinet" title="Кабинет"> 
+                    <i class="lni-cog"></i> 
+                </a> 
+            </li>
+
+            <li class="header__item"> 
+                <a class="header__item-name" href="/logout" title="Выход" style="transform: rotate(180deg)"> 
+                    <i class="lni-exit"></i> 
+                </a> 
+            </li>
+
+        </ul>
+    </div>
+
+
+
+    <div class="header__messages">
+
+        <!-- mesages -->
+        <slot></slot>
+
+    </div> 
+
+
+
+</header>

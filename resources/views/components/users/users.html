@@ -1,0 +1,193 @@
+<main>
+    <!-- Modals -->
+    <div class="modal" v-show="modal">
+        <!-- New user -->
+        <div class="modal__form" v-show="modalPage.user">
+            <div class="close">
+                <div class="close__btn" v-on:click="closeModal()">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </div>
+            </div>
+
+
+            <div class="form">
+                <div class="form__grid-2">
+
+                    <div class="element-form" :class="{ 'element-form--error': validList[0].error }">
+                        <label for="" class="element-form__label">Логин <span class="element-form__label-req">*</span> </label>
+                        <input type="text" v-model="newUser.login" class="element-form__input">
+                    </div>
+
+                    <div class="element-form" :class="{ 'element-form--error': validList[1].error }">
+                        <label for="" class="element-form__label">Пароль <span class="element-form__label-req">*</span></label>
+                        <input type="text" v-model="newUser.password" class="element-form__input">
+
+                        <div class="element-form__button" v-on:click="newUser.password = generateKey()" title="Сгенерировать пароль">
+                            <i class="fa fa-key" aria-hidden="true"></i>
+                        </div>
+                    </div>
+
+                    <div class="element-form">
+                        <label for="" class="element-form__label">Тип записи <span class="element-form__label-req">*</span></label>
+                        
+                        <div class="element-form__contener">
+                            <div class="cheked">
+                                <input 
+                                    class="cheked__input" 
+                                    v-model="newUser.tupe" 
+                                    value="client" 
+                                    name="tupe" 
+                                    type="radio" 
+                                    id="tupe1"
+                                >
+                                <label class="cheked__label" for="tupe1"><div></div></label>
+                            </div>
+                            <label for="tupe1" class="">Клиент</label>
+                        </div>
+
+                        <div class="element-form__contener">
+                            <div class="cheked">
+                                <input 
+                                    class="cheked__input" 
+                                    v-model="newUser.tupe" 
+                                    value="redactor" 
+                                    name="tupe" 
+                                    type="radio" 
+                                    id="tupe2"
+                                >
+                                <label class="cheked__label" for="tupe2"><div></div></label>
+                            </div> 
+                            <label for="tupe2" class="">Редактор</label>
+                        </div>
+
+                        <div class="element-form__contener">
+                            <div class="cheked">
+                                <input 
+                                    class="cheked__input" 
+                                    v-model="newUser.tupe" 
+                                    value="managing" 
+                                    name="tupe" 
+                                    type="radio" 
+                                    id="tupe3"
+                                >
+                                <label class="cheked__label" for="tupe3"><div></div></label>
+                            </div> 
+                            <label for="tupe3" class="">Менеджер</label>
+                        </div>
+                        
+                        <div class="element-form__contener">
+                            <div class="cheked">
+                                <input 
+                                    class="cheked__input" 
+                                    v-model="newUser.tupe" 
+                                    value="administrator" 
+                                    name="tupe" 
+                                    type="radio" 
+                                    id="tupe4"
+                                >
+                                <label class="cheked__label" for="tupe4"><div></div></label>
+                            </div> 
+                            <label for="tupe4" class="">Администратор</label>
+                        </div>
+
+                    </div>
+
+                </div>
+                <div class="form__grid-2">
+
+                    <div class="element-form" :class="{ 'element-form--error': validList[2].error }">
+                        <label for="" class="element-form__label">Почта <span class="element-form__label-req">*</span></label>
+                        <input type="text" v-model="newUser.email" class="element-form__input">
+                    </div>
+                    <div class="element-form">
+                        <label for="" class="element-form__label">Имя</label>
+                        <input type="text" v-model="newUser.name" class="element-form__input">
+                    </div>
+                    <div class="element-form">
+                        <label for="" class="element-form__label">Фамилия</label>
+                        <input type="text" v-model="newUser.endnmae" class="element-form__input">
+                    </div>
+
+                </div>
+            </div>
+
+            
+            <button class="button tikets-s__button-l" v-on:click="addUserSend()">Создать</button>
+            
+            
+        </div>
+        <!-- End new user -->
+    </div>
+
+    <div class="main">
+
+        <!-- <component-header :data="data.header"></component-header> -->
+        <slot></slot>
+
+        <div class="main__content">
+
+            <div class="tikets-s">
+                <div class="tikets-s__panel tikets-s__panel--center">
+
+                    <div class="tikets-s__button-plat" :class="{ activ: !pageUsers }" v-on:click="openPageUsers(false)">Активные</div>
+                    <div class="tikets-s__button-plat" :class="{ activ: pageUsers }" v-on:click="openPageUsers(true)">Заблокированные</div>
+
+                </div>
+                <div class="tikets-s__panel">
+
+                    <div class="tikets-s__button-l button" v-on:click="putStatusUser(0)">Заблокировать</div>
+                    <div class="tikets-s__button-l button" v-on:click="putStatusUser(2)">Разблокировать</div>
+                    <div class="tikets-s__button-r button" v-on:click="addUser()">Создать пользователя</div>
+
+                </div>
+            </div>
+
+
+            <section class="articles">
+                <!-- Head users -->
+                <div class="articles__head">
+                    <div class="table__col--50"></div>
+                    <p class="table__col-2--50">Тип</p>
+                    <p class="table__col-2">Логин</p>
+                    <p class="table__col-2">Статус</p>
+                    <p class="table__col-4">Ключ</p>
+                </div>
+                <!-- End head users -->
+
+                <div class="articles__scrol" ref="articles__scrol">
+                    <!-- For users -->
+                    <div v-for="(value, name) in usersList" class="articles__item">
+
+                        <div class="articles__item-part table__col--50">
+
+                            <div class="cheked">
+                                <input class="cheked__input" v-model="value.chek" type="checkbox" name="" :id=" 'chek' + value.element.id ">
+                                <label class="cheked__label" :for=" 'chek' + value.element.id "><div></div></label>
+                            </div>
+
+                        </div>
+
+                        <p class="articles__item-part table__col-2--50"> 
+                            <tupe-user :tupe="value.element.tupe"></tupe-user> 
+                        </p>
+
+                        <p class="articles__item-part table__col-2">
+                            {{ value.element.login }}
+                        </p>
+                        
+                        <p class="articles__item-part table__col-2"> 
+                            <status-user :status="value.element.status"></status-user> 
+                        </p>
+
+                        <p class="articles__item-part table__col-4">
+                            {{ value.element.api_key }}
+                        </p>
+                        
+                    </div>
+                    <!-- End for users -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+</main>
