@@ -1,24 +1,5 @@
 <?php
 
-if (!in_array($_SERVER['HTTP_HOST'], [
-
-    'sys.cdnhubstream.pro',
-    
-    'api.cdnhubstream.pro',
-
-    'cdn0.cdnhubstream.pro',
-    'cdn1.cdnhubstream.pro',
-    'cdn2.cdnhubstream.pro',
-    'cdn3.cdnhubstream.pro',
-    'cdn4.cdnhubstream.pro',
-
-    'tg.cdnhubstream.pro',
-
-])) {
-    http_response_code(404);
-    exit;
-}
-
 /**
  * Laravel - A PHP Framework For Web Artisans
  *
@@ -75,5 +56,3 @@ $response = $kernel->handle(
 $response->send();
 
 $kernel->terminate($request, $response);
-
-

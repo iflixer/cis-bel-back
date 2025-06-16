@@ -1,0 +1,51 @@
+FROM php:7.4-fpm
+
+WORKDIR /var/www/html
+
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    libbz2-dev \
+    zip \
+    unzip \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libmcrypt-dev \
+    libgd-dev \
+    nodejs \
+    npm \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath zip bz2 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --version=1.10.26
+
+RUN apt-get update && apt-get install -y \
+    libfontconfig1 \
+    libfreetype6 \
+    fontconfig \
+    wget \
+    bzip2 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN cd /tmp && \
+    wget -O phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2 && \
+    tar -xjf phantomjs.tar.bz2 && \
+    mv phantomjs-2.1.1-linux-x86_64/bin/phantomjs /usr/local/bin/ && \
+    chmod +x /usr/local/bin/phantomjs && \
+    rm -rf /tmp/phantomjs*
+
+RUN groupadd -g 1000 www && useradd -u 1000 -ms /bin/bash -g www www
+
+COPY . /var/www/html
+COPY --chown=www:www . /var/www/html
+
+USER www-data
+
+EXPOSE 9000
+CMD ["php-fpm"]
