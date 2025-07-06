@@ -50,4 +50,3 @@ backup_*
 phpunit.xml
 .phpunit.result.cache
 composer.phar
-composer.lock

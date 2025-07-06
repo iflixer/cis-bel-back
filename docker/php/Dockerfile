@@ -40,10 +40,19 @@ RUN cd /tmp && \
     chmod +x /usr/local/bin/phantomjs && \
     rm -rf /tmp/phantomjs*
 
-RUN groupadd -g 1000 www && useradd -u 1000 -ms /bin/bash -g www www
+RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
 
-COPY . /var/www/html
-COPY --chown=www:www . /var/www/html
+COPY --chown=www-data:www-data . /var/www/html
+
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+RUN chown -R www-data:www-data /var/www/html \
+    && find /var/www/html/storage -type f -exec chmod 664 {} \; \
+    && find /var/www/html/storage -type d -exec chmod 775 {} \; \
+    && find /var/www/html/bootstrap/cache -type f -exec chmod 664 {} \; \
+    && find /var/www/html/bootstrap/cache -type d -exec chmod 775 {} \; \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/bootstrap/cache
 
 USER www-data
 

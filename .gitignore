@@ -49,3 +49,4 @@ node_modules/
 
 bootstrap/cache/*
 !bootstrap/cache/.gitkeep
+/bin
