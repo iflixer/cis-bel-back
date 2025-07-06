@@ -14,7 +14,8 @@ class Kernel extends HttpKernel
      * @var array
      */
     protected $middleware = [
-        \Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode::class
+        \Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode::class,
+        \App\Http\Middleware\CorsMiddleware::class
     ];
 
     /**
@@ -57,5 +58,6 @@ class Kernel extends HttpKernel
         'center' => \App\Http\Middleware\CenterMiddleware::class,
         'showMiddleware' => \App\Http\Middleware\ShowMiddleware::class,
         'apiShowMiddleware' => \App\Http\Middleware\ApiShowMiddleware::class,
+        'cors' => \App\Http\Middleware\CorsMiddleware::class,
     ];
 }
