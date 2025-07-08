@@ -39,7 +39,6 @@ yarn-error.log*
 docker-compose*.yml
 Dockerfile*
 .dockerignore
-docker/
 setup.sh
 docker-manage.sh
 verify-setup.sh
