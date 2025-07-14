@@ -43,6 +43,11 @@ RUN cd /tmp && \
 RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
 
 COPY --chown=www-data:www-data . /var/www/html
+COPY ./docker/php/php.ini /usr/local/etc/php/php.ini
+
+RUN sed -i 's/^;*catch_workers_output.*/catch_workers_output = yes/' /usr/local/etc/php-fpm.d/www.conf \
+ && echo "php_admin_value[error_log] = /proc/self/fd/2" >> /usr/local/etc/php-fpm.d/www.conf \
+ && echo "php_admin_flag[log_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
