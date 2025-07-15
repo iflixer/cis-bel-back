@@ -39,6 +39,7 @@ class ShowMiddleware{
             if (isset($_GET['d'])) {
                 echo $request->domain;
                 var_dump($domain);
+                die();
             }
 
             // check if subdomain
