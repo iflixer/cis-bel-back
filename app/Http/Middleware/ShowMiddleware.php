@@ -63,7 +63,7 @@ class ShowMiddleware{
             
 
         }
-        abort(404);
+        abort(402);
 
         // return $next($request);
 
