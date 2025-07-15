@@ -39,8 +39,8 @@ class ApiController extends Controller{
     protected $passVDB; //  = '5HxL2P2Yw1yq'
 
     // protected $adress = 'https://api.kholobok.biz/show/';
-    // protected $adress = 'https://cdn0.cdnhubstream.pro/show/';
-    protected $adress = 'https://cdn0.cdnhubstream.pro/show/';
+    // protected $adress = 'https://bel-cdn.printhouse.casa/show/';
+    protected $adress = 'https://bel-cdn.printhouse.casa/show/';
 
     protected $usesApi = "App\Http\Controllers\api\\";
 
@@ -574,7 +574,7 @@ class ApiController extends Controller{
         else
             $domain = 'api.kholobok.biz';*/
 
-        $domain = 'cdn0.cdnhubstream.pro';
+        $domain = 'bel-cdn.printhouse.casa';
 
         // build data
 
@@ -779,7 +779,7 @@ class ApiController extends Controller{
             else
                 $domain = 'api.kholobok.biz';*/
 
-            $domain = 'cdn0.cdnhubstream.pro';
+            $domain = 'bel-cdn.printhouse.casa';
 
             $result = [];
 
@@ -1119,7 +1119,7 @@ class ApiController extends Controller{
             $domain = 'api.kholobok.biz';
         }*/
 
-        $domain = 'cdn0.cdnhubstream.pro';
+        $domain = 'bel-cdn.printhouse.casa';
 
         $timeDomains = microtime(false);
         
