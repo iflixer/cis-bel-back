@@ -899,7 +899,7 @@ class ShowController extends Controller{
                         else
                             $stats[$dateNow]['startuniq'] = 1;
 
-                        Cookie::queue(Cookie::make('startuniq'.date('Ymd'), '1', 1440, '/;SameSite=None', null, true, false, false, 'none'));
+                        Cookie::queue(Cookie::make('startuniq'.date('Ymd'), '1', 1440, '/', null, true, false, false, 'none'));
                     }
                 } else {
                     $stats[$dateNow] = array(
@@ -910,7 +910,7 @@ class ShowController extends Controller{
                         'showads' => 0,
                     );
 
-                    Cookie::queue(Cookie::make('startuniq'.date('Ymd'), '1', 1440, '/;SameSite=None', null, true, false, false, 'none'));
+                    Cookie::queue(Cookie::make('startuniq'.date('Ymd'), '1', 1440, '/', null, true, false, false, 'none'));
                 }
                 $stats = json_encode($stats);
                 Domain::where('name', $this->request->domain)->update(['show' => $stats ]);
