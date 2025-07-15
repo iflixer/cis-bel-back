@@ -105,7 +105,6 @@ return [
     */
 
     'redis' => [
-        'client' => 'phpredis',
         'cluster' => false,
         'default' => [
             'host' => env('REDIS_HOST', 'localhost'),
