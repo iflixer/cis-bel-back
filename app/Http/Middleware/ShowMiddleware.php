@@ -36,10 +36,10 @@ class ShowMiddleware{
             $domain = Domain::where('name', $_domain)->first();
             $request->domain = $_domain;
 
-            // if (isset($_GET['d'])) {
-            //     echo $request->domain;
-            //     var_dump($domain);
-            // }
+            if (isset($_GET['d'])) {
+                echo $request->domain;
+                var_dump($domain);
+            }
 
             // check if subdomain
             if ($domain === null) {
@@ -63,7 +63,7 @@ class ShowMiddleware{
             
 
         }
-        abort(402);
+        abort(404);
 
         // return $next($request);
 
