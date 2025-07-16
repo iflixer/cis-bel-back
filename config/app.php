@@ -39,7 +39,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'https://api.futemaxlive.com'),
+    'url' => env('APP_URL', 'https://futmax.info'),
 
     /*
     |--------------------------------------------------------------------------
