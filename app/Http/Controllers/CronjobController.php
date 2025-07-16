@@ -36,8 +36,8 @@ class CronjobController extends Controller
 	protected $passVDB; // = '5HxL2P2Yw1yq'
 
 	// protected $adress = 'https://api.kholobok.biz/show/';
-	// protected $adress = 'https://bel-cdn.printhouse.casa/show/';
-	protected $adress = 'https://bel-cdn.printhouse.casa/show/';
+	// protected $adress = 'https://cdn0.futemaxlive.com/show/';
+	protected $adress = 'https://cdn0.futemaxlive.com/show/';
 
 	protected $usesApi = "App\Http\Controllers\api\\";
 
