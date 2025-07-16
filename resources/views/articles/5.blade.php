@@ -47,7 +47,7 @@
 <br>
 
 <h3>Архив с модулем</h3>
-<p><a href="https://sys.cdnhubstream.pro/cdnhub-v3.1.zip">cdnhub-v3.1.zip</a> [1,85 МБ] &middot; <a href="/articles/15">История обновлений модуля</a></p>
+<p><a href="https://futmax.info/dle-plugins/cdnhub-v3.2.zip">cdnhub-v3.2.zip</a> [1,85 МБ] &middot; <a href="/articles/15">История обновлений модуля</a></p>
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
     <strong style="color: rgb(240, 102, 102);"><u>Важно!</u> Делайте бэкап базы данных перед установкой или обновлением модулей.</strong>
 </blockquote>

@@ -192,7 +192,7 @@
             "duration": "01:14",
             "slogan": "Giant Killer Grizzly Attacks Massive Rock Concert.",
             "age": null,
-            "iframe_url": "https://cdn0.cdnhubstream.pro/show/64186",
+            "iframe_url": "https://cdn0.futemaxlive.com/show/64186",
             "genres": [
                 "музыка",
                 "триллер",
@@ -223,7 +223,7 @@
             "duration": null,
             "slogan": null,
             "age": null,
-            "iframe_url": "https://cdn0.cdnhubstream.pro/show/63888",
+            "iframe_url": "https://cdn0.futemaxlive.com/show/63888",
             "genres": [
                 "документальный",
                 "музыка"
@@ -274,7 +274,7 @@
             "duration": "1:49",
             "slogan": "The Machines Will Rise",
             "age": "16",
-            "iframe_url": "https://cdn0.cdnhubstream.pro/show/54434",
+            "iframe_url": "https://cdn0.futemaxlive.com/show/54434",
             "genres": [
                 "боевик",
                 "фантастика"
@@ -326,7 +326,7 @@
             "duration": "0:43",
             "slogan": "This season a mother will become a warrior, a son will become a hero, and their only ally will be a friend from the future.",
             "age": "16",
-            "iframe_url": "https://cdn0.cdnhubstream.pro/show/13601",
+            "iframe_url": "https://cdn0.futemaxlive.com/show/13601",
             "genres": [
                 "боевик",
                 "триллер",
@@ -379,7 +379,7 @@
             "duration": "1:49",
             "slogan": "The Machines Will Rise",
             "age": "16",
-            "iframe_url": "https://cdn0.cdnhubstream.pro/show/54434",
+            "iframe_url": "https://cdn0.futemaxlive.com/show/54434",
             "genres": [
                 "боевик",
                 "фантастика"
