@@ -119,7 +119,7 @@ class AuthController extends Controller
         ]);
 
         $data = [
-            'url' => "https://cdnhub.pro/reset-password?email={$email}&token={$token}"
+            'url' => "https://futemaxlive.com/reset-password?email={$email}&token={$token}"
         ];
 
         Mail::send('emails.forgot-password', $data, function($message) use ($email) {

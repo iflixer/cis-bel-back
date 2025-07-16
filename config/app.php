@@ -39,7 +39,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'https://api.cdnhubstream.pro'),
+    'url' => env('APP_URL', 'https://api.futemaxlive.com'),
 
     /*
     |--------------------------------------------------------------------------

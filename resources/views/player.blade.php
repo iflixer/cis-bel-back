@@ -73,7 +73,7 @@
 			    if ($url['host'] && preg_match("#^[a-z0-9-_.]+$#i", $url['host'])) {
 			        echo $url['host'];
 			    } else {
-			        echo 'cdnhub.pro';
+			        echo 'futemaxlive.com';
 			    }
 			}
 
