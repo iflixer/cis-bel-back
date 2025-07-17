@@ -1,6 +1,14 @@
 jobs:
   hello:
     schedule: "0 * * * *"
-    name: "hello-cron"
+    name: "test cron"
     image: alpine
-    command: ["echo", "Hello from Swarm Cron"]
+    command: ["echo", "Hello from Swarm Cron, I am alive!"]
+  ping_url_job:
+    schedule: "0 */3 * * *"
+    name: "import from VideoDB"
+    image: curlimages/curl:latest
+    command:
+      - curl
+      - --silent
+      - "http://bel-back-nginx/cronjob/videodb"
