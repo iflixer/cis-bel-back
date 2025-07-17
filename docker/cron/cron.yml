@@ -1,0 +1,6 @@
+jobs:
+  hello:
+    schedule: "0 * * * *"
+    name: "hello-cron"
+    image: alpine
+    command: ["echo", "Hello from Swarm Cron"]

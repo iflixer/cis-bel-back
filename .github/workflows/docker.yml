@@ -50,6 +50,17 @@ jobs:
             SOURCE_COMMIT=${{ steps.vars.outputs.commit }}
             SOURCE_TAG=${{ steps.vars.outputs.tag }}
 
+      - name: Build and push Docker image CRON
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/cron/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/cis-bel-back-cron:latest
+          build-args: |
+            SOURCE_COMMIT=${{ steps.vars.outputs.commit }}
+            SOURCE_TAG=${{ steps.vars.outputs.tag }}
+
       - name: Notify Telegram
         if: success()
         run: |
