@@ -367,6 +367,7 @@ class ShowController extends Controller{
         if (!$video)
             abort(404);
 
+
         // if ($this->request->domain != 'api.kholobok.biz' && $this->request->domain != 'kholobok.biz') {
             if (isset($video) && $video->lock != null && $video->lock != '') {
                 $lock = explode(',',$video->lock);

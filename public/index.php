@@ -1,5 +1,7 @@
 <?php
 
+if ($_SERVER['HTTP_CF_CONNECTING_IP']) $_SERVER['HTTP_X_FORWARDED_FOR'] = $_SERVER['HTTP_CF_CONNECTING_IP'];
+
 /**
  * Laravel - A PHP Framework For Web Artisans
  *
