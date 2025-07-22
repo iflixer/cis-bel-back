@@ -174,9 +174,10 @@ class ShowController extends Controller{
 
         if(isset($video) && $video->lock != null && $video->lock != ''){
             $lock = explode(',',$video->lock);
-            $ipData = json_decode(file_get_contents('http://ipinfo.io/'.$_SERVER['HTTP_X_FORWARDED_FOR'].'?token=81e9b5a1120863'), true); 
+            // $ipData = json_decode(file_get_contents('http://ipinfo.io/'.$_SERVER['HTTP_X_FORWARDED_FOR'].'?token=81e9b5a1120863'), true); 
+            $country = $_SERVER['HTTP_CF_IPCOUNTRY'];
             foreach ($lock as $value) {
-                if($value == 'FULL' ||   ( isset($lockMass[$value]) && strpos($lockMass[$value], $ipData['country']) !== false)  ){
+                if($value == 'FULL' ||   ( isset($lockMass[$value]) && strpos($lockMass[$value], $country) !== false)  ){
                     abort(423);
                 }
             }
@@ -371,12 +372,13 @@ class ShowController extends Controller{
         // if ($this->request->domain != 'api.kholobok.biz' && $this->request->domain != 'kholobok.biz') {
             if (isset($video) && $video->lock != null && $video->lock != '') {
                 $lock = explode(',',$video->lock);
-                $ipSource = @file_get_contents('http://ipinfo.io/'.$_SERVER['HTTP_X_FORWARDED_FOR'].'?token=81e9b5a1120863');
-                if ($ipSource) {
-                    $ipData = json_decode($ipSource, true);
-
+                //$ipSource = @file_get_contents('http://ipinfo.io/'.$_SERVER['HTTP_X_FORWARDED_FOR'].'?token=81e9b5a1120863');
+                $country = $_SERVER['HTTP_CF_IPCOUNTRY'];
+                if ($country) {
+                    //$ipData = json_decode($ipSource, true);
+                    // $country = $ipData['country'];
                     foreach ($lock as $value) {
-                        if ($value == 'FULL' || ( isset($lockMass[$value]) && strpos($lockMass[$value], $ipData['country']) !== false)) {
+                        if ($value == 'FULL' || ( isset($lockMass[$value]) && strpos($lockMass[$value], $country ) !== false)) {
                             abort(423);
                         }
                     }
@@ -953,9 +955,10 @@ class ShowController extends Controller{
         // if ($this->request->domain != 'api.kholobok.biz' && $this->request->domain != 'kholobok.biz') {
             if (isset($video) && $video->lock != null && $video->lock != '') {
                 $lock = explode(',',$video->lock);
-                $ipData = json_decode(file_get_contents('http://ipinfo.io/'.$_SERVER['HTTP_X_FORWARDED_FOR'].'?token=81e9b5a1120863'), true); 
+                // $ipData = json_decode(file_get_contents('http://ipinfo.io/'.$_SERVER['HTTP_X_FORWARDED_FOR'].'?token=81e9b5a1120863'), true); 
+                $country = $_SERVER['HTTP_CF_IPCOUNTRY'];
                 foreach ($lock as $value) {
-                    if ($value == 'FULL' || ( isset($lockMass[$value]) && strpos($lockMass[$value], $ipData['country']) !== false)) {
+                    if ($value == 'FULL' || ( isset($lockMass[$value]) && strpos($lockMass[$value], $country) !== false)) {
                         abort(423);
                     }
                 }
