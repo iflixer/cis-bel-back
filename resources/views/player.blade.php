@@ -673,6 +673,33 @@
 
 		});
 
+		if (typeof gtag !== 'undefined') {
+			function PlayerjsEvents(event,id,info){
+
+				if (event == "loaderror") {
+					// console.log(event,id,info);
+					gtag('event', 'Video load error', {'event_category': 'Videos'});
+				}
+				if (event == "play") {
+					// console.log(event,id,info);
+					gtag('event', 'Video start play', {'event_category': 'Videos'});
+				}
+				if (event == "pause") {
+					// console.log(event,id,info);
+					gtag('event', 'Video paused', {'event_category': 'Videos'});
+				}
+				if (event == "quartile") {
+					// console.log(event,id,info);
+					gtag('event', info + ' of timeline completed', {'event_category': 'Videos'});
+
+				}
+				if (event == "line") {
+					// console.log(event,id,info);
+					gtag('event', 'Video rewind(fwd/rwd)', {'event_category': 'Videos'});
+				}
+			}
+		}
+
 	</script>
 
 	<!-- Yandex.Metrika counter -->
