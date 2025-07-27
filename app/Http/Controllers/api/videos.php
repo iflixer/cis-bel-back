@@ -23,14 +23,17 @@ use App\Link_country;
 use App\Link_genre;
 
 use App\Domain;
+use App\Services\KinoPoiskService;
 
 class videos extends Controller{
 
     public $request;
     protected $user;
+    protected $kinoPoiskService;
 
-    public function __construct(Request $request){
+    public function __construct(Request $request, KinoPoiskService $kinoPoiskService){
         $this->request = $request;
+        $this->kinoPoiskService = $kinoPoiskService;
         if( $request->input('account_key') != ''){
             $this->user = User::where('api_key', $request->input('account_key'))->first()->toArray();
         }else{
@@ -48,63 +51,7 @@ class videos extends Controller{
     }
 
 
-    // @1 - массив
-    // @2 - основная таблица
-    // @3 - таблица связи
-    // @4 - название колонки
-    // @5 - id элемента
-    // @6 - разделитель
-    protected function parseDopElements($elements, $tableElement, $tableLink, $nameColumn, $id){
-        // $elements = explode($bort ,$stringElements);
-        
 
-        $tableLink::where('id_video',$id)->delete();
-
-        foreach ($elements as $element) {
-            if($element != ''){
-                // Ищем запись, если нет - создаем
-                $dataTable = $tableElement::where('name', $element)->first();
-                if( !isset($dataTable->name) ){
-                    $lastIdTable = $tableElement::create([
-                        'name' => $element
-                    ])->id;
-                }else{
-                    $lastIdTable = $dataTable->id;
-                }
-                // Ищем связь, если нет - создаем
-                $dataLinkTable = $tableLink::where('id_video',$id)->where($nameColumn,$lastIdTable)->get();
-
-                if($dataLinkTable->isEmpty()){
-                    $tableLink::create(['id_video' => $id, $nameColumn => $lastIdTable]);
-                }
-            }
-        }
-    }
-
-    
-    protected function parseKinopoisk($id){
-
-        // dump($id);
-
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-        // curl_setopt($curl, CURLOPT_USERAGENT, 'DLE Module v1.1 for VideoDB https://cdnhub.pro');	
-        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-        // curl_setopt($curl, CURLOPT_USERPWD, $this->loginVDB.':'.$this->passVDB);
-        curl_setopt($curl, CURLOPT_URL, 'https://kinopoiskapiunofficial.tech/api/v2.1/films/'.$id);
-
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            // 'X-API-KEY: 102a2177-a594-48af-98a3-fa1f51b5a215'
-            'X-API-KEY: c2e7a6f2-82f1-4415-b9af-42f991a4d0d4'
-        ));
-
-        // dump(curl_exec($curl));
-
-        return json_decode(curl_exec($curl));
-    }
 
     protected function parseConverter($id)
     {
@@ -137,65 +84,11 @@ class videos extends Controller{
 
     public function addKinoPoisk(){
         $messages = [];
-        $response = [];
-
         $limit = $this->request->input('limit');
+        
+        $response = $this->kinoPoiskService->updateMultipleVideos($limit);
 
-        $video = Video::where('update_kino', null)->where('kinopoisk', '!=', null)->limit($limit)->get();
-
-        // $response = $video;
-
-        foreach ($video as $value) {
-
-            if (!$value->kinopoisk)
-                continue;
-
-            $film = '';
-            if($value->kinopoisk < 2000000) $film = $this->parseKinopoisk($value->kinopoisk);
-            
-            $response[] = [ 'id' => $value->id ];
-            
-            if( $film != '' ){
-                $kinoPoisk = $film->data;
-
-                // dump($kinoPoisk);
-
-                // Разбираем и сохраняем строку с жанрами
-                $this->parseDopElements( array_map( function($item){ return $item->genre; }, $kinoPoisk->genres), new Genre, new Link_genre, 'id_genre', $value->id);
-
-                // Разбираем и сохраняем строку с странами
-                $this->parseDopElements( array_map( function($item){ return $item->country; }, $kinoPoisk->countries), new Country, new Link_country, 'id_country', $value->id);
-
-                // Обновление данных фильма
-                Video::where('id',$value->id)->update([
-                    'year' => $kinoPoisk->year, 
-                    'description' => $kinoPoisk->description, 
-                    'img' => $kinoPoisk->posterUrl, 
-                    'update_kino' => 1,
-
-                    'film_length' => $kinoPoisk->filmLength,
-                    'slogan' => $kinoPoisk->slogan,
-                    'rating_mpaa' => $kinoPoisk->ratingMpaa,
-                    'rating_age_limits' => $kinoPoisk->ratingAgeLimits,
-                    'premiere_ru' => $kinoPoisk->premiereRu,
-                    'distributors' => $kinoPoisk->distributors,
-                    'premiere_world' => $kinoPoisk->premiereWorld,
-                    'premiere_digital' => $kinoPoisk->premiereDigital,
-                    'premiere_world_country' => $kinoPoisk->premiereWorldCountry,
-                    'premiere_dvd' => $kinoPoisk->premiereDvd,
-                    'premiere_blu_ray' => $kinoPoisk->premiereBluRay,
-                    'distributor_release' => $kinoPoisk->distributorRelease,
-
-                    'facts' => json_encode($kinoPoisk->facts),
-                    'seasons' => json_encode($kinoPoisk->seasons),
-                ]); 
-
-            }else{
-                Video::where('id',$value->id)->update([ 'update_kino' => 1 ]);
-            }
-        }
-
-        return ['data' => $response,'messages' => $messages];
+        return ['data' => $response, 'messages' => $messages];
     }
 
 
@@ -398,49 +291,7 @@ class videos extends Controller{
         ])->id;
 
         if ($data['kinopoisk']) {
-            $film = $this->parseKinopoisk($data['kinopoisk']);
-
-            if ($film != '') {
-                $kinoPoisk = $film->data;
-
-                // dump($kinoPoisk);
-
-                // Разбираем и сохраняем строку с жанрами
-                $this->parseDopElements( array_map( function($item){ return $item->genre; }, $kinoPoisk->genres), new Genre, new Link_genre, 'id_genre', $id);
-
-                // Разбираем и сохраняем строку с странами
-                $this->parseDopElements( array_map( function($item){ return $item->country; }, $kinoPoisk->countries), new Country, new Link_country, 'id_country', $id);
-
-                // Обновление данных фильма
-                Video::where('id', $id)->update([
-                    'ru_name' => $kinoPoisk->nameRu,
-                    'name' => $kinoPoisk->nameEn,
-
-                    'year' => $kinoPoisk->year, 
-                    'description' => $kinoPoisk->description, 
-                    'img' => $kinoPoisk->posterUrl, 
-                    'update_kino' => 1,
-
-                    'film_length' => $kinoPoisk->filmLength,
-                    'slogan' => $kinoPoisk->slogan,
-                    'rating_mpaa' => $kinoPoisk->ratingMpaa,
-                    'rating_age_limits' => $kinoPoisk->ratingAgeLimits,
-                    'premiere_ru' => $kinoPoisk->premiereRu,
-                    'distributors' => $kinoPoisk->distributors,
-                    'premiere_world' => $kinoPoisk->premiereWorld,
-                    'premiere_digital' => $kinoPoisk->premiereDigital,
-                    'premiere_world_country' => $kinoPoisk->premiereWorldCountry,
-                    'premiere_dvd' => $kinoPoisk->premiereDvd,
-                    'premiere_blu_ray' => $kinoPoisk->premiereBluRay,
-                    'distributor_release' => $kinoPoisk->distributorRelease,
-
-                    'facts' => json_encode($kinoPoisk->facts),
-                    'seasons' => json_encode($kinoPoisk->seasons),
-                ]);
-
-            } else {
-                Video::where('id', $id)->update(['update_kino' => 1]);
-            }
+            $this->kinoPoiskService->updateVideoWithKinoPoiskData($id, true);
         }
 
         if ($conv->status == 'success') {

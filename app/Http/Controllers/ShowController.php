@@ -8,7 +8,6 @@ use App\Http\Requests;
 
 use App\File;
 use App\Video;
-use App\Seting;
 
 use App\Translation;
 use App\Videodb;
@@ -154,10 +153,10 @@ class ShowController extends Controller{
     public function __construct(Request $request){
         $this->request = $request;
 
-        $this->keyWin = Seting::where('name', 'keyWin')->first()->toArray()['value'];
+        $this->keyWin = config('videodb.key_win');
 
-        $this->loginVDB = Seting::where('name', 'loginVDB')->first()->toArray()['value'];
-        $this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
+        $this->loginVDB = config('videodb.login');
+        $this->passVDB = config('videodb.password');
     }
 
     public function newshow(Request $request, $id){
@@ -658,7 +657,7 @@ class ShowController extends Controller{
             $folder = '';
             $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
             $date = date('YmdH', strtotime("+1 days"));
-            $susuritiKey = Seting::where('name', 'keyWin')->first()->toArray()['value'];
+            $susuritiKey = $this->keyWin;
 
             $file = parse_url($media['path']);
             $date = date('YmdH', strtotime("+1 days"));
@@ -1216,7 +1215,7 @@ class ShowController extends Controller{
             $folder = '';
             $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
             $date = date('YmdH', strtotime("+1 days"));
-            $susuritiKey = Seting::where('name', 'keyWin')->first()->toArray()['value'];
+            $susuritiKey = $this->keyWin;
 
             $file = parse_url($media['path']);
             $date = date('YmdH', strtotime("+1 days"));

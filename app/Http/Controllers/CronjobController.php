@@ -11,7 +11,6 @@ use App\User;
 use App\Video;
 use App\File;
 use App\Domain;
-use App\Seting;
 
 use App\Translation;
 use App\Videodb;
@@ -20,6 +19,8 @@ use App\Country;
 use App\Genre;
 use App\Link_country;
 use App\Link_genre;
+
+use App\Services\KinoPoiskService;
 
 use Mail;
 use DB;
@@ -34,6 +35,7 @@ class CronjobController extends Controller
 	public $request;
 	protected $loginVDB; // = 'kolobock'
 	protected $passVDB; // = '5HxL2P2Yw1yq'
+	protected $kinoPoiskService;
 
 	// protected $adress = 'https://api.kholobok.biz/show/';
 	// protected $adress = 'https://cdn0.futemaxlive.com/show/';
@@ -41,12 +43,13 @@ class CronjobController extends Controller
 
 	protected $usesApi = "App\Http\Controllers\api\\";
 
-	public function __construct(Request $request)
+	public function __construct(Request $request, KinoPoiskService $kinoPoiskService)
 	{
 		$this->request = $request;
+		$this->kinoPoiskService = $kinoPoiskService;
 
-		$this->loginVDB = Seting::where('name', 'loginVDB')->first()->toArray()['value'];
-		$this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
+		$this->loginVDB = config('videodb.login');
+		$this->passVDB = config('videodb.password');
 	}
 
 	public function videodb()
@@ -140,6 +143,10 @@ class CronjobController extends Controller
 							'description' => '',
 							'img' => ''
 						])->id;
+						
+						if ($value->content_object->kinopoisk_id) {
+							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
+						}
 					} else {
 						$lastId = $video->id;
 						Video::where('id', $video->id)->
@@ -152,6 +159,10 @@ class CronjobController extends Controller
 								'imdb' => $value->content_object->imdb_id,
 								'quality' => $value->source_quality.' '.$value->max_quality
 							]);
+							
+						if ($value->content_object->kinopoisk_id && !$video->update_kino) {
+							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
+						}
 					}
 
 					$file = File::where('id_VDB', $value->id)->where('sids', 'VDB')->first();
@@ -191,6 +202,10 @@ class CronjobController extends Controller
 							'description' => '', 
 							'img' => ''
 						])->id;
+						
+						if ($value->content_object->kinopoisk_id) {
+							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
+						}
 					} else {
 						$lastId = $video->id;
 						Video::where('id', $video->id)->
@@ -203,6 +218,10 @@ class CronjobController extends Controller
 								'imdb' => $value->content_object->imdb_id,
 								'quality' => $value->source_quality.' '.$value->max_quality
 							]);
+							
+						if ($value->content_object->kinopoisk_id && !$video->update_kino) {
+							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
+						}
 					}
 
 					$file = File::where('id_VDB', $value->id)->where('sids', 'VDB')->first();
