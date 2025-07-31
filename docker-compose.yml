@@ -12,7 +12,8 @@ services:
     networks:
       - kolobok_network
     environment:
-      - XDEBUG_CONFIG=client_host=172.29.48.1 client_port=9003 idekey=PHPSTORM
+      XDEBUG_CONFIG: "client_host=172.29.48.1 client_port=9003"
+      PHP_IDE_CONFIG: "serverName=kolobok-backend"
     depends_on:
       - mysql
 
@@ -30,6 +31,7 @@ services:
       - ./docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template
     networks:
       - kolobok_network
+      - kolobok-shared-network
     depends_on:
       - app
 
@@ -71,3 +73,5 @@ volumes:
 networks:
   kolobok_network:
     driver: bridge
+  kolobok-shared-network:
+    external: true

@@ -23,6 +23,10 @@ use App\Country;
 use App\Genre;
 use App\Link_country;
 use App\Link_genre;
+use App\Actor;
+use App\Director;
+use App\Link_actor;
+use App\Link_director;
 
 use Mail;
 use DB;
@@ -602,6 +606,27 @@ class ApiController extends Controller{
                     $videos[$key]['countries'][] = $country['name'];
             }
 
+            $actors = Link_actor::select('actors.name_ru', 'actors.name_en', 'actors.poster_url', 'link_actors.character_name')->where('id_video', $video['id'])->join('actors', 'link_actors.id_actor', '=', 'actors.id')->get()->toArray();
+            if ($actors) {
+                foreach ($actors as $actor)
+                    $videos[$key]['actors'][] = [
+                        'name_ru' => $actor['name_ru'],
+                        'name_en' => $actor['name_en'],
+                        'character_name' => $actor['character_name'],
+                        'poster_url' => $actor['poster_url']
+                    ];
+            }
+
+            $directors = Link_director::select('directors.name_ru', 'directors.name_en', 'directors.poster_url')->where('id_video', $video['id'])->join('directors', 'link_directors.id_director', '=', 'directors.id')->get()->toArray();
+            if ($directors) {
+                foreach ($directors as $director)
+                    $videos[$key]['directors'][] = [
+                        'name_ru' => $director['name_ru'],
+                        'name_en' => $director['name_en'],
+                        'poster_url' => $director['poster_url']
+                    ];
+            }
+
             if ($video['type'] == 'movie') {
                 $translations = File::select('translations.id as id', 'translations.title as title', 'translations.tag as tag')
                 ->where('id_parent', $video['id'])
@@ -885,6 +910,27 @@ class ApiController extends Controller{
                         $_data['content']['countries'][] = $country['name'];
                 }
 
+                $actors = Link_actor::select('actors.name_ru', 'actors.name_en', 'actors.poster_url', 'link_actors.character_name')->where('id_video', $video['id'])->join('actors', 'link_actors.id_actor', '=', 'actors.id')->get()->toArray();
+                if ($actors) {
+                    foreach ($actors as $actor)
+                        $_data['content']['actors'][] = [
+                            'name_ru' => $actor['name_ru'],
+                            'name_en' => $actor['name_en'],
+                            'character_name' => $actor['character_name'],
+                            'poster_url' => $actor['poster_url']
+                        ];
+                }
+
+                $directors = Link_director::select('directors.name_ru', 'directors.name_en', 'directors.poster_url')->where('id_video', $video['id'])->join('directors', 'link_directors.id_director', '=', 'directors.id')->get()->toArray();
+                if ($directors) {
+                    foreach ($directors as $director)
+                        $_data['content']['directors'][] = [
+                            'name_ru' => $director['name_ru'],
+                            'name_en' => $director['name_en'],
+                            'poster_url' => $director['poster_url']
+                        ];
+                }
+
                 if ($video['type'] == 'movie') {
                     $translations = File::select('translations.id as id', 'translations.title as title', 'translations.tag as tag')
                     ->where('id_parent', $video['id'])
@@ -1139,6 +1185,38 @@ class ApiController extends Controller{
         $idsGenresInVideos = getLincTable($idsVideo, new Link_genre, new Genre, 'id_genre');
         $idsCountrysInVideos = getLincTable($idsVideo, new Link_country, new Country, 'id_country');
 
+        $idsActorsInVideos = [];
+        $idsDirectorsInVideos = [];
+        
+        $actorLinks = Link_actor::select('id_actor', 'id_video', 'character_name')->whereIn('id_video', $idsVideo)->get()->toArray();
+        $actorIds = array_unique(array_column($actorLinks, 'id_actor'));
+        $actors = Actor::select('id', 'name_ru', 'name_en', 'poster_url')->whereIn('id', $actorIds)->get()->keyBy('id')->toArray();
+        
+        foreach ($actorLinks as $link) {
+            if (isset($actors[$link['id_actor']])) {
+                $idsActorsInVideos[$link['id_video']][] = [
+                    'name_ru' => $actors[$link['id_actor']]['name_ru'],
+                    'name_en' => $actors[$link['id_actor']]['name_en'],
+                    'character_name' => $link['character_name'],
+                    'poster_url' => $actors[$link['id_actor']]['poster_url']
+                ];
+            }
+        }
+        
+        $directorLinks = Link_director::select('id_director', 'id_video')->whereIn('id_video', $idsVideo)->get()->toArray();
+        $directorIds = array_unique(array_column($directorLinks, 'id_director'));
+        $directors = Director::select('id', 'name_ru', 'name_en', 'poster_url')->whereIn('id', $directorIds)->get()->keyBy('id')->toArray();
+        
+        foreach ($directorLinks as $link) {
+            if (isset($directors[$link['id_director']])) {
+                $idsDirectorsInVideos[$link['id_video']][] = [
+                    'name_ru' => $directors[$link['id_director']]['name_ru'],
+                    'name_en' => $directors[$link['id_director']]['name_en'],
+                    'poster_url' => $directors[$link['id_director']]['poster_url']
+                ];
+            }
+        }
+
         
 
         // Дополнения
@@ -1165,6 +1243,8 @@ class ApiController extends Controller{
 
             if(array_key_exists($element['id'], $idsGenresInVideos)){ $element['genre'] = $idsGenresInVideos[$element['id']]; } // Жанры
             if(array_key_exists($element['id'], $idsCountrysInVideos)){ $element['country'] = $idsCountrysInVideos[$element['id']]; } // Страны
+            if(array_key_exists($element['id'], $idsActorsInVideos)){ $element['actors'] = $idsActorsInVideos[$element['id']]; }
+            if(array_key_exists($element['id'], $idsDirectorsInVideos)){ $element['directors'] = $idsDirectorsInVideos[$element['id']]; }
 
             
             $data['items'][] = $element;
