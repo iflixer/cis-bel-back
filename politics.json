@@ -163,7 +163,9 @@
 
             "users":{ "update":true,"name":"Пользователи", "visible":true },
 
-            "translations":{ "update":true,"name":"Переводы", "visible":true }
+            "translations":{ "update":true,"name":"Переводы", "visible":true },
+
+            "domain-tags":{ "update":true,"name":"Теги доменов", "visible":true }
         },
         "methods":{
             "getVideo": true,
@@ -237,7 +239,12 @@
             "system.deleteMessage": true,
 
             "translations.search": true,
-            "translations.update": true
+            "translations.update": true,
+
+            "domaintags.get": true,
+            "domaintags.add": true,
+            "domaintags.update": true,
+            "domaintags.delete": true
             
         }
     }

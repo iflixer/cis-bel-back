@@ -237,7 +237,16 @@
             "system.deleteMessage": true,
 
             "translations.search": true,
-            "translations.update": true
+            "translations.update": true,
+
+            "domaintags.get": true,
+            "domaintags.add": true,
+            "domaintags.update": true,
+            "domaintags.delete": true,
+
+            "domaintags.domainsList": true,
+            "domaintags.getAll": true,
+            "domaintags.setForDomain": true
             
         }
     }
