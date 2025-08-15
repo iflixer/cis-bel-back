@@ -17,6 +17,7 @@ use App\Domain;
 use App\Ad;
 use App\Show;
 use App\Seting;
+use App\Services\LocationTracker;
 
 class shows extends Controller{
 
@@ -284,6 +285,8 @@ class shows extends Controller{
             }
             $stats = json_encode($stats);
             Domain::where('name', $domain)->update(['show' => $stats ]);
+=
+            LocationTracker::logPlayerRequestFromHeaders(null, $domain);
         }
     }
 
@@ -315,6 +318,8 @@ class shows extends Controller{
             $stats[$dateNow]['lowshow'] += 1;
             $stats = json_encode($stats);
             Domain::where('name', $domain)->update(['show' => $stats ]);
+=
+            LocationTracker::logPlayerRequestFromHeaders(null, $domain);
         }
     }
 
