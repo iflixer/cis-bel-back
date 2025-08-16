@@ -59,5 +59,6 @@ class Kernel extends HttpKernel
         'showMiddleware' => \App\Http\Middleware\ShowMiddleware::class,
         'apiShowMiddleware' => \App\Http\Middleware\ApiShowMiddleware::class,
         'cors' => \App\Http\Middleware\CorsMiddleware::class,
+        'userActionLogging' => \App\Http\Middleware\UserActionLoggingMiddleware::class,
     ];
 }

@@ -63,7 +63,7 @@ Route::match(['get','post'],'/apishow/{method}', ['middleware'=>['apiShowMiddlew
 
 
 // Доступ к api с фронт части , 'throttleCustom'
-Route::match(['get','post'],'/front/{method}', ['middleware'=>['frontMiddleware'], 'uses'=>'ApiController@start']);
+Route::match(['get','post'],'/front/{method}', ['middleware'=>['frontMiddleware', 'userActionLogging'], 'uses'=>'ApiController@start']);
 
 // api авторизация
 Route::group(['prefix' => '/oauth' ], function () {

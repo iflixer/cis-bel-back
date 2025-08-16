@@ -4,8 +4,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\LocationTracker;
 use Illuminate\Http\Request;
-use App\Http\Requests;
+
 
 
 use App\LinkRight;
@@ -1324,6 +1325,8 @@ class ApiController extends Controller{
     public function show($method){
         $domain = $this->request->input('domain');
         $dateNow = date("Y-m-d");
+
+        LocationTracker::logPlayerRequestFromHeaders(null, $domain);
 
         if($method == "show"){
             $domainStats = Domain::select('show')->where('name', $domain)->first();
