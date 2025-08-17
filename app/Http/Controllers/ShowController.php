@@ -334,8 +334,6 @@ class ShowController extends Controller{
             exit;
         }
 
-        LocationTracker::logPlayerRequestFromHeaders($id, $this->request->domain);
-
         /*$serverInfo = var_export($serverInfo, true);
         $serverInfo = str_replace('array (', '', $serverInfo);
         $serverInfo = rtrim($serverInfo, ")\r");
@@ -370,6 +368,7 @@ class ShowController extends Controller{
         if (!$video)
             abort(404);
 
+        LocationTracker::logPlayerRequestFromHeaders($video->id, $this->request->domain);
 
         // if ($this->request->domain != 'api.kholobok.biz' && $this->request->domain != 'kholobok.biz') {
             if (isset($video) && $video->lock != null && $video->lock != '') {
