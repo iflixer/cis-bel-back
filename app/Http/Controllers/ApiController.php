@@ -1326,8 +1326,6 @@ class ApiController extends Controller{
         $domain = $this->request->input('domain');
         $dateNow = date("Y-m-d");
 
-        LocationTracker::logPlayerRequestFromHeaders(null, $domain);
-
         if($method == "show"){
             $domainStats = Domain::select('show')->where('name', $domain)->first();
             $stats = [];

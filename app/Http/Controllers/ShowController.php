@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\LocationTracker;
 use Illuminate\Http\Request;
 
 use App\Http\Requests;
@@ -332,6 +333,8 @@ class ShowController extends Controller{
             http_response_code(404);
             exit;
         }
+
+        LocationTracker::logPlayerRequestFromHeaders($id, $this->request->domain);
 
         /*$serverInfo = var_export($serverInfo, true);
         $serverInfo = str_replace('array (', '', $serverInfo);
