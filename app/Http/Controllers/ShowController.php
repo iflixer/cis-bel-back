@@ -657,14 +657,15 @@ class ShowController extends Controller{
             $p1080 = false;
 
             $folder = '';
-            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+            // $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+            $ip = "";
             $date = date('YmdH', strtotime("+1 days"));
             $susuritiKey = $this->keyWin;
 
             $file = parse_url($media['path']);
             $date = date('YmdH', strtotime("+1 days"));
             $folder = $file['path'];
-
+    
             /*if ($this->request->input('debug') && $video['kinopoisk']) {
 
                 print_r($media);
@@ -694,6 +695,8 @@ class ShowController extends Controller{
                 }
 
             }*/
+
+            
 
             foreach ($resolutions as $rKey => $resolution) {
                 $hash = md5($folder.'-'.$ip.'-'.$date.'-'.$susuritiKey);
