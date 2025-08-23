@@ -13,6 +13,7 @@
 
             "search": true,
             "translations": true,
+            "genres": true,
             "updates": true,
             "kpids": true,
             
