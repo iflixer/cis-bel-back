@@ -23,7 +23,7 @@ services:
     #   - "80:80"
     #   - "443:443"
     environment:
-      - BACKEND_URL=app:9000
+      - BACKEND_ADDRESS=app:9000
     volumes:
       - .:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/templates/default.conf.template
