@@ -658,13 +658,14 @@ class ShowController extends Controller{
 
             $folder = '';
             // $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-            $ip = ""; // TODO: remove this hack when we will re-sign on cdn
+            $ip = ""; // TODO: ivanezko remove this hack when we will re-sign on cdn
             $date = date('YmdH', strtotime("+1 days"));
             $susuritiKey = $this->keyWin;
 
             $file = parse_url($media['path']);
 
-            $file = str_replace('storage.kinohd.co','cdn1.testme.wiki', $file);
+            // TODO: ivanezko refactor to store the host in DB
+            $file['host'] = "cdn1.testme.wiki";
 
             $date = date('YmdH', strtotime("+1 days"));
             $folder = $file['path'];
