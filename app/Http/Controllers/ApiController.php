@@ -776,6 +776,27 @@ class ApiController extends Controller{
         ];
     }
 
+    public function genres()
+    {
+        $data = Genre::select('id', 'name')
+            ->orderBy('id', 'asc')
+            ->get()
+            ->toArray();
+
+        $result = [];
+
+        foreach ($data as $genre) {
+            $result[] = [
+                'id' => $genre['id'],
+                'name' => $genre['name'],
+            ];
+        }
+
+        return [
+            'result' => $result
+        ];
+    }
+
     protected function updates()
     {
 
