@@ -356,6 +356,12 @@ class ShowController extends Controller{
 
         if ($type && $id) {
             $video = Video::where($type, $id)->first();
+            if (!$video) {
+                header("X-CDNHub-error: Video not found");
+                header("X-CDNHub-type: ".$type);
+                header("X-CDNHub-id: ".$id);
+                abort(404);
+            }
             $id = $video->id;
         } else {
             if (!$id) {
