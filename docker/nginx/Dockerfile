@@ -9,8 +9,8 @@ LABEL org.opencontainers.image.revision=$SOURCE_COMMIT
 LABEL org.opencontainers.image.version=$SOURCE_TAG
 
 COPY ./docker/nginx/default.prod.conf /etc/nginx/templates/default.conf.template
-COPY ./docker/nginx/html /var/www/nginx-html
 COPY . /var/www/html
+COPY ./docker/nginx/html /var/www/nginx-html
 
 RUN echo "$(date +%s)" >> /etc/container_build_timestamp
 RUN echo $SOURCE_COMMIT >> /etc/container_SOURCE_COMMIT
