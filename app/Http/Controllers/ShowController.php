@@ -296,6 +296,15 @@ class ShowController extends Controller{
         abort(404);
     }
 
+    // fallback_player used to show collapse player if we cant show ours
+    private function fallback_player($kp_id) {
+        $this->log('Fallback player triggered');
+        header("X-CDNHub-fallback: fallback");
+        return view('show.collapse', [ 
+                'kp_id' => $kp_id
+            ]);
+    }
+
     public function player($type = null, $id = 0)
     {
         // filter begin
@@ -357,10 +366,11 @@ class ShowController extends Controller{
         if ($type && $id) {
             $video = Video::where($type, $id)->first();
             if (!$video) {
-                header("X-CDNHub-error: Video not found");
-                header("X-CDNHub-type: ".$type);
-                header("X-CDNHub-id: ".$id);
-                abort(404);
+                // header("X-CDNHub-error: Video not found");
+                // header("X-CDNHub-type: ".$type);
+                // header("X-CDNHub-id: ".$id);
+                // abort(404);
+                $this->fallback_player($id);
             }
             $id = $video->id;
         } else {
@@ -371,8 +381,10 @@ class ShowController extends Controller{
             $video = Video::where('id', $id)->first();
         }
 
-        if (!$video)
-            abort(404);
+        if (!$video) {
+            // abort(404);
+            $this->fallback_player($id);
+        }
 
         LocationTracker::logPlayerRequestFromHeaders($video->id, $this->request->domain);
 
