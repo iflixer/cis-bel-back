@@ -369,7 +369,7 @@ class ShowController extends Controller{
                 // header("X-CDNHub-type: ".$type);
                 // header("X-CDNHub-id: ".$id);
                 // abort(404);
-                $this->fallback_player($id);
+                return $this->fallback_player($id);
             }
             $id = $video->id;
         } else {
@@ -382,7 +382,7 @@ class ShowController extends Controller{
 
         if (!$video) {
             // abort(404);
-            $this->fallback_player($id);
+            return $this->fallback_player($id);
         }
 
         LocationTracker::logPlayerRequestFromHeaders($video->id, $this->request->domain);
