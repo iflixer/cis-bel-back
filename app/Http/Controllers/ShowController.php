@@ -298,7 +298,6 @@ class ShowController extends Controller{
 
     // fallback_player used to show collapse player if we cant show ours
     private function fallback_player($kp_id) {
-        $this->log('Fallback player triggered');
         header("X-CDNHub-fallback: fallback");
         return view('show.collapse', [ 
                 'kp_id' => $kp_id
