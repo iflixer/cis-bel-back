@@ -365,11 +365,11 @@ class ShowController extends Controller{
         if ($type && $id) {
             $video = Video::where($type, $id)->first();
             if (!$video) {
-                // header("X-CDNHub-error: Video not found");
-                // header("X-CDNHub-type: ".$type);
-                // header("X-CDNHub-id: ".$id);
-                // abort(404);
-                return $this->fallback_player($id);
+                header("X-CDNHub-error: Video not found");
+                header("X-CDNHub-type: ".$type);
+                header("X-CDNHub-id: ".$id);
+                abort(404);
+                //return $this->fallback_player($id);
             }
             $id = $video->id;
         } else {
@@ -381,8 +381,8 @@ class ShowController extends Controller{
         }
 
         if (!$video) {
-            // abort(404);
-            return $this->fallback_player($id);
+            abort(404);
+            // return $this->fallback_player($id);
         }
 
         LocationTracker::logPlayerRequestFromHeaders($video->id, $this->request->domain);
