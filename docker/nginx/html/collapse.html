@@ -1,10 +1,28 @@
 <!doctype html>
 <html lang="ru">
-<body>
-<iframe id="player2" style="width:100%;height:auto;aspect-ratio: 16/9"
-        src="https://api.domem.ws/embed/kp/$arg_id"
-        allow="autoplay *" width="640" height="360"
-        allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen>
-</iframe>
-</body>
+  <head>
+    <meta charset="utf-8">
+    <title>Плеер</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+      html,body{margin:0;padding:0;font-family:system-ui,Arial,sans-serif;background:#0b0b0b;color:#fff}
+      .wrap{max-width:1200px;margin:0 auto;padding:16px}
+      iframe{width:100%;height:auto;aspect-ratio:16/9;border:0;background:#000}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <!-- Nginx передаст аргумент ?path=/embed/xxx/ID -->
+      <iframe
+        id="player2"
+        src="https://api.domem.ws$arg_path"
+        allow="autoplay *; fullscreen"
+        allowfullscreen
+        webkitallowfullscreen
+        mozallowfullscreen
+        oallowfullscreen
+        msallowfullscreen>
+      </iframe>
+    </div>
+  </body>
 </html>
