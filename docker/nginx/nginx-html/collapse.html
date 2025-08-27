@@ -12,10 +12,9 @@
   </head>
   <body>
     <div class="wrap">
-      <!-- Nginx передаст аргумент ?path=/embed/xxx/ID -->
       <iframe
         id="player2"
-        src="https://api.domem.ws$arg_path"
+        src="https://api.domem.ws<!--# echo var=\"arg_path\" default=\"/embed/kp/0\" -->"
         allow="autoplay *; fullscreen"
         allowfullscreen
         webkitallowfullscreen
