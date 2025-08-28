@@ -985,6 +985,9 @@ class ShowController extends Controller{
                 ['video_id' => $video_id],    // что ищем
                 ['cdn_id'   => $cdn->id]      // что обновляем
             );
+            CdnVideo::where('video_id', $video_id)->update([
+                'counter' => DB::raw('counter+1')
+            ]); 
             Cdn::where('id', $cdn->id)->update([
                 'counter' => DB::raw('counter+1'),
                 'weight_counter' => DB::raw('weight_counter+1')
