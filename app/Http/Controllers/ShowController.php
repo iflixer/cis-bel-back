@@ -15,6 +15,10 @@ use App\Videodb;
 use App\Ad;
 
 use App\Domain;
+use App\Cdn;
+use App\CdnVideo;
+
+use Illuminate\Support\Facades\DB;
 
 use App\Show;
 
@@ -682,7 +686,10 @@ class ShowController extends Controller{
             $file = parse_url($media['path']);
 
             // TODO: ivanezko refactor to store the host in DB
-            $file['host'] = "cdn1.testme.wiki";
+            $file['host'] = $this->cdn_host_by_video_id($video['id']);
+            if (!$file['host']) {
+                $file['host'] = "cdn0.testme.wiki"; // fallback если не удалось найти хост
+            }
 
             $date = date('YmdH', strtotime("+1 days"));
             $folder = $file['path'];
@@ -949,6 +956,55 @@ class ShowController extends Controller{
         // }
 
         return view('player', $data);
+    }
+
+    // cdn_host_by_video_id - возвращает хост CDN для видео
+    private function cdn_host_by_video_id($video_id): ?string {
+        // есть связка видеоид-сдн?
+        $cdnVideo = CdnVideo::select('cdn_id')->where('video_id', $video_id)->first();
+        if ($cdnVideo) {
+            // есть. проверяем живой ли сдн
+            $cdn = Cdn::where('id', $cdnVideo->cdn_id)->where('active', 1)->first();
+            if ($cdn) {
+                // обновляем счетчик распределенных на этот сдн видосов
+                Cdn::where('id', $cdn->id)->update([
+                    'counter' => $cdn->counter + 1,
+                    'weight_counter' => $cdn->weight_counter + 1
+                ]);
+                $this->reduce_cdn_weight();
+                return $cdn->host;
+            }
+            // нет назначенного ранее сдн. выбираем новый
+            $cdn = Cdn::where('active', 1)->orderBy('weight_counter', 'asc')->first();
+            if ($cdn) {
+                CdnVideo::create([
+                    'video_id' => $video_id,
+                    'cdn_id' => $cdn->id
+                ]);
+                Cdn::where('id', $cdn->id)->update([
+                    'counter' => $cdn->counter + 1,
+                    'weight_counter' => $cdn->weight_counter + 1
+                ]);
+                $this->reduce_cdn_weight();
+                return $cdn->host;
+            }
+            // не удалось выбрать новый
+            // TODO: логирование ошибки
+            return null;
+
+        }
+
+        return null;
+    }
+
+    // reduce_cdn_weight обновляет взвешенный счетчик примерно каждый 100 вызов
+    private function reduce_cdn_weight() {
+        if (rand() % 100 == 0) {
+            Cdn::where('weight_counter', '>', 0)
+                ->update([
+                    'weight_counter' => DB::raw('CEIL(weight_counter - weight_counter/10)')
+                ]);
+        }
     }
 
     public function player2($type = null, $id = 0)

@@ -17,8 +17,7 @@ class ShowMiddleware{
      */
     public function handle($request, Closure $next){
 
-        
-        if( isset($_SERVER['HTTP_REFERER']) ){
+        if(isset($_SERVER['HTTP_REFERER']) || isset($_GET['domain']) ){
 
             /*if ($_SERVER['HTTP_REFERER'] && (parse_url($_SERVER['HTTP_REFERER'])['host'] == 'api.kholobok.biz' || parse_url($_SERVER['HTTP_REFERER'])['host'] == 'kholobok.biz')) {
                 $request->domain = parse_url($_SERVER['HTTP_REFERER'])['host'];
@@ -27,10 +26,16 @@ class ShowMiddleware{
 
             // $domain = Domain::where('name', parse_url($_SERVER['HTTP_REFERER'])['host'])->first();
 
-            $_domain = parse_url($_SERVER['HTTP_REFERER'])['host'];
-
+            if(isset($_SERVER['HTTP_REFERER'])) {
+                $_domain = parse_url($_SERVER['HTTP_REFERER'])['host'];
+            }
             if (isset($_GET['domain']) && $_GET['domain'] && preg_match("#^[a-z0-9-_.]+$#i", $_GET['domain'])) {
                 $_domain = $_GET['domain'];
+            }
+
+            if (!$_domain) {
+                header('X-back-reason: ShowMiddleware domain not set');
+                abort(404); 
             }
 
             $domain = Domain::where('name', $_domain)->first();
@@ -64,6 +69,7 @@ class ShowMiddleware{
             
 
         }
+        header('X-back-reason: ShowMiddleware end');
         abort(404);
 
         // return $next($request);
