@@ -962,6 +962,7 @@ class ShowController extends Controller{
     private function cdn_host_by_video_id($video_id): ?string {
         // есть связка видеоид-сдн?
         $cdnVideo = CdnVideo::select('cdn_id')->where('video_id', $video_id)->first();
+
         if ($cdnVideo) {
             // есть. проверяем живой ли сдн
             $cdn = Cdn::where('id', $cdnVideo->cdn_id)->where('active', 1)->first();
@@ -974,25 +975,24 @@ class ShowController extends Controller{
                 $this->reduce_cdn_weight();
                 return $cdn->host;
             }
-            // нет назначенного ранее сдн. выбираем новый
-            $cdn = Cdn::where('active', 1)->orderBy('weight_counter', 'asc')->first();
-            if ($cdn) {
-                CdnVideo::create([
-                    'video_id' => $video_id,
-                    'cdn_id' => $cdn->id
-                ]);
-                Cdn::where('id', $cdn->id)->update([
-                    'counter' => $cdn->counter + 1,
-                    'weight_counter' => $cdn->weight_counter + 1
-                ]);
-                $this->reduce_cdn_weight();
-                return $cdn->host;
-            }
-            // не удалось выбрать новый
-            // TODO: логирование ошибки
-            return null;
-
         }
+
+        // нет назначенного ранее сдн. выбираем новый
+        $cdn = Cdn::where('active', 1)->orderBy('weight_counter', 'asc')->first();
+        if ($cdn) {
+            CdnVideo::create([
+                'video_id' => $video_id,
+                'cdn_id' => $cdn->id
+            ]);
+            Cdn::where('id', $cdn->id)->update([
+                'counter' => $cdn->counter + 1,
+                'weight_counter' => $cdn->weight_counter + 1
+            ]);
+            $this->reduce_cdn_weight();
+            return $cdn->host;
+        }
+        // не удалось выбрать новый
+        // TODO: логирование ошибки
 
         return null;
     }
