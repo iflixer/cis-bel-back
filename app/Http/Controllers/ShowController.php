@@ -968,13 +968,12 @@ class ShowController extends Controller{
             $cdn = Cdn::where('id', $cdnVideo->cdn_id)->where('active', 1)->first();
             if ($cdn) {
                 // обновляем счетчик распределенных на этот сдн видосов
-                // Cdn::where('id', $cdn->id)->update([
-                //     'counter' => $cdn->counter + 1,
-                //     'weight_counter' => $cdn->weight_counter + 1
-                // ]);
                 Cdn::where('id', $cdn->id)->update([
                     'counter' => DB::raw('counter+1'),
                     'weight_counter' => DB::raw('weight_counter+1')
+                ]);
+                CdnVideo::where('video_id', $video_id)->update([
+                    'counter' => DB::raw('counter+1')
                 ]);
                 return $cdn->host;
             }
