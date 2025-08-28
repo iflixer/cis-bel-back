@@ -962,22 +962,24 @@ class ShowController extends Controller{
     private function cdn_host_by_video_id($video_id): ?string {
         // есть связка видеоид-сдн?
         $cdnVideo = CdnVideo::select('cdn_id')->where('video_id', $video_id)->first();
-
+        $this->reduce_all_cdns_weight();
         if ($cdnVideo) {
             // есть. проверяем живой ли сдн
             $cdn = Cdn::where('id', $cdnVideo->cdn_id)->where('active', 1)->first();
             if ($cdn) {
                 // обновляем счетчик распределенных на этот сдн видосов
+                // Cdn::where('id', $cdn->id)->update([
+                //     'counter' => $cdn->counter + 1,
+                //     'weight_counter' => $cdn->weight_counter + 1
+                // ]);
                 Cdn::where('id', $cdn->id)->update([
-                    'counter' => $cdn->counter + 1,
-                    'weight_counter' => $cdn->weight_counter + 1
+                    'counter' => DB::raw('counter+1'),
+                    'weight_counter' => DB::raw('weight_counter+1')
                 ]);
-                $this->reduce_all_cdns_weight();
                 return $cdn->host;
             }
         }
-
-        // нет назначенного ранее сдн. выбираем новый
+        // нет назначенного ранее сдн либо он отключен. выбираем новый
         $cdn = Cdn::where('active', 1)->orderBy('weight_counter', 'asc')->first();
         if ($cdn) {
             CdnVideo::updateOrCreate(
@@ -985,15 +987,13 @@ class ShowController extends Controller{
                 ['cdn_id'   => $cdn->id]      // что обновляем
             );
             Cdn::where('id', $cdn->id)->update([
-                'counter' => $cdn->counter + 1,
-                'weight_counter' => $cdn->weight_counter + 1
+                'counter' => DB::raw('counter+1'),
+                'weight_counter' => DB::raw('weight_counter+1')
             ]);
-            $this->reduce_all_cdns_weight();
             return $cdn->host;
         }
         // не удалось выбрать новый
         // TODO: логирование ошибки
-
         return null;
     }
 
