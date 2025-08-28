@@ -972,7 +972,7 @@ class ShowController extends Controller{
                     'counter' => $cdn->counter + 1,
                     'weight_counter' => $cdn->weight_counter + 1
                 ]);
-                $this->reduce_cdn_weight();
+                $this->reduce_all_cdns_weight();
                 return $cdn->host;
             }
         }
@@ -980,15 +980,15 @@ class ShowController extends Controller{
         // нет назначенного ранее сдн. выбираем новый
         $cdn = Cdn::where('active', 1)->orderBy('weight_counter', 'asc')->first();
         if ($cdn) {
-            CdnVideo::create([
-                'video_id' => $video_id,
-                'cdn_id' => $cdn->id
-            ]);
+            CdnVideo::updateOrCreate(
+                ['video_id' => $video_id],    // что ищем
+                ['cdn_id'   => $cdn->id]      // что обновляем
+            );
             Cdn::where('id', $cdn->id)->update([
                 'counter' => $cdn->counter + 1,
                 'weight_counter' => $cdn->weight_counter + 1
             ]);
-            $this->reduce_cdn_weight();
+            $this->reduce_all_cdns_weight();
             return $cdn->host;
         }
         // не удалось выбрать новый
@@ -998,7 +998,7 @@ class ShowController extends Controller{
     }
 
     // reduce_cdn_weight обновляет взвешенный счетчик примерно каждый 100 вызов
-    private function reduce_cdn_weight() {
+    private function reduce_all_cdns_weight() {
         if (rand() % 100 == 0) {
             Cdn::where('weight_counter', '>', 0)
                 ->update([
