@@ -62,8 +62,10 @@
 	<script>
 
 		<?php if (strpos($_SERVER['REQUEST_URI'], '/show2/') === false) { ?>
-		var referrer = document.referrer;
-		window.parent.postMessage('khL', referrer);
+			var referrer = document.referrer;
+			if (referrer && window.self !== window.top) {
+				window.parent.postMessage('khL', referrer);
+			}	
 		<?php } ?>
 
 		var tgc = '{{ $tgc }}';

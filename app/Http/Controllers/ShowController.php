@@ -918,12 +918,12 @@ class ShowController extends Controller{
 
             $dateNow = date("Y-m-d");
 
-            $domainStats = Domain::select('show')->where('name', $this->request->domain)->first();
+            $domain = Domain::where('name', $this->request->domain)->first();
 
-            if ($domainStats) {
+            if ($domain) {
                 $stats = [];
-                if ($domainStats->show != '') {
-                    $stats = json_decode($domainStats->show, true);
+                if ($domain->show != '') {
+                    $stats = json_decode($domain->show, true);
                 }
                 if (isset($stats[$dateNow])) {
                     if (isset($stats[$dateNow]['start']))
@@ -951,15 +951,21 @@ class ShowController extends Controller{
                     Cookie::queue(Cookie::make('startuniq'.date('Ymd'), '1', 1440, '/', null, true, false, false, 'none'));
                 }
                 $stats = json_encode($stats);
-                Domain::where('name', $this->request->domain)->update(['show' => $stats ]);
+                Domain::where('id', $domain->id)->update(['show' => $stats ]);
             }
 
         // }
 
-        $player_view = Seting::where('name', 'player_view')->first()->toArray()['value'];
-        if (!$player_view) {
-            $player_view = 'player';
+        $player_view = 'player';
+        if ($domain->player_view) {
+            $player_view = $domain->player_view;
+        } else {
+            $player_view_global = Seting::where('name', 'player_view')->first()->toArray()['value'];
+            if ($player_view_global) {
+                $player_view = $player_view_global;
+            }
         }
+        
 
         return view($player_view, $data);
     }
