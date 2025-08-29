@@ -31,7 +31,6 @@ services:
       - ./docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template
     networks:
       - kolobok_network
-      - kolobok-shared-network
     depends_on:
       - app
 
@@ -73,5 +72,3 @@ volumes:
 networks:
   kolobok_network:
     driver: bridge
-  kolobok-shared-network:
-    external: true
