@@ -672,19 +672,17 @@
 
 		});
 
-		function PlayerjsEvents(event,id,info){
-			if(event=="vast_Impression"){
-				// VAST AD VIDEO start
-				console.log(info);
-			}
-			if(event=="vast_finish"){
-				// VAST AD VIDEO finished
-				console.log(info);
-			}
-		}
-
 		
 			function PlayerjsEvents(event,id,info){
+
+				if(event=="vast_Impression"){
+					// VAST AD VIDEO start
+					console.log(info);
+				}
+				if(event=="vast_finish"){
+					// VAST AD VIDEO finished
+					console.log(info);
+			}
             if (typeof gtag !== 'undefined') {
 				if (event == "loaderror") {
 					// console.log(event,id,info);
