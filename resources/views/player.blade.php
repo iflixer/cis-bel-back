@@ -732,6 +732,6 @@
 	</script>
 	<noscript><div><img src="https://mc.yandex.ru/watch/70538995" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 	<!-- /Yandex.Metrika counter -->
-
+	<script src="/player/js/cdnhubevents.js"></script>	
 </body>
 </html>
