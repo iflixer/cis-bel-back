@@ -99,6 +99,11 @@ class ShowController extends Controller{
 
         $data['id'] = $video['id'];
 
+        // force use cdn
+        $force_cdn = null;
+        if ($this->request->input('cdn') && intval($this->request->input('cdn')))
+            $force_cdn = intval($this->request->input('cdn'));
+
         // video type
         if ($video['tupe'] == 'movie')
             $data['type'] = 'movie';
@@ -106,45 +111,40 @@ class ShowController extends Controller{
             $data['type'] = 'serial';
 
         // input autoplay
+        $autoplay = false;
         if ($this->request->input('autoplay') && intval($this->request->input('autoplay')))
             $autoplay = true;
-        else
-            $autoplay = false;
+            
+        $data['autoplay'] = 0;
         if ($autoplay)
             $data['autoplay'] = 1;
-        else
-            $data['autoplay'] = 0;
 
         // input start
+        $start = 0;
         if ($this->request->input('start') && intval($this->request->input('start')))
             $start = intval($this->request->input('start'));
-        else
-            $start = 0;
 
         $data['start'] = $start;
 
         // input translate
+        $translate = null;
         if ($this->request->input('translation') && intval($this->request->input('translation')))
             $translate = intval($this->request->input('translation'));
-        else
-            $translate = null;
 
         // input season
+        $season = null;
         if ($this->request->input('season') && intval($this->request->input('season')))
             $season = intval($this->request->input('season'));
-        else
-            $season = null;
 
         // input episode
+        $episode = null;
         if ($this->request->input('episode') && intval($this->request->input('episode')))
             $episode = intval($this->request->input('episode'));
-        else
-            $episode = null;
 
 
         $data = $this->inject_media($data,  $translate, $season, $episode);
         $data = $this->inject_translations($data);
-        $data = $this->inject_files($data);
+        $data = $this->inject_files($data, $force_cdn);
         $data = $this->inject_ads($data);
 
         $domain = Domain::where('name', $this->request->domain)->first();
@@ -356,7 +356,7 @@ class ShowController extends Controller{
         return $data;
     }
 
-    private function inject_files(array $data): array {
+    private function inject_files(array $data, ?int $force_cdn): array {
         $result = [];
         $video = $data['video'];
         $media = $data['media'];
@@ -379,7 +379,7 @@ class ShowController extends Controller{
             $file = parse_url($media['path']);
 
             // TODO: ivanezko refactor to store the host in DB
-            $file['host'] = $this->cdn_host_by_video_id($video['id']);
+            $file['host'] = $this->cdn_host_by_video_id($video['id'], $force_cdn);
             if (!$file['host']) {
                 $file['host'] = "cdn0.testme.wiki"; // fallback если не удалось найти хост
             }
@@ -532,7 +532,11 @@ class ShowController extends Controller{
     }
 
     // cdn_host_by_video_id - возвращает хост CDN для видео
-    private function cdn_host_by_video_id($video_id): ?string {
+    private function cdn_host_by_video_id(int $video_id, int $force_cdn = null): ?string {
+        if ($force_cdn) {
+            return "cdn{$force_cdn}.testme.wiki";
+        }
+
         // есть связка видеоид-сдн?
         $cdnVideo = CdnVideo::select('cdn_id')->where('video_id', $video_id)->first();
         $this->reduce_all_cdns_weight();
