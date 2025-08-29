@@ -10,6 +10,7 @@ use App\Http\Requests;
 use App\File;
 use App\Video;
 
+use App\Seting;
 use App\Translation;
 use App\Videodb;
 use App\Ad;
@@ -955,7 +956,12 @@ class ShowController extends Controller{
 
         // }
 
-        return view('player', $data);
+        $player_view = Seting::where('name', 'player_view')->first()->toArray()['value'];
+        if (!$player_view) {
+            $player_view = 'player';
+        }
+
+        return view($player_view, $data);
     }
 
     // cdn_host_by_video_id - возвращает хост CDN для видео
