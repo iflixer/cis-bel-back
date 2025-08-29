@@ -29,132 +29,7 @@ class ShowController extends Controller{
 
     protected $loginVDB;
     protected $passVDB;
-    
 
-    // public function show(Request $request, $id){
-
-
-    //     $lockMass = [
-    //         'RU' => 'RU',
-    //         'UA' => 'UA',
-    //         'SNG' => 'AZ,AM,BY,KZ,KG,MD,TJ,UZ,TM'
-    //     ];
-
-    //     $video = Video::where('id', $id)->first();
-
-    //     if(isset($video) && $video->lock != null && $video->lock != ''){
-    //         $lock = explode(',',$video->lock);
-    //         $ipData = json_decode(file_get_contents('http://ipinfo.io/'.$_SERVER['HTTP_X_FORWARDED_FOR'].'?token=81e9b5a1120863'), true); 
-    //         foreach ($lock as $value) {
-    //             if($value == 'FULL' ||   ( isset($lockMass[$value]) && strpos($lockMass[$value], $ipData['country']) !== false)  ){
-    //                 abort(423);
-    //             }
-    //         }
-    //     }
-
-        
-
-
-
-
-    //     if( isset($video) ){
-
-    //         $name = $video->ru_name;
-    //         $url = '';
-    //         $filess = [];
-    //         $sesons = [];
-    //         $translations = [];
-
-    //         $folder = '';
-    //         $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-    //         $date = date('YmdH', strtotime("+1 days"));
-    //         $susuritiKey = 'mB19SrYdROqY';
-
-            
-    //         $path = '';
-    //         $playList = [];
-
-
-    //         if($video->tupe == 'movie'){
-
-    //             // dump( File::where('id_parent', $id)->get() );
-
-    //             $files = File::where('id_parent', $id)->first();
-    //             $file = parse_url($files->path);
-
-    //             $folder = $file['path'];
-    //             $url =  $file['scheme'] .'://'. $file['host'] . $folder. md5($folder.'-'.$ip.'-'.$date.'-'.$susuritiKey).':'.$date.'/720.mp4';
-    //             $path = $file['scheme'] . '://' . $file['host'] . $folder . md5($folder.'-'.$ip.'-'.$date.'-'.$susuritiKey).':'.$date.'/';
-
-
-    //             $playList = $file['scheme'] .'://'. $file['host'] . $folder . md5($folder.'-'.$ip.'-'.$date.'-'.$susuritiKey).':'.$date.'/hls.m3u8';
-
-    //         }else{
-
-    //             $files = File::where('id_parent', $id)->get();
-
-    //             foreach ($files as $value) {
-    //                 $translations[] = $value->translation;
-    //                 $translations = array_unique($translations);
-    //                 sort($translations);
-    //             }
-    //             $playList = array_map(function($var){ return ["title" => $var, "folder" => []]; } ,$translations);
-
-    //             foreach ($files as $value) {
-    //                 foreach ($playList as $key => $valueFolder){
-    //                     $playList[$key]['folder'][] = $value->season;
-
-    //                     $playList[$key]['folder'] = array_unique($playList[$key]['folder']);
-    //                     sort($playList[$key]['folder']);
-    //                 }
-    //             }
-
-    //             $playList = array_map(function($var){ 
-    //                 return ["title" => $var['title'], "folder" => array_map(function($var2){ 
-    //                     return ["title" => $var2, "folder" => []]; 
-    //                 }, $var['folder']) ]; 
-    //             } ,$playList);
-
-    //             foreach ($files as $value) {
-    //                 foreach ($playList as $key => $translation){
-    //                     if($translation['title'] == $value->translation){
-    //                         foreach($playList[$key]['folder'] as $keyj => $season){
-    //                             if($season['title'] == $value->season){
-    //                                 $file = parse_url($value->path);
-    //                                 $date = date('YmdH', strtotime("+1 days"));
-    //                                 $folder = $file['path'];
-
-    //                                 $playList[$key]['folder'][$keyj]['folder'][] = [ 
-    //                                     "title" => $value->ru_name, 
-    //                                     "file" =>   $file['scheme'] .'://'. $file['host'] . $folder . md5($folder.'-'.$ip.'-'.$date.'-'.$susuritiKey).':'.$date.'/hls.m3u8'
-    //                                 ];
-    //                                 break;
-    //                             }
-    //                         }
-    //                         break;
-    //                     }
-    //                 }
-    //             }
-        
-    //         }
-
-
-
-            
-
-    //         // $recvaer = $file['scheme'] . '://' . $file['host'] . $folder . md5($folder.'-'.$ip.'-'.$date.'-'.$key).':'.$date.'/720.mp4';
-
-
-    //         return view('show', [ 
-    //             'dataPlayer' => $request->player,
-    //             'domain' => $request->domain,
-    //             'playList' => json_encode($playList)
-    //         ]);
-    //     }
-
-
-    //     abort(404);
-    // }
 
     public function __construct(Request $request){
         $this->request = $request;
@@ -168,24 +43,7 @@ class ShowController extends Controller{
 
     public function player($type = null, $id = 0)
     {
-
-        if (
-            $this->request->domain == 'apiget.ru'
-            || ($this->request->domain == 'kholobok.biz' && $_SERVER['HTTP_USER_AGENT'] == 'okhttp/4.9.0')
-        ) {
-            http_response_code(404);
-            exit;
-        }
-
-        $lockMass = [
-            'RU' => 'RU',
-            'UA' => 'UA',
-            'SNG' => 'AZ,AM,BY,KZ,KG,MD,TJ,UZ,TM'
-        ];
-
         $data = [];
-
-        // video
 
         if ($type && $id) {
             $video = Video::where($type, $id)->first();
@@ -200,7 +58,6 @@ class ShowController extends Controller{
             if (!$id) {
                 $id = $type;
             }
-
             $video = Video::where('id', $id)->first();
         }
 
@@ -208,21 +65,21 @@ class ShowController extends Controller{
             abort(404);
         }
 
-
-        LocationTracker::logPlayerRequestFromHeaders($video->id, $this->request->domain);
-
-        if (isset($video) && $video->lock != null && $video->lock != '') {
-            $lock = explode(',',$video->lock);
+        if ($video->lock) {
+            if ($video->lock == 'FULL') {
+                abort(423);
+            }
+            $lock = $video->lock;
+            $lock = str_replace('SNG', 'AZ,AM,BY,KZ,KG,MD,TJ,UZ,TM', $lock);
+            $lock = array_unique(
+                array_filter(
+                    array_map('trim', explode(',', $lock))
+                )
+            );
             //$ipSource = @file_get_contents('http://ipinfo.io/'.$_SERVER['HTTP_X_FORWARDED_FOR'].'?token=81e9b5a1120863');
-            $country = $_SERVER['HTTP_CF_IPCOUNTRY'];
-            if ($country) {
-                //$ipData = json_decode($ipSource, true);
-                // $country = $ipData['country'];
-                foreach ($lock as $value) {
-                    if ($value == 'FULL' || ( isset($lockMass[$value]) && strpos($lockMass[$value], $country ) !== false)) {
-                        abort(423);
-                    }
-                }
+            $user_country = $_SERVER['HTTP_CF_IPCOUNTRY'];
+            if ($user_country && in_array($user_country, $lock)) {
+                abort(423);
             }
         }
 
@@ -230,50 +87,35 @@ class ShowController extends Controller{
 
         $data['video'] = $video;
 
-
-        // check domain in parameters
-
-        /*if (isset($_GET['domain']) && $_GET['domain'] && preg_match("#^[a-z0-9-_.]+$#i", $_GET['domain'])) {
-            $this->request->domain = $_GET['domain'];
-        }*/
-
         // tgc
-
         if ($this->request->input('tgc'))
             $tgc = $this->request->input('tgc');
         else
             $tgc = null;
-
         if ($tgc)
             $this->request->domain = "@{$tgc}";
 
         $data['tgc'] = $tgc;
 
-        // video id
-
         $data['id'] = $video['id'];
 
         // video type
-
         if ($video['tupe'] == 'movie')
             $data['type'] = 'movie';
         elseif ($video['tupe'] == 'episode')
             $data['type'] = 'serial';
 
         // input autoplay
-
         if ($this->request->input('autoplay') && intval($this->request->input('autoplay')))
             $autoplay = true;
         else
             $autoplay = false;
-
         if ($autoplay)
             $data['autoplay'] = 1;
         else
             $data['autoplay'] = 0;
 
         // input start
-
         if ($this->request->input('start') && intval($this->request->input('start')))
             $start = intval($this->request->input('start'));
         else
@@ -282,40 +124,37 @@ class ShowController extends Controller{
         $data['start'] = $start;
 
         // input translate
-
         if ($this->request->input('translation') && intval($this->request->input('translation')))
             $translate = intval($this->request->input('translation'));
         else
             $translate = null;
 
         // input season
-
         if ($this->request->input('season') && intval($this->request->input('season')))
             $season = intval($this->request->input('season'));
         else
             $season = null;
 
         // input episode
-
         if ($this->request->input('episode') && intval($this->request->input('episode')))
             $episode = intval($this->request->input('episode'));
         else
             $episode = null;
 
-        // movie
+
         $data = $this->inject_media($data,  $translate, $season, $episode);
-
         $data = $this->inject_translations($data);
-
         $data = $this->inject_files($data);
-
         $data = $this->inject_ads($data);
-
 
         $domain = Domain::where('name', $this->request->domain)->first();
 
+        // update stat for domain
         $this->do_stat($domain);
 
+        LocationTracker::logPlayerRequestFromHeaders($video->id, $this->request->domain);
+
+        // get view for player
         $player_view = 'player';
         if ($domain->player_view) {
             $player_view = $domain->player_view;
