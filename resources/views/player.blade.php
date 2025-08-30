@@ -5,7 +5,7 @@
 	<meta name="robots" content="noindex">
 	<meta name="referrer" content="always">
 	<meta name="viewport" content="user-scalable=0, initial-scale=1.0, maximum-scale=1.0, width=device-width">
-	<title>player 1.0</title>
+	<title>player {{ $version }}</title>
 	<link rel="stylesheet" href="/player/css/player.css">
 	<script src="/player/js/jquery.min.js"></script>
 	<script src="/player/js/jquery.nice-select.min.js"></script>
@@ -22,6 +22,13 @@
 	</script>
 </head>
 <body>
+
+	@php
+		if (isset($_GET['debug_data']) && $_GET['debug_data'] == '1') {
+			echo '<style>body { background: #000; color: #fff; overflow:auto}</style>';
+			dd($__data);
+		}
+	@endphp
 
 	<div id="selectors" class="video_selectors" style="display: block;">
 	
@@ -737,6 +744,5 @@
 	</script>
 	<noscript><div><img src="https://mc.yandex.ru/watch/70538995" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 	<!-- /Yandex.Metrika counter -->
-	<script src="/player/js/cdnhubevents.js"></script>	
 </body>
 </html>

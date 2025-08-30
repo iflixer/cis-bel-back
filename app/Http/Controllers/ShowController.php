@@ -45,6 +45,8 @@ class ShowController extends Controller{
     {
         $data = [];
 
+        $data['version'] = '1.0.2';
+
         if ($type && $id) {
             $video = Video::where($type, $id)->first();
             if (!$video) {
@@ -100,15 +102,15 @@ class ShowController extends Controller{
         $data['id'] = $video['id'];
 
         // force use cdn
-        $force_cdn = null;
+        $data['force_cdn'] = null;
         if ($this->request->input('cdn') && intval($this->request->input('cdn')))
-            $force_cdn = intval($this->request->input('cdn'));
+            $data['force_cdn'] = intval($this->request->input('cdn'));
 
-        if (isset($_GET['debug']) && $_GET['debug']) {
-            var_dump($force_cdn);
-            var_dump($this->request->all());
-            die();
-        }
+        // if (isset($_GET['debug']) && $_GET['debug']) {
+        //     var_dump($data['force_cdn']);
+        //     var_dump($this->request->all());
+        //     die();
+        // }
 
         // video type
         if ($video['tupe'] == 'movie')
@@ -150,7 +152,7 @@ class ShowController extends Controller{
 
         $data = $this->inject_media($data,  $translate, $season, $episode);
         $data = $this->inject_translations($data);
-        $data = $this->inject_files($data, $force_cdn);
+        $data = $this->inject_files($data);
         $data = $this->inject_ads($data);
 
         $domain = Domain::where('name', $this->request->domain)->first();
@@ -362,10 +364,11 @@ class ShowController extends Controller{
         return $data;
     }
 
-    private function inject_files(array $data, ?int $force_cdn): array {
+    private function inject_files(array $data): array {
         $result = [];
         $video = $data['video'];
         $media = $data['media'];
+        $force_cdn = $data['force_cdn'];
         $resolutions = explode(',', $media['resolutions']);
         sort($resolutions);
 
