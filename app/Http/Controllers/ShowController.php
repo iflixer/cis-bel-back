@@ -104,6 +104,12 @@ class ShowController extends Controller{
         if ($this->request->input('cdn') && intval($this->request->input('cdn')))
             $force_cdn = intval($this->request->input('cdn'));
 
+        if (isset($_GET['debug']) && $_GET['debug']) {
+            var_dump($force_cdn);
+            var_dump($this->request->all());
+            die();
+        }
+
         // video type
         if ($video['tupe'] == 'movie')
             $data['type'] = 'movie';
