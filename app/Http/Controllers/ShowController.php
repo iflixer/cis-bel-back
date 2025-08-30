@@ -387,7 +387,6 @@ class ShowController extends Controller{
 
             $file = parse_url($media['path']);
 
-            // TODO: ivanezko refactor to store the host in DB
             $file['host'] = $this->cdn_host_by_video_id($video['id'], $force_cdn);
             if (!$file['host']) {
                 $file['host'] = "cdn0.testme.wiki"; // fallback если не удалось найти хост
@@ -594,7 +593,7 @@ class ShowController extends Controller{
         if (rand() % 100 == 0) {
             Cdn::where('weight_counter', '>', 0)
                 ->update([
-                    'weight_counter' => DB::raw('CEIL(weight_counter - weight_counter/10)')
+                    'weight_counter' => DB::raw('CEIL(weight_counter - weight_counter/5)')
                 ]);
         }
     }
