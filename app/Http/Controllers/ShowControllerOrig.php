@@ -25,7 +25,7 @@ use App\Show;
 
 use Cookie;
 
-class ShowController extends Controller{
+class ShowControllerOrig extends Controller{
 
     protected $loginVDB;
     protected $passVDB;
