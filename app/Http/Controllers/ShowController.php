@@ -534,6 +534,7 @@ class ShowController extends Controller{
     // cdn_host_by_video_id - возвращает хост CDN для видео
     private function cdn_host_by_video_id(int $video_id, int $force_cdn = null): ?string {
         if ($force_cdn) {
+            header("X-Player-cdn-method: force");
             return "cdn{$force_cdn}.testme.wiki";
         }
 
@@ -552,6 +553,7 @@ class ShowController extends Controller{
                 CdnVideo::where('video_id', $video_id)->update([
                     'counter' => DB::raw('counter+1')
                 ]);
+                header("X-Player-cdn-method: stale");
                 return $cdn->host;
             }
         }
@@ -569,10 +571,12 @@ class ShowController extends Controller{
                 'counter' => DB::raw('counter+1'),
                 'weight_counter' => DB::raw('weight_counter+1')
             ]);
+            header("X-Player-cdn-method: new");
             return $cdn->host;
         }
         // не удалось выбрать новый
         // TODO: логирование ошибки
+        header("X-Player-cdn-method: error");
         return null;
     }
 
