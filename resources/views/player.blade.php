@@ -5,7 +5,7 @@
 	<meta name="robots" content="noindex">
 	<meta name="referrer" content="always">
 	<meta name="viewport" content="user-scalable=0, initial-scale=1.0, maximum-scale=1.0, width=device-width">
-	<title>player {{ $version }}</title>
+	<title>player qwe</title>
 	<link rel="stylesheet" href="/player/css/player.css">
 	<script src="/player/js/jquery.min.js"></script>
 	<script src="/player/js/jquery.nice-select.min.js"></script>
