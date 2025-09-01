@@ -350,7 +350,6 @@ class ShowController extends Controller{
     }
 
     private function inject_translations(array $data): array {
-        $files = $data['files'];
         $translations = [];
         foreach ($data['files'] as $file) {
             if (!isset($translations[$file['translation_id']]))

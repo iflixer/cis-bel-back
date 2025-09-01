@@ -44,8 +44,8 @@ class ApiController extends Controller{
     protected $passVDB; //  = '5HxL2P2Yw1yq'
 
     // protected $adress = 'https://api.kholobok.biz/show/';
-    // protected $adress = 'https://cdn0.futemaxlive.com/show/';
-    protected $adress = 'https://cdn0.futemaxlive.com/show/';
+    // protected $adress = 'https://cdnhub.help/show/';
+    protected $adress = 'https://cdnhub.help/show/';
 
     protected $usesApi = "App\Http\Controllers\api\\";
 
@@ -579,7 +579,7 @@ class ApiController extends Controller{
         else
             $domain = 'api.kholobok.biz';*/
 
-        $domain = 'cdn0.futemaxlive.com';
+        $domain = 'cdnhub.help';
 
         // build data
 
@@ -826,7 +826,7 @@ class ApiController extends Controller{
             else
                 $domain = 'api.kholobok.biz';*/
 
-            $domain = 'cdn0.futemaxlive.com';
+            $domain = 'cdnhub.help';
 
             $result = [];
 
@@ -1187,7 +1187,7 @@ class ApiController extends Controller{
             $domain = 'api.kholobok.biz';
         }*/
 
-        $domain = 'cdn0.futemaxlive.com';
+        $domain = 'cdnhub.help';
 
         $timeDomains = microtime(false);
         

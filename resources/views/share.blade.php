@@ -57,7 +57,7 @@
           </div>
         </div>
         <div class="player">
-            <iframe id="cdnhub" src="https://cdn0.futemaxlive.com/show/{{ $id }}?tgc={{ $tgc }}" frameborder="0" allowfullscreen allow="autoplay *; fullscreen *"></iframe>
+            <iframe id="cdnhub" src="https://cdnhub.help/show/{{ $id }}?tgc={{ $tgc }}" frameborder="0" allowfullscreen allow="autoplay *; fullscreen *"></iframe>
         </div>
         <div class="bottom-info">
           <div></div>

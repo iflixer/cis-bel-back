@@ -63,7 +63,7 @@
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
 пример, как должно получиться ниже
 <pre class="html-syntax">
-<?php echo htmlspecialchars('<iframe src="https://cdn0.futemaxlive.com/show/1" id="cdnhub" frameborder="0" allowfullscreen></iframe>'); ?>
+<?php echo htmlspecialchars('<iframe src="https://cdnhub.help/show/1" id="cdnhub" frameborder="0" allowfullscreen></iframe>'); ?>
 </pre>
 </blockquote>
 

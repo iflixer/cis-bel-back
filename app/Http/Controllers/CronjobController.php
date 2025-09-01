@@ -38,8 +38,8 @@ class CronjobController extends Controller
 	protected $kinoPoiskService;
 
 	// protected $adress = 'https://api.kholobok.biz/show/';
-	// protected $adress = 'https://cdn0.futemaxlive.com/show/';
-	protected $adress = 'https://cdn0.futemaxlive.com/show/';
+	// protected $adress = 'https://cdnhub.help/show/';
+	protected $adress = 'https://cdnhub.help/show/';
 
 	protected $usesApi = "App\Http\Controllers\api\\";
 
