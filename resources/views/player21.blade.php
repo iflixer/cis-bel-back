@@ -420,29 +420,8 @@
             'default_quality': ((CDNquality !== null) ? CDNquality : '480p'),
             // 'subtitle': false,
 
-            @if ($preroll)
-                    <?php // 'preroll': 'https://franecki.net/assets/vendor/bd01f9fd2f98c883c2c1656c64eaa488.xml?v=3.0&amp;external_subid=(host)', ?>
-            'preroll': '<?php echo $preroll; ?>',
-            @endif
 
-                    @if ($midroll)
-            'midroll': <?php echo json_encode($midroll); ?>,
-            @endif
 
-            'hlsconfig': {
-                // 'maxBufferLength': 60, // 180
-                // 'maxBufferSize': 33554432000,
-                // 'enableSoftwareAES': true,
-                // 'progressive': true,
-                'startFragPrefetch': true,
-                'enableWorker': true,
-                'fragLoadingRetryDelay': 500,
-                'maxBufferHole': 1,
-                'maxBufferLength': 30,
-                // Может помочь при ошибках seek:
-                'maxFragLookUpTolerance': 0.1
-            },
-            'hlsdebug': 0,
             'debug': 0,
             'ready': PlayerReady(),
             'autoplay': CDNautoplay,
