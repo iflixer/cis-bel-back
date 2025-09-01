@@ -41,7 +41,7 @@
 
 <br>
 
-<p><code><a href="https://sys.futemaxlive.com/actualize.js" target="_blank" class="code-link">actualize.js</a></code></p>
+<p><code><a href="https://cdnhub.help/actualize.js" target="_blank" class="code-link">actualize.js</a></code></p>
 
 <br>
 
