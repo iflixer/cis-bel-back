@@ -17,7 +17,7 @@ class CdnController extends Controller{
         // Валидация через Validator
         $v = Validator::make($request->all(), [
             'node_name'             => 'required|string',
-            'timestamp'             => 'required|string',
+            'timestamp'             => 'required|numeric',
             'tx_bytes_per_sec'      => 'sometimes|numeric',
             'rx_bytes_per_sec'      => 'sometimes|numeric',
             'tx_bytes_per_sec_5m'   => 'sometimes|numeric',
