@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/player/css/player.css">
     <script src="/player/js/jquery.min.js"></script>
     <script src="/player/js/jquery.nice-select.min.js"></script>
-    <script src="/player/js/player21.js?v=20250901"></script>
+    <script src="/player/js/player21.js?v={{ hash_file('md5', public_path('player/js/player21.js')) }}"></script>
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-QG08LXZ7MT"></script>
