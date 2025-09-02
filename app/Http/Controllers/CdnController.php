@@ -33,16 +33,8 @@ class CdnController extends Controller{
 
         $data = $v->getData();
 
-        $node = $data['node_name'];
-        $parts = explode('-', $node);
-        $id = (int) end($parts);
-        if ($id==0) {
-            return response()->json(['status' => 'error', 'error' => 'Invalid node ID']);
-        }
-
-        $data['host'] = "cdn$id.testme.wiki";
         $row = [
-            'host' => $data['host'],
+            'node_name' => $data['node_name'],
             'tx' => $data['tx_bytes_per_sec'] ?? null,
             'rx' => $data['rx_bytes_per_sec'] ?? null,
             'tx5m' => $data['tx_bytes_per_sec_5m'] ?? null,
@@ -50,13 +42,13 @@ class CdnController extends Controller{
             'last_report' => $data['timestamp'],
         ];
 
-        DB::enableQueryLog();
+        // DB::enableQueryLog();
 
         Cdn::updateOrCreate(
-            ['host' => $data['host']],
+            ['node_name' => $data['node_name']],
             $row
         );
-        dd(DB::getQueryLog());
+        // dd(DB::getQueryLog());
 
         return response()->json(['status' => 'ok']);
     }
