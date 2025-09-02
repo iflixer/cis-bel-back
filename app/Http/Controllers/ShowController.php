@@ -43,6 +43,15 @@ class ShowController extends Controller{
 
     public function player($type = null, $id = 0)
     {
+        if (!empty($_REQUEST['debuggy']) && $_REQUEST['debuggy']) {
+            ini_set('display_errors', 1);
+            ini_set('display_startup_errors', 1);
+            error_reporting(E_ALL);
+            DB::enableQueryLog();
+            // var_dump($this->request->all());
+            // var_dump($_SERVER);
+            // var_dump($_COOKIE);
+        }
         $data = [];
 
         $data['version'] = '1.0.2';
@@ -172,7 +181,10 @@ class ShowController extends Controller{
                 $player_view = $player_view_global;
             }
         }
-        
+
+        if (!empty($_REQUEST['debuggy']) && $_REQUEST['debuggy']) {
+            dd(DB::getQueryLog());
+        }
 
         return view($player_view, $data);
     }
@@ -587,7 +599,7 @@ class ShowController extends Controller{
         return null;
     }
 
-    // reduce_cdn_weight обновляет взвешенный счетчик примерно каждый 100 вызов
+    // reduce_cdn_weight уменьгает взвешенный счетчик примерно каждый 100 вызов
     private function reduce_all_cdns_weight() {
         if (rand() % 100 == 0) {
             Cdn::where('weight_counter', '>', 0)
