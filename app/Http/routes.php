@@ -53,11 +53,16 @@ Route::match(['get','post'],'/api/{method}', ['middleware'=>['throttleCustom'], 
 Route::get('/show/{id}', ['middleware'=>['showMiddleware'], 'uses'=>'ShowController@player'])->where('id', '[0-9]+');
 Route::get('/show/{type}/{id}', ['middleware'=>['showMiddleware'], 'uses'=>'ShowController@player'])->where('id', 'kinopoisk|imdb')->where('id', '[a-z0-9]+');
 Route::get('/share/{id}', ['uses'=>'ShowController@share'])->where('id', '[0-9]+');
+// для васта
+Route::get('/share/{id}', ['uses'=>'ShowController@share'])->where('id', '[0-9]+');
 // Route::get('/newshow/{id}', ['middleware'=>['showMiddleware'], 'uses'=>'ShowController@newshow'])->where('id', '[0-9]+');
 
 // api для плеера
 Route::match(['get','post'],'/apishow/{method}', ['middleware'=>['apiShowMiddleware'], 'uses'=>'ApiController@start']);
 
+// cdn reports
+// Route::match(['post'],'/cdn/netload', ['middleware'=>[], 'uses'=>'CdnController@netload']);
+Route::post('/cdn/netload', 'CdnController@netload');
 
 
 

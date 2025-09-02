@@ -15,6 +15,7 @@ class VerifyCsrfToken extends BaseVerifier
         'api/*',
         'oauth/*',
         'front/*',
-        'apishow/*'
+        'apishow/*',
+        'cdn/*'
     ];
 }

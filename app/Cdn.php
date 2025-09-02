@@ -11,6 +11,15 @@ class Cdn extends Model
     protected $fillable = [
         'host', 
         'weight', 
-        'active'
+        'active',
+        'tx','rx','tx5m','rx5m','last_report'
+    ];
+
+    protected $casts = [
+        'tx' => 'int',
+        'rx' => 'int',
+        'tx5m' => 'int',
+        'rx5m' => 'int',
+        'last_report' => 'datetime',
     ];
 }
