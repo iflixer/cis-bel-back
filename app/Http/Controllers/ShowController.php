@@ -44,15 +44,7 @@ class ShowController extends Controller{
     public function player($type = null, $id = 0)
     {
         $start_time = microtime(true);
-        if (!empty($_REQUEST['debuggy']) && $_REQUEST['debuggy']) {
-            ini_set('display_errors', 1);
-            ini_set('display_startup_errors', 1);
-            error_reporting(E_ALL);
-            DB::enableQueryLog();
-            // var_dump($this->request->all());
-            // var_dump($_SERVER);
-            // var_dump($_COOKIE);
-        }
+
         $data = [];
 
         $data['version'] = '1.0.2';
