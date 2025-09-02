@@ -23,6 +23,7 @@
         gtag('js', new Date());
         gtag('config', 'G-QG08LXZ7MT');
     </script>
+
 </head>
 <body>
 
@@ -33,7 +34,7 @@
     }
 @endphp
 
-<div id="selectors" class="video_selectors" style="display: block;">
+<div id="selectors" class="video_selectors" style="display: flex;">
 
     @if ($type === 'serial')
 
@@ -407,25 +408,28 @@
                     ;
                 }
             }
+
+
         }
 
         /* player config */
         CDNquality = getItem('pljsquality');
+        if(!CDNquality) {
+            CDNquality = 360;
+        }
 
         var CDNplayerConfig = {
             'id': 'player',
             'cuid': getCDNplayerCUID(),
-            'poster': null,
+          //  'poster': null,
             'file': '{{ $file }}',
-            'default_quality': ((CDNquality !== null) ? CDNquality : '480p'),
-            // 'subtitle': false,
-
-
-
+            'default_quality':CDNquality,
             'debug': 0,
             'ready': PlayerReady(),
             'autoplay': CDNautoplay,
-            'start': CDNstart
+            'start': CDNstart,
+            'preload': 'metadata',
+         // 'subtitle': false,
         }
 
         return pub;
@@ -572,11 +576,46 @@
             } else {
                 window.location.href = '/show/' + p_id + '?translation=' + _translate + '&season=' + _season + (_episode ? '&episode=' + _episode : '') + ((_url_params.length > 0) ? '&' + _url_params.join('&') : '');
             }
+
         });
         @endif
     });
 
+    // ADD CHANNEL1 TO VAST request
+    const injectUrl = "<?php echo $_GET['domain'];?>";
+    const originalOpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
+        if (url.includes('vast=')) {
+            const separator = url.includes('?') ? '&' : '?';
+            url += separator + 'channel1='+injectUrl;
+        }
+        return originalOpen.call(this, method, url, async, user, password);
+    };
+
+
+
     PlayerjsEvents = function (event, id, info) {
+
+        if(event=="vast_Impression"){
+            console.log(event, info);
+            // WORKS - ADD SAVE REQUEST
+        }
+
+        if (event == "vast_complete" || event == "vast_skip") {  // ! NOT WORKS in PJS v21
+            if (typeof iframeVastValue[iframeVastKey] != 'undefined') {
+                var matches = $.parseJSON(info).url.match(/khtag=([0-9]+)/i);
+                var ad_id = matches[1];
+                $.ajax({
+                    type: 'get',
+                    url: '/apishow/shows.showsAd',
+                    data: 'domain=' + pub.getVBR() + '&id=' + ad_id + (tgc ? '&tgc=' + tgc : ''),
+                    dataType: "html",
+                    cache: false,
+                    success: function (response) {
+                    }
+                });
+            }
+        }
 
         if (event == "init") {
             if (CDNplayer.api('adblock')) {
@@ -605,11 +644,10 @@
 
         if (event == "play" || event == "start" || event == "vast_init") {
             pub.controlSelectors('hide');
-
             $('#save-holder').remove();
         }
 
-        if (event == "start") {
+        if (event == "start") { // NOT WORKS IN v21
             console.log(event, id, info);
             $.ajax({
                 type: 'get',
@@ -620,6 +658,7 @@
                 success: function (response) {
                 }
             });
+
         }
 
         if (event == "pause" || event == "end") {
@@ -654,21 +693,7 @@
             }
         }
 
-        if (event == "vast_complete" || event == "vast_skip") {
-            if (typeof iframeVastValue[iframeVastKey] != 'undefined') {
-                var matches = $.parseJSON(info).url.match(/khtag=([0-9]+)/i);
-                var ad_id = matches[1];
-                $.ajax({
-                    type: 'get',
-                    url: '/apishow/shows.showsAd',
-                    data: 'domain=' + pub.getVBR() + '&id=' + ad_id + (tgc ? '&tgc=' + tgc : ''),
-                    dataType: "html",
-                    cache: false,
-                    success: function (response) {
-                    }
-                });
-            }
-        }
+
 
         // GA AND CROSSFRAME EVENTS
 
@@ -700,6 +725,7 @@
 
         if (event == "userplay") {
             console.log(event, id, info);
+            $('#selectors').fadeOut('slow');
             $('#save-holder').remove();
             if (typeof gtag !== 'undefined') {
                 gtag('event', 'Video start play', {'event_category': 'Videos'});
@@ -714,6 +740,7 @@
         }
 
         if (event == "userpause") {
+            $('#selectors').fadeIn('slow');
             console.log(event, id, info);
             if (typeof gtag !== 'undefined') {
                 gtag('event', 'Video paused', {'event_category': 'Videos'});
@@ -764,33 +791,50 @@
             }
         }
     }
-</script>
-<!-- Yandex.Metrika counter -->
-<script type="text/javascript">
-    var yaParams = {ip: "<?php echo $_SERVER['HTTP_X_FORWARDED_FOR']; ?>"};
 
-    (function (m, e, t, r, i, k, a) {
-        m[i] = m[i] || function () {
-            (m[i].a = m[i].a || []).push(arguments)
-        };
-        m[i].l = 1 * new Date();
-        k = e.createElement(t), a = e.getElementsByTagName(t)[0], k.async = 1, k.src = r, a.parentNode.insertBefore(k, a)
-    })
+    let hideTimeout;
+
+    function showSelectors() {
+        if (!$('#selectors').is(':visible')) {
+            $('#selectors').fadeIn('fast');
+        }
+        clearTimeout(hideTimeout); // prevent hiding if quickly moving between elements
+    }
+
+    function hideSelectors() {
+        hideTimeout = setTimeout(function () {
+            if (!$('#player').is(':hover') && !$('#selectors').is(':hover')) {
+                $('#selectors').fadeOut('fast');
+            }
+        }, 200); // 200ms delay to allow moving between elements
+    }
+
+    // Bind events to both #player and #selectors
+    $('#player, #selectors').on('mouseenter', showSelectors);
+    $('#player, #selectors').on('mouseleave', hideSelectors);
+
+</script>
+
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript" >
+    var yaParams = { ip: "<?php echo $_SERVER['HTTP_X_FORWARDED_FOR']; ?>" };
+
+    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
     (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
 
     ym(70538995, "init", {
-        clickmap: true,
-        trackLinks: true,
-        accurateTrackBounce: true,
-        webvisor: true,
+        clickmap:true,
+        trackLinks:true,
+        accurateTrackBounce:true,
+        webvisor:true,
 
         params: window.yaParams
     });
 </script>
-<noscript>
-    <div><img src="https://mc.yandex.ru/watch/70538995" style="position:absolute; left:-9999px;" alt=""/></div>
-</noscript>
+<noscript><div><img src="https://mc.yandex.ru/watch/70538995" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 <!-- /Yandex.Metrika counter -->
+
 
 </body>
 </html>
