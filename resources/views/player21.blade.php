@@ -582,7 +582,7 @@
     });
 
     // ADD CHANNEL1 TO VAST request
-    const injectUrl = "<?php echo $_GET['domain'];?>";
+    const injectUrl = iframeReferer;
     const originalOpen = XMLHttpRequest.prototype.open;
     XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
         if (url.includes('vast=')) {
