@@ -43,6 +43,7 @@ class ShowController extends Controller{
 
     public function player($type = null, $id = 0)
     {
+        $start_time = microtime(true);
         if (!empty($_REQUEST['debuggy']) && $_REQUEST['debuggy']) {
             ini_set('display_errors', 1);
             ini_set('display_startup_errors', 1);
@@ -185,7 +186,7 @@ class ShowController extends Controller{
         if (!empty($_REQUEST['debuggy']) && $_REQUEST['debuggy']) {
             dd(DB::getQueryLog());
         }
-
+        header("X-Player-Build-Duration: " . (microtime(true) - $start_time));
         return view($player_view, $data);
     }
 
