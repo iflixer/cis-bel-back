@@ -595,7 +595,18 @@
 
         if(event=="vast_Impression"){
             console.log(event, info);
-            // WORKS - ADD SAVE REQUEST
+
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'VAST_impression', {'event_category': 'Videos'});
+            }
+            if (window.self !== window.top) {
+                window.parent.postMessage({
+                    type: "CDN_PLAYER_EVENT",
+                    action: 'VAST_impression',
+                }, "*");
+            }
+
+            // ADD SAVE TO LOCAL STATISTIC
         }
 
         if (event == "vast_complete" || event == "vast_skip") {  // ! NOT WORKS in PJS v21
