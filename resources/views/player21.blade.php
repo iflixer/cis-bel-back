@@ -609,8 +609,9 @@
             // ADD SAVE TO LOCAL STATISTIC
         }
 
-        if (event == "vast_complete" || event == "vast_skip") {  // ! NOT WORKS in PJS v21
-            if (typeof iframeVastValue[iframeVastKey] != 'undefined') {
+
+        if (event == "vast_complete" || event == "vast_skip") { // NOW WORKS in PJS21
+             if (typeof iframeVastValue[iframeVastKey] != 'undefined') {
                 var matches = $.parseJSON(info).url.match(/khtag=([0-9]+)/i);
                 var ad_id = matches[1];
                 $.ajax({
