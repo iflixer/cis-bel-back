@@ -599,14 +599,15 @@
         if(event=="vast_Impression"){
             console.log(event, info);
             let infoobj = JSON.parse(info);
+            let iswas = infoobj["is"];
 
             if (typeof gtag !== 'undefined') {
-                gtag('event', 'VAST_impression '+ infoobj, {'event_category': 'Videos'});
+                gtag('event', 'VAST_impression: '+iswas, {'event_category': 'Videos'});
             }
             if (window.self !== window.top) {
                 window.parent.postMessage({
                     type: "CDN_PLAYER_EVENT",
-                    action: 'VAST_impression: '+ infoobj,
+                    action: 'VAST_impression: '+iswas,
                 }, "*");
             }
 
