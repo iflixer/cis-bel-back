@@ -29,9 +29,11 @@
         echo '<style>body { background: #000; color: #fff; overflow:auto}</style>';
         dd($__data);
     }
+  
 @endphp
 
 <div id="selectors" class="video_selectors" style="display: flex;">
+
 
     @if ($type === 'serial')
 
@@ -348,7 +350,7 @@
                         if (_allowed == 1) {
                             var _url_params = [];
 
-                            //  _url_params.push('domain=' + pub.getVBR());
+                             _url_params.push('domain=' + pub.getVBR());
 
                             if (_save.t != null) {
                                 _url_params.push('translation=' + _save.t);
@@ -477,8 +479,8 @@
 
         $('#translator-name').change(function () {
             var t = $(this).find(':selected').attr('value');
-            // window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&translation=' + t + (tgc ? '&tgc=' + tgc : '');
-            window.location.href = '/show/' + p_id + '?translation=' + t + (tgc ? '&tgc=' + tgc : '');
+            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&translation=' + t + (tgc ? '&tgc=' + tgc : '');
+            // window.location.href = '/show/' + p_id + '?translation=' + t + (tgc ? '&tgc=' + tgc : '');
         });
 
         @elseif ($type === 'serial')
@@ -548,7 +550,7 @@
 
             var _url_params = [];
 
-            // _url_params.push('domain=' + iframeReferer);
+            _url_params.push('domain=' + iframeReferer);
 
                 <?php if (isset($_GET['no_controls'])): ?>
             _url_params.push('no_controls=1');
