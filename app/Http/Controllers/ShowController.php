@@ -379,6 +379,11 @@ class ShowController extends Controller{
         usort($translations, fn($a, $b) => $b['counter'] <=> $a['counter']);
 
         $data['translations'] = $translations;
+
+        // override default translation
+        $data['translate'] = $translations[0]['id'] ?? null;
+        $data['translateTitle'] = $translations[0]['title'] ?? null;
+
         return $data;
     }
 
