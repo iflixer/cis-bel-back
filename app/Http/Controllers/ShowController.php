@@ -360,14 +360,24 @@ class ShowController extends Controller{
 
     private function inject_translations(array $data): array {
         $translations = [];
+
+        // собираем статистику по translation_id
         foreach ($data['files'] as $file) {
-            if (!isset($translations[$file['translation_id']]))
-                $translations[$file['translation_id']] = [
-                    'id' => $file['translation_id'],
-                    'title' => $file['t_tag'] ?: $file['t_title']
+            $id = $file['translation_id'];
+            if (!isset($translations[$id])) {
+                $translations[$id] = [
+                    'id'      => $id,
+                    'title'   => $file['t_tag'] ?: $file['t_title'],
+                    'counter' => 0,
                 ];
+            }
+            $translations[$id]['counter']++;
         }
+
+        // превращаем в индексированный массив и сортируем по counter DESC
         $translations = array_values($translations);
+        usort($translations, fn($a, $b) => $b['counter'] <=> $a['counter']);
+
         $data['translations'] = $translations;
         return $data;
     }
