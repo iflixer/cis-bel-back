@@ -60,8 +60,7 @@ Route::get('/share/{id}', ['uses'=>'ShowController@share'])->where('id', '[0-9]+
 // api для плеера
 Route::match(['get','post'],'/apishow/{method}', ['middleware'=>['apiShowMiddleware'], 'uses'=>'ApiController@start']);
 
-// cdn reports
-// Route::match(['post'],'/cdn/netload', ['middleware'=>[], 'uses'=>'CdnController@netload']);
+// отчеты network-stater о загруженности сети и живости CND ноды
 Route::post('/cdn/netload', 'CdnController@netload');
 
 

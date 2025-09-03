@@ -175,6 +175,10 @@ class ShowController extends Controller{
             }
         }
 
+        if ($player_view_arg = $this->request->input('view') ?? '') {
+            $player_view = $player_view_arg;
+        }
+
         if (!empty($_REQUEST['debuggy']) && $_REQUEST['debuggy']) {
             dd(DB::getQueryLog());
         }
