@@ -116,11 +116,12 @@
             // durationVideo = 3254,
             currentTime = 0,
             durationTime = null,
-            iframeHostname = window.location.hostname,
-            iframeVastKey = '',
-            iframeVastValue = {'p': 0, 'm': 0};
+            iframeHostname = window.location.hostname;
 
-        var getCDNplayerCUID = function () {
+        pub.iframeVastKey = '';
+        pub.iframeVastValue = {'p': 0, 'm': 0};
+
+        window.getCDNplayerCUID = function () {
             return 'kh{{ $id }}';
         }
 
@@ -149,7 +150,7 @@
             return iframeHostname;
         }
 
-        var setSave = function () {
+        window.setSave = function (currentTime, durationTime) {
             var _key = "save-" + getCDNplayerCUID(),
                 _value = {
                     p: {{ $id }},
@@ -173,7 +174,7 @@
             return false;
         }
 
-        var removeSave = function () {
+        window.removeSave = function () {
             var _key = "save-" + getCDNplayerCUID();
 
             try {
@@ -185,7 +186,7 @@
             return true;
         }
 
-        var getSave = function () {
+        window.getSave = function () {
             var is_hidden = 0;
 
             if (is_hidden == 1)
@@ -202,7 +203,7 @@
             return null;
         }
 
-        var setItem = function (k, v) {
+        window.setItem = function (k, v) {
             try {
                 localStorage.setItem(k, v);
 
@@ -214,7 +215,7 @@
             return false;
         }
 
-        var getItem = function (k) {
+        window.getItem = function (k) {
             try {
                 return localStorage.getItem(k);
             } catch (e) {
@@ -288,11 +289,11 @@
             if (CDNplayer === null) {
                 // console.log(CDNplayerConfig);
                 CDNplayer = new Playerjs(CDNplayerConfig);
+                window.CDNplayer = CDNplayer;
             }
         }
 
         var lns = [];
-
 
         PlayerReady = function () {
             if (CDNautoplay == 0) {
@@ -428,6 +429,28 @@
             'autoplay': CDNautoplay,
             'start': CDNstart,
             'preload': 'metadata',
+            'hlsconfig': {
+                // Сколько видео держать впереди (VOD/Live)
+                maxBufferLength: 15,           // сек (по умолчанию может быть больше)
+                maxMaxBufferLength: 30,        // жёсткий потолок
+                backBufferLength: 30,          // не держать слишком длинный «хвост»
+                // Live-синхронизация (если поток живой)
+                liveSyncDurationCount: 3,      // держаться ~3 сегментов от live-edge
+                liveMaxLatencyDurationCount: 6,
+                lowLatencyMode: false,         // если не LL-HLS
+                // Временные лимиты и поведение при дырках в буфере
+                fragLoadingTimeOut: 10000,
+                manifestLoadingTimeOut: 5000,
+                maxBufferHole: 0.5,
+                maxStarvationDelay: 4,
+                // ABR можно чуть «успокоить»
+                abrEwmaDefaultEstimate: 5_000_000, // стартовая оценка (бит/с), подстрой под свою сеть
+                // Параллелизм/ретраи (по ситуации)
+                fragLoadingMaxRetry: 2,
+                levelLoadingMaxRetry: 2,
+                // Иногда помогает отключить worker, если есть странные зависания в браузерах
+                enableWorker: true
+            }
          // 'subtitle': false,
         }
 
@@ -593,216 +616,229 @@
     };
 
 
-
-    PlayerjsEvents = function (event, id, info) {
-
-        if(event=="vast_Impression"){
-            console.log(event, info);
-            let infoobj = JSON.parse(info);
-            let iswas = infoobj["is"];
-
-            if (typeof gtag !== 'undefined') {
-                gtag('event', 'VAST_impression: '+iswas, {'event_category': 'Videos'});
-            }
-            if (window.self !== window.top) {
-                window.parent.postMessage({
-                    type: "CDN_PLAYER_EVENT",
-                    action: 'VAST_impression: '+iswas,
-                }, "*");
-            }
-
-            // ADD SAVE TO LOCAL STATISTIC
+    window.PlayerjsEvents = function (event, id, info) {
+        if (typeof CDNplayer == "undefined") {
+            return;
         }
+        try {
+            if(event=="vast_Impression"){
+                console.log('PlayerjsEvents', event, info);
+                let infoobj = JSON.parse(info);
+                let iswas = infoobj["is"];
+
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'VAST_impression: '+iswas, {'event_category': 'Videos'});
+                }
+                if (window.self !== window.top) {
+                    window.parent.postMessage({
+                        type: "CDN_PLAYER_EVENT",
+                        action: 'VAST_impression: '+iswas,
+                    }, "*");
+                }
+
+                // ADD SAVE TO LOCAL STATISTIC
+            }
 
 
-        if (event == "vast_complete" || event == "vast_skip") { // NOW WORKS in PJS21
-             if (typeof iframeVastValue[iframeVastKey] != 'undefined') {
-                var matches = $.parseJSON(info).url.match(/khtag=([0-9]+)/i);
-                var ad_id = matches[1];
+            if (event == "vast_complete" || event == "vast_skip") { // NOW WORKS in PJS21
+                console.log('PlayerjsEvents', event, info);
+                if (typeof cdn.player.iframeVastValue[cdn.player.iframeVastKey] != 'undefined') {
+                    var matches = $.parseJSON(info).url.match(/khtag=([0-9]+)/i);
+                    var ad_id = matches[1];
+                    $.ajax({
+                        type: 'get',
+                        url: '/apishow/shows.showsAd',
+                        data: 'domain=' + cdn.player.getVBR() + '&id=' + ad_id + (tgc ? '&tgc=' + tgc : ''),
+                        dataType: "html",
+                        cache: false,
+                        success: function (response) {
+                        }
+                    });
+                }
+            }
+
+            if (event == "init") {
+                console.log('PlayerjsEvents', event, info);
+                if (CDNplayer.api('adblock')) {
+                    window.abc = true;
+                }
+            }
+
+            if (event == 'subtitle') {
+                console.log('PlayerjsEvents', event, info);
+                var cc = document.getElementById('player_control_cc_icon0'),
+                    cl = 'none',
+                    arr,
+                    ln = ((lns[info] !== undefined) ? lns[info] : "");
+
+                if (ln == '') {
+                    arr = cc.className.split(" ");
+
+                    if (arr.indexOf(cl) == -1) {
+                        cc.className += ' ' + cl;
+                    }
+                } else {
+                    cc.className = cc.className.replace(/\bnone\b/g, "");
+                }
+
+                cc.setAttribute('data-content', ln.replace(/\-\d+/i, ''));
+            }
+
+            if (event == "play" || event == "start" || event == "vast_init") {
+                console.log('PlayerjsEvents', event, info);
+                cdn.player.controlSelectors('hide');
+                $('#save-holder').remove();
+            }
+
+            if (event == "start") {
+                console.log('PlayerjsEvents', event, info);
                 $.ajax({
                     type: 'get',
-                    url: '/apishow/shows.showsAd',
-                    data: 'domain=' + pub.getVBR() + '&id=' + ad_id + (tgc ? '&tgc=' + tgc : ''),
+                    url: '/apishow/shows.show',
+                    data: 'domain=' + cdn.player.getVBR() + (tgc ? '&tgc=' + tgc : ''),
                     dataType: "html",
                     cache: false,
                     success: function (response) {
                     }
                 });
+
             }
-        }
 
-        if (event == "init") {
-            if (CDNplayer.api('adblock')) {
-                window.abc = true;
+            if (event == "pause" || event == "end") {
+                console.log('PlayerjsEvents', event, info);
+                cdn.player.controlSelectors('show');
             }
-        }
 
-        if (event == 'subtitle') {
-            var cc = document.getElementById('player_control_cc_icon0'),
-                cl = 'none',
-                arr,
-                ln = ((lns[info] !== undefined) ? lns[info] : "");
+            if (event == "new") {
+                //
+            }
 
-            if (ln == '') {
-                arr = cc.className.split(" ");
-
-                if (arr.indexOf(cl) == -1) {
-                    cc.className += ' ' + cl;
+            if (event == "time") {
+                //console.log('PlayerjsEvents', event, info);
+                if (info > 0 && CDNplayer.api('duration') > 0) {
+                    currentTime = info;
+                    durationTime = CDNplayer.api('duration');
+                    setSave(currentTime, durationTime);
                 }
-            } else {
-                cc.className = cc.className.replace(/\bnone\b/g, "");
             }
 
-            cc.setAttribute('data-content', ln.replace(/\-\d+/i, ''));
-        }
+            if (event == "reload") {
+                //
+            }
 
-        if (event == "play" || event == "start" || event == "vast_init") {
-            pub.controlSelectors('hide');
-            $('#save-holder').remove();
-        }
-
-        if (event == "start") { // NOT WORKS IN v21
-            console.log(event, id, info);
-            $.ajax({
-                type: 'get',
-                url: '/apishow/shows.show',
-                data: 'domain=' + pub.getVBR() + (tgc ? '&tgc=' + tgc : ''),
-                dataType: "html",
-                cache: false,
-                success: function (response) {
+            if (event == "vast_load") {
+                console.log('PlayerjsEvents', event, info);
+                if (info == "preroll") {
+                    cdn.player.iframeVastKey = 'p';
+                } else if (info == "midroll") {
+                    cdn.player.iframeVastKey = 'm';
                 }
-            });
 
-        }
-
-        if (event == "pause" || event == "end") {
-            pub.controlSelectors('show');
-        }
-
-        if (event == "new") {
-            //
-        }
-
-        if (event == "time") {
-            if (info > 0 && CDNplayer.api('duration') > 0) {
-                currentTime = info;
-                durationTime = CDNplayer.api('duration');
-                setSave();
-            }
-        }
-
-        if (event == "reload") {
-            //
-        }
-
-        if (event == "vast_load") {
-            if (info == "preroll") {
-                iframeVastKey = 'p';
-            } else if (info == "midroll") {
-                iframeVastKey = 'm';
-            }
-
-            if (typeof iframeVastValue[iframeVastKey] != 'undefined') {
-                iframeVastValue[iframeVastKey]++;
-            }
-        }
-
-
-
-        // GA AND CROSSFRAME EVENTS
-
-        if (event == "loaderror") {
-            if (typeof gtag !== 'undefined') {
-                gtag('event', 'Video load error', {'event_category': 'Videos'});
-            }
-            if (window.self !== window.top) {
-                window.parent.postMessage({
-                    type: "CDN_PLAYER_EVENT",
-                    action: "Load error",
-                }, "*");
-            }
-        }
-
-        if (event == "quartile") {
-            console.log(event, id, info);
-            if (typeof gtag !== 'undefined') {
-                gtag('event', info + ' of timeline completed', {'event_category': 'Videos'});
-            }
-            if (window.self !== window.top) {
-                window.parent.postMessage({
-                    type: "CDN_PLAYER_EVENT",
-                    action: info + ' of timeline completed',
-                }, "*");
-            }
-
-        }
-
-        if (event == "userplay") {
-            console.log(event, id, info);
-            $('#selectors').fadeOut('slow');
-            $('#save-holder').remove();
-            if (typeof gtag !== 'undefined') {
-                gtag('event', 'Video start play', {'event_category': 'Videos'});
-            }
-            if (window.self !== window.top) {
-                window.parent.postMessage({
-                    type: "CDN_PLAYER_EVENT",
-                    action: "Video start play",
-                }, "*");
-            }
-
-        }
-
-        if (event == "userpause") {
-            $('#selectors').fadeIn('slow');
-            console.log(event, id, info);
-            if (typeof gtag !== 'undefined') {
-                gtag('event', 'Video paused', {'event_category': 'Videos'});
-            }
-            if (window.self !== window.top) {
-                window.parent.postMessage({
-                    type: "CDN_PLAYER_EVENT",
-                    action: "Video paused",
-                }, "*");
-
-            }
-        }
-
-        if (event == "line") {
-            console.log(event, id, info);
-            if (typeof gtag !== 'undefined') {
-                gtag('event', 'Video rewind(fwd/rwd)', {'event_category': 'Videos'});
-            }
-            if (window.self !== window.top) {
-                window.parent.postMessage({
-                    type: "CDN_PLAYER_EVENT",
-                    action: "Video rewind(fwd/rwd)",
-                }, "*");
-            }
-
-        }
-
-        if (event == "finish") {
-            console.log(event, id, info);
-            $.ajax({
-                type: 'get',
-                url: '/apishow/shows.fullshow',
-                data: 'domain=' + pub.getVBR() + (tgc ? '&tgc=' + tgc : ''),
-                dataType: "html",
-                cache: false,
-                success: function (response) {
+                if (typeof cdn.player.iframeVastValue[cdn.player.iframeVastKey] != 'undefined') {
+                    cdn.player.iframeVastValue[cdn.player.iframeVastKey]++;
                 }
-            });
-            if (typeof gtag !== 'undefined') {
-                gtag('event', 'Video ENDED', {'event_category': 'Videos'});
             }
-            if (window.self !== window.top) {
-                window.parent.postMessage({
-                    type: "CDN_PLAYER_EVENT",
-                    action: "Video ENDED",
-                }, "*");
+
+
+
+            // GA AND CROSSFRAME EVENTS
+
+            if (event == "loaderror") {
+                console.log('PlayerjsEvents', event, info);
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'Video load error', {'event_category': 'Videos'});
+                }
+                if (window.self !== window.top) {
+                    window.parent.postMessage({
+                        type: "CDN_PLAYER_EVENT",
+                        action: "Load error",
+                    }, "*");
+                }
+            }
+
+            if (event == "quartile") {
+                console.log('PlayerjsEvents', event, info);
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', info + ' of timeline completed', {'event_category': 'Videos'});
+                }
+                if (window.self !== window.top) {
+                    window.parent.postMessage({
+                        type: "CDN_PLAYER_EVENT",
+                        action: info + ' of timeline completed',
+                    }, "*");
+                }
 
             }
+
+            if (event == "userplay") {
+                console.log('PlayerjsEvents', event, info);
+                $('#selectors').fadeOut('slow');
+                $('#save-holder').remove();
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'Video start play', {'event_category': 'Videos'});
+                }
+                if (window.self !== window.top) {
+                    window.parent.postMessage({
+                        type: "CDN_PLAYER_EVENT",
+                        action: "Video start play",
+                    }, "*");
+                }
+
+            }
+
+            if (event == "userpause") {
+                console.log('PlayerjsEvents', event, info);
+                $('#selectors').fadeIn('slow');
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'Video paused', {'event_category': 'Videos'});
+                }
+                if (window.self !== window.top) {
+                    window.parent.postMessage({
+                        type: "CDN_PLAYER_EVENT",
+                        action: "Video paused",
+                    }, "*");
+
+                }
+            }
+
+            if (event == "line") {
+                console.log('PlayerjsEvents', event, info);
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'Video rewind(fwd/rwd)', {'event_category': 'Videos'});
+                }
+                if (window.self !== window.top) {
+                    window.parent.postMessage({
+                        type: "CDN_PLAYER_EVENT",
+                        action: "Video rewind(fwd/rwd)",
+                    }, "*");
+                }
+
+            }
+
+            if (event == "finish") {
+                console.log('PlayerjsEvents', event, info);
+                $.ajax({
+                    type: 'get',
+                    url: '/apishow/shows.fullshow',
+                    data: 'domain=' + cdn.player.getVBR() + (tgc ? '&tgc=' + tgc : ''),
+                    dataType: "html",
+                    cache: false,
+                    success: function (response) {
+                    }
+                });
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'Video ENDED', {'event_category': 'Videos'});
+                }
+                if (window.self !== window.top) {
+                    window.parent.postMessage({
+                        type: "CDN_PLAYER_EVENT",
+                        action: "Video ENDED",
+                    }, "*");
+
+                }
+            }
+        } catch (e) {
+            console.error('Error handling player event:', e);
         }
     }
 

@@ -380,7 +380,7 @@ class ShowController extends Controller{
 
         $data['translations'] = $translations;
 
-        // override default translation
+        // override default translation which was set in inject_media()
         $data['translate'] = $translations[0]['id'] ?? null;
         $data['translateTitle'] = $translations[0]['title'] ?? null;
 

@@ -65,6 +65,11 @@ class ApiController extends Controller{
             $metodElements = explode(".", $method);
             $nameClass = $this->usesApi.$metodElements[0];
 
+            // $nameClass fex App\Http\Controllers\api\shows
+            // $metodElements fex array:2 [
+            //   0 => "shows"
+            //   1 => "show"
+            // ]
 
             $tiket = new $nameClass( $this->request );
             // return response()->json( $tiket->$metodElements[1]() );
