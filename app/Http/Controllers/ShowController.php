@@ -138,8 +138,11 @@ class ShowController extends Controller{
 
         // input translate
         $translate = null;
-        if ($this->request->input('translation') && intval($this->request->input('translation')))
+        $data['translate_was_set_by_user'] = false;
+        if ($this->request->input('translation') && intval($this->request->input('translation'))) {
             $translate = intval($this->request->input('translation'));
+            $data['translate_was_set_by_user'] = true;
+        }
 
         // input season
         $season = null;
@@ -380,9 +383,11 @@ class ShowController extends Controller{
 
         $data['translations'] = $translations;
 
-        // override default translation which was set in inject_media()
-        $data['translate'] = $translations[0]['id'] ?? null;
-        $data['translateTitle'] = $translations[0]['title'] ?? null;
+        // override default translation which was set in inject_media() if not set by user
+        if (!$data['translate_was_set_by_user']) {
+            $data['translate'] = $translations[0]['id'] ?? null;
+            $data['translateTitle'] = $translations[0]['title'] ?? null;
+        }
 
         return $data;
     }

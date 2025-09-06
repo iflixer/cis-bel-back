@@ -446,8 +446,8 @@
                 // ABR можно чуть «успокоить»
                 abrEwmaDefaultEstimate: 5_000_000, // стартовая оценка (бит/с), подстрой под свою сеть
                 // Параллелизм/ретраи (по ситуации)
-                fragLoadingMaxRetry: 2,
-                levelLoadingMaxRetry: 2,
+                fragLoadingMaxRetry: 5, // def.6
+                levelLoadingMaxRetry: 3, // def.4-6
                 // Иногда помогает отключить worker, если есть странные зависания в браузерах
                 enableWorker: true
             }
@@ -617,10 +617,15 @@
 
 
     window.PlayerjsEvents = function (event, id, info) {
+        console.log('PlayerjsEvents', event, id, info);
         if (typeof CDNplayer == "undefined") {
             return;
         }
         try {
+            if(event=="prehls"){
+                //
+            }
+
             if(event=="vast_Impression"){
                 console.log('PlayerjsEvents', event, info);
                 let infoobj = JSON.parse(info);
