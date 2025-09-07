@@ -11,6 +11,7 @@ class Cdn extends Model
     protected $fillable = [
         'host', 
         'node_name', 
+        'comment',
         'weight', 
         'active',
         'tx','rx','tx5m','rx5m','last_report'

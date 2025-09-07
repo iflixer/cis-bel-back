@@ -247,7 +247,10 @@
 
             "domaintags.domainsList": true,
             "domaintags.getAll": true,
-            "domaintags.setForDomain": true
+            "domaintags.setForDomain": true,
+
+            "cdns.get": true,
+            "cdns.update": true
             
         }
     }
