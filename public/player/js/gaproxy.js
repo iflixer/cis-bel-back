@@ -107,60 +107,61 @@
             case 'js': // gtag('js', new Date());
             return;
             case 'config': {
-            // gtag('config', 'G-XXXX', { user_id, session_id, user_properties, consent })
-            const mid = a;
-            state.measurementId = mid;
-            const opts = b || {};
-            if (opts.user_id) state.user_id = opts.user_id;
-            if (opts.session_id) state.session_id = opts.session_id;
-            if (opts.user_properties && typeof opts.user_properties === 'object') {
-                Object.keys(opts.user_properties).forEach(k => {
-                const v = opts.user_properties[k];
-                state.user_properties[k] = (v && typeof v === 'object' && 'value' in v) ? v : { value: v };
-                });
-            }
-            if (opts.consent && typeof opts.consent === 'object') {
-                state.consent = Object.assign({}, state.consent, opts.consent);
-            }
-            // Часто при config хотят отправить page_view:
-            if (opts.send_page_view !== false) {
-                emitEvent('page_view', {  });
-            }
-            return;
+                // gtag('config', 'G-XXXX', { user_id, session_id, user_properties, consent })
+                const mid = a;
+                state.measurementId = mid;
+                const opts = b || {};
+                if (opts.user_id) state.user_id = opts.user_id;
+                if (opts.session_id) state.session_id = opts.session_id;
+                if (opts.user_properties && typeof opts.user_properties === 'object') {
+                    Object.keys(opts.user_properties).forEach(k => {
+                    const v = opts.user_properties[k];
+                    state.user_properties[k] = (v && typeof v === 'object' && 'value' in v) ? v : { value: v };
+                    });
+                }
+                if (opts.consent && typeof opts.consent === 'object') {
+                    state.consent = Object.assign({}, state.consent, opts.consent);
+                }
+                // Часто при config хотят отправить page_view:
+                if (opts.send_page_view !== false) {
+                    emitEvent('page_view', {  });
+                }
+                return;
             }
             case 'consent': {
-            // gtag('consent','update',{ analytics_storage: 'granted'|'denied', ... })
-            if (a === 'update' && b && typeof b === 'object') {
-                state.consent = Object.assign({}, state.consent, b);
-            }
-            return;
+                // gtag('consent','update',{ analytics_storage: 'granted'|'denied', ... })
+                if (a === 'update' && b && typeof b === 'object') {
+                    state.consent = Object.assign({}, state.consent, b);
+                }
+                return;
             }
             case 'set': {
-            // gtag('set', { user_id, session_id, user_properties })
-            if (a && typeof a === 'object') {
-                if (a.user_id) state.user_id = a.user_id;
-                if (a.session_id) state.session_id = a.session_id;
-                if (a.user_properties && typeof a.user_properties === 'object') {
-                Object.keys(a.user_properties).forEach(k => {
-                    const v = a.user_properties[k];
-                    state.user_properties[k] = (v && typeof v === 'object' && 'value' in v) ? v : { value: v };
-                });
+                // gtag('set', { user_id, session_id, user_properties })
+                if (a && typeof a === 'object') {
+                    if (a.user_id) state.user_id = a.user_id;
+                    if (a.session_id) state.session_id = a.session_id;
+                    if (a.user_properties && typeof a.user_properties === 'object') {
+                    Object.keys(a.user_properties).forEach(k => {
+                        const v = a.user_properties[k];
+                        state.user_properties[k] = (v && typeof v === 'object' && 'value' in v) ? v : { value: v };
+                    });
+                    }
                 }
-            }
-            return;
+                return;
             }
             case 'event': {
-            // gtag('event','name', {params})
-            emitEvent(a, b || {});
-            return;
+                // gtag('event','name', {params})
+                emitEvent(a, b || {});
+                return;
             }
             default:
-            // игнорируем прочее
+                // игнорируем прочее
+                console.log('gaproxy ignore', cmd);
             return;
         }
         } catch(e) {
-        // мягко промолчим, чтобы не ломать страницу
-        // console.warn('gtag proxy error', e);
+            // мягко промолчим, чтобы не ломать страницу
+            console.warn('gtag proxy error', e);
         }
     }
 
