@@ -245,7 +245,10 @@
             "domaintags.get": true,
             "domaintags.add": true,
             "domaintags.update": true,
-            "domaintags.delete": true
+            "domaintags.delete": true,
+
+            "cdns.get": true,
+            "cdns.update": true
             
         }
     }
