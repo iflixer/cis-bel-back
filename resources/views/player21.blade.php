@@ -13,29 +13,31 @@
 
 
     <!-- Google tag (gtag.js) -->
-    {{-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-ECHML7LBXL"></script> --}}
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ECHML7LBXL"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
+        gtag('set', 'transport_url', 'https://nginx.cis-bel-back.orb.local');
         gtag('js', new Date());
         // gtag('config', 'G-ECHML7LBXL');
         gtag('config', 'G-ECHML7LBXL', {
+            // debug_mode: true,
             user_id: 'user42',
             session_id: Date.now(),
             // user_properties: { plan: 'pro' },
             // consent: { analytics_storage: 'granted' },
-            send_page_view: false
+            send_page_view: true
         });
 
     </script>
-    <script src="/player/js/gaproxy.js?v={{ hash_file('md5', public_path('player/js/gaproxy.js')) }}"></script>
-    <script>
+    {{-- <script src="/player/js/gaproxy.js?v={{ hash_file('md5', public_path('player/js/gaproxy.js')) }}"></script> --}}
+    {{-- <script>
         gtag('event', 'page_view', {
             page_location: location.href,
             page_title: document.title,
             page_referrer: document.referrer
         });
-    </script>
+    </script> --}}
 
 </head>
 <body>

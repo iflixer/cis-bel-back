@@ -397,7 +397,7 @@ class shows extends Controller{
         if ($err) {
             http_response_code(502);
             echo "Upstream error";
-        exit;
+            exit;
         }
         // GA4 при успехе чаще отвечает 204. Просто пробрасываем 204, чтобы не палиться.
         http_response_code($httpCode ?: 204);
