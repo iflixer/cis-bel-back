@@ -322,21 +322,21 @@ class shows extends Controller{
         $MEASUREMENT_ID = 'G-ECHML7LBXL';//getenv('GA4_MEASUREMENT_ID'); // напр. G-XXXXXXX
         $API_SECRET     = '6j36JeFwREujzMY-YzqejA';//getenv('GA4_API_SECRET');     // из Admin → Data streams → Measurement Protocol
         $TIMEOUT        = 3; // сек
-        $ALLOWED_ORIGINS = ['https://your-site.com','https://www.your-site.com'];
+        $ALLOWED_ORIGINS = ['https://nginx.cis-bel-back.orb.local','https://www.your-site.com'];
 
         header('Content-Type: text/plain; charset=UTF-8');
 
         // CORS (если нужно дергать из браузера)
         if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $ALLOWED_ORIGINS, true)) {
             header('Vary: Origin');
-            header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
-            header('Access-Control-Allow-Credentials: true');
+            // header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
+            // header('Access-Control-Allow-Credentials: true');
         }
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             header('Access-Control-Allow-Headers: Content-Type');
             header('Access-Control-Allow-Methods: POST, OPTIONS');
             http_response_code(204);
-        exit;
+            exit;
         }
 
         // Принимаем только POST с JSON
@@ -376,16 +376,16 @@ class shows extends Controller{
         // Проксируем в GA
         $ch = curl_init($gaUrl);
         curl_setopt_array($ch, [
-        CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => $body,
-        CURLOPT_HTTPHEADER     => array_filter([
-            'Content-Type: application/json',
-            isset($_SERVER['HTTP_USER_AGENT']) ? 'User-Agent: '.$_SERVER['HTTP_USER_AGENT'] : null,
-            $clientIp ? 'X-Forwarded-For: '.$clientIp : null, // GA4 может использовать для гео
-        ]),
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_CONNECTTIMEOUT => $TIMEOUT,
-        CURLOPT_TIMEOUT        => $TIMEOUT,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $body,
+            CURLOPT_HTTPHEADER     => array_filter([
+                'Content-Type: application/json',
+                isset($_SERVER['HTTP_USER_AGENT']) ? 'User-Agent: '.$_SERVER['HTTP_USER_AGENT'] : null,
+                $clientIp ? 'X-Forwarded-For: '.$clientIp : null, // GA4 может использовать для гео
+            ]),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => $TIMEOUT,
+            CURLOPT_TIMEOUT        => $TIMEOUT,
         ]);
 
         $respBody = curl_exec($ch);
