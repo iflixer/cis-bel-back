@@ -318,5 +318,91 @@ class shows extends Controller{
         }
     }
 
+    public function gaproxy() {
+        $MEASUREMENT_ID = 'G-ECHML7LBXL';//getenv('GA4_MEASUREMENT_ID'); // напр. G-XXXXXXX
+        $API_SECRET     = '6j36JeFwREujzMY-YzqejA';//getenv('GA4_API_SECRET');     // из Admin → Data streams → Measurement Protocol
+        $TIMEOUT        = 3; // сек
+        $ALLOWED_ORIGINS = ['https://your-site.com','https://www.your-site.com'];
+
+        header('Content-Type: text/plain; charset=UTF-8');
+
+        // CORS (если нужно дергать из браузера)
+        if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $ALLOWED_ORIGINS, true)) {
+            header('Vary: Origin');
+            header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
+            header('Access-Control-Allow-Credentials: true');
+        }
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            header('Access-Control-Allow-Headers: Content-Type');
+            header('Access-Control-Allow-Methods: POST, OPTIONS');
+            http_response_code(204);
+        exit;
+        }
+
+        // Принимаем только POST с JSON
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo "Method Not Allowed";
+            exit;
+        }
+        $body = file_get_contents('php://input');
+        if (!$body || strlen($body) > 64 * 1024) { // защитимся от мусора
+            http_response_code(400);
+            echo "Bad Request";
+            exit;
+        }
+        // Быстрая валидация JSON
+        $json = json_decode($body, true);
+        if (!is_array($json)) {
+            http_response_code(400);
+            echo "Invalid JSON";
+            exit;
+        }
+
+        // Подставим client_ip в X-Forwarded-For (GA4 не принимает ip в теле)
+        $clientIp = $_SERVER['HTTP_CF_CONNECTING_IP']
+        ?? $_SERVER['HTTP_X_REAL_IP']
+        ?? $_SERVER['HTTP_X_FORWARDED_FOR']
+        ?? $_SERVER['REMOTE_ADDR']
+        ?? null;
+
+        // Собираем URL GA4 MP
+        $gaUrl = sprintf(
+            'https://www.google-analytics.com/mp/collect?measurement_id=%s&api_secret=%s',
+            rawurlencode($MEASUREMENT_ID),
+            rawurlencode($API_SECRET)
+        );
+
+        // Проксируем в GA
+        $ch = curl_init($gaUrl);
+        curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $body,
+        CURLOPT_HTTPHEADER     => array_filter([
+            'Content-Type: application/json',
+            isset($_SERVER['HTTP_USER_AGENT']) ? 'User-Agent: '.$_SERVER['HTTP_USER_AGENT'] : null,
+            $clientIp ? 'X-Forwarded-For: '.$clientIp : null, // GA4 может использовать для гео
+        ]),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => $TIMEOUT,
+        CURLOPT_TIMEOUT        => $TIMEOUT,
+        ]);
+
+        $respBody = curl_exec($ch);
+        $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err      = curl_error($ch);
+        curl_close($ch);
+
+        // Ответ клиенту: 204 если всё ок
+        if ($err) {
+            http_response_code(502);
+            echo "Upstream error";
+        exit;
+        }
+        // GA4 при успехе чаще отвечает 204. Просто пробрасываем 204, чтобы не палиться.
+        http_response_code($httpCode ?: 204);
+        echo $respBody; // обычно пусто; можно вообще ничего не писать
+    }
+
 
 }
