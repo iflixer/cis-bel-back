@@ -322,7 +322,7 @@ class shows extends Controller{
         $MEASUREMENT_ID = 'G-ECHML7LBXL';//getenv('GA4_MEASUREMENT_ID'); // напр. G-XXXXXXX
         $API_SECRET     = '6j36JeFwREujzMY-YzqejA';//getenv('GA4_API_SECRET');     // из Admin → Data streams → Measurement Protocol
         $TIMEOUT        = 3; // сек
-        $ALLOWED_ORIGINS = ['https://nginx.cis-bel-back.orb.local','https://www.your-site.com'];
+        $ALLOWED_ORIGINS = ['https://nginx.cis-bel-back.orb.local','https://cdn0.cdnhub.help','https://cdn1.cdnhub.help','https://cdn2.cdnhub.help','https://cdn3.cdnhub.help'];
 
         header('Content-Type: text/plain; charset=UTF-8');
 
