@@ -1550,7 +1550,7 @@ class ShowControllerOrig extends Controller{
             ]);
         }
 
-        $serverDomain = 'tg.cdnhubstream.pro';
+        $serverDomain = 'tg.futemaxlive.com';
 
         return view('share', [
             'id' => $id,

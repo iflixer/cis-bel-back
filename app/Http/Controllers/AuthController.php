@@ -39,17 +39,17 @@ class AuthController extends Controller
         $email = $this->request->input('email');
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $response['messages'][] = ['tupe'=>'error', 'message'=>'Введён не корректный Email адрес', 'code' => 0];
+            $response['messages'][] = ['type'=>'error', 'message'=>'Введён не корректный Email адрес', 'code' => 0];
         }
 
         $userDB = User::where('login', $login)->first();
         if(isset($userDB)){
-            $response['messages'][] = ['tupe'=>'error', 'message'=>'Пользователь с таким Логином уже зарегистрирован', 'code' => 0];
+            $response['messages'][] = ['type'=>'error', 'message'=>'Пользователь с таким Логином уже зарегистрирован', 'code' => 0];
         }
 
         $userDB = User::where('email', $email)->first();
         if(isset($userDB)){
-            $response['messages'][] = ['tupe'=>'error', 'message'=>'Пользователь с таким Email адресом уже зарегистрирован', 'code' => 0];
+            $response['messages'][] = ['type'=>'error', 'message'=>'Пользователь с таким Email адресом уже зарегистрирован', 'code' => 0];
         }
 
         if( count($response['messages']) > 0 ){ return response()->json($response); }
@@ -95,7 +95,7 @@ class AuthController extends Controller
 
         if (!isset($user)) {
             $response['messages'][] = [
-                'tupe' => 'error',
+                'type' => 'error',
                 'message' => 'Пользователь с таким E-mail не существует',
                 'code' => 0
             ];
@@ -127,7 +127,7 @@ class AuthController extends Controller
         });
 
         $response['messages'][] = [
-            'tupe' => 'success',
+            'type' => 'success',
             'message' => 'Ссылка для восстановления пароля отправлена вам на почту',
             'code' => 0
         ];
@@ -147,7 +147,7 @@ class AuthController extends Controller
 
         if (!isset($passwordReset)) {
             $response['messages'][] = [
-                'tupe' => 'error',
+                'type' => 'error',
                 'message' => 'Не верный адрес',
                 'code' => 0
             ];
@@ -164,7 +164,7 @@ class AuthController extends Controller
         PasswordReset::where('email', $email)->where('token', $token)->delete();
 
         $response['messages'][] = [
-            'tupe' => 'success',
+            'type' => 'success',
             'message' => 'Новый пароль успешно установлен',
             'code' => 0
         ];
@@ -185,12 +185,12 @@ class AuthController extends Controller
 
         $userDB = User::where('login', $login)->first();
         if(!isset($userDB)){
-            $response['messages'][] = ['tupe'=>'error', 'message'=>'Пользователь не найден', 'code' => 1];
+            $response['messages'][] = ['type'=>'error', 'message'=>'Пользователь не найден', 'code' => 1];
             return response()->json($response);
         }
 
         if( !Hash::check($password, $userDB->password) ){
-            $response['messages'][] = ['tupe'=>'error', 'message'=>'Пароль не верен', 'code' => 2];
+            $response['messages'][] = ['type'=>'error', 'message'=>'Пароль не верен', 'code' => 2];
             return response()->json($response);
         }
 
@@ -226,7 +226,7 @@ class AuthController extends Controller
 
         $userDB = User::where('refresh_token', $token)->first();
         if(!isset($userDB)){
-            $response['messages'][] = ['tupe'=>'error', 'message'=>'Пользователь не найден', 'code' => 410];
+            $response['messages'][] = ['type'=>'error', 'message'=>'Пользователь не найден', 'code' => 410];
             return response()->json($response);
         }
 
