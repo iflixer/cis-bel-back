@@ -183,6 +183,17 @@ class domains extends Controller
             return ['response' => $response,'messages' => ['tupe'=>'error', 'message'=>'Не указанн idDomain']];
         }
         Domain::where('id', $idDomain)->update([ 'status' => '2' ]);
+        
+        $updatedDomain = Domain::where('id', $idDomain)->first();
+        if ($updatedDomain) {
+            $response = [
+                'id' => $updatedDomain->id,
+                'name' => $updatedDomain->name,
+                'status' => $updatedDomain->status,
+                'id_parent' => $updatedDomain->id_parent
+            ];
+        }
+        
         return ['data' => $response,'messages' => [['tupe'=>'info', 'message'=>'Домен отклонен']]];
     }
 
@@ -194,6 +205,17 @@ class domains extends Controller
             return ['response' => $response,'messages' => ['tupe'=>'error', 'message'=>'Не указанн idDomain']];
         }
         Domain::where('id', $idDomain)->update([ 'status' => '1' ]);
+        
+        $updatedDomain = Domain::where('id', $idDomain)->first();
+        if ($updatedDomain) {
+            $response = [
+                'id' => $updatedDomain->id,
+                'name' => $updatedDomain->name,
+                'status' => $updatedDomain->status,
+                'id_parent' => $updatedDomain->id_parent
+            ];
+        }
+        
         return ['data' => $response,'messages' => [['tupe'=>'success', 'message'=>'Домен одобрен']]];
     }
 
