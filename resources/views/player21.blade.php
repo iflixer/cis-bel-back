@@ -17,9 +17,27 @@
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
+        gtag('set', 'transport_url', 'https://<?php echo $_SERVER['HTTP_HOST'];?>');
         gtag('js', new Date());
-        gtag('config', 'G-ECHML7LBXL');
+        // gtag('config', 'G-ECHML7LBXL');
+        gtag('config', 'G-ECHML7LBXL', {
+            // debug_mode: true,
+            user_id: 'user42',
+            session_id: Date.now(),
+            // user_properties: { plan: 'pro' },
+            // consent: { analytics_storage: 'granted' },
+            send_page_view: true
+        });
+
     </script>
+    {{-- <script src="/player/js/gaproxy.js?v={{ hash_file('md5', public_path('player/js/gaproxy.js')) }}"></script> --}}
+    {{-- <script>
+        gtag('event', 'page_view', {
+            page_location: location.href,
+            page_title: document.title,
+            page_referrer: document.referrer
+        });
+    </script> --}}
 
 </head>
 <body>
@@ -534,7 +552,7 @@
                 _seasons_select.append('<option value="' + season + '"' + _selected + '>Сезон ' + season + '</option>');
 
                 if (parseInt(season) == parseInt(_season)) {
-                    console.log(episodes);
+                    // console.log(episodes);
                     $.each(episodes, function (key, episode) {
                         _selected = (parseInt(episode) == parseInt(_episode)) ? ' selected="selected"' : '';
                         _episodes_select.append('<option value="' + episode + '"' + _selected + '>Серия ' + episode + '</option>');
@@ -617,7 +635,7 @@
 
 
     window.PlayerjsEvents = function (event, id, info) {
-        console.log('PlayerjsEvents', event, id, info);
+        // console.log('PlayerjsEvents', event, id, info);
         if (typeof CDNplayer == "undefined") {
             return;
         }
@@ -627,7 +645,7 @@
             }
 
             if(event=="vast_Impression"){
-                console.log('PlayerjsEvents', event, info);
+                // console.log('PlayerjsEvents', event, info);
                 let infoobj = JSON.parse(info);
                 let iswas = infoobj["is"];
 
@@ -646,7 +664,7 @@
 
 
             if (event == "vast_complete" || event == "vast_skip") { // NOW WORKS in PJS21
-                console.log('PlayerjsEvents', event, info);
+                // console.log('PlayerjsEvents', event, info);
                 if (typeof cdn.player.iframeVastValue[cdn.player.iframeVastKey] != 'undefined') {
                     var matches = $.parseJSON(info).url.match(/khtag=([0-9]+)/i);
                     var ad_id = matches[1];
@@ -663,14 +681,14 @@
             }
 
             if (event == "init") {
-                console.log('PlayerjsEvents', event, info);
+                // console.log('PlayerjsEvents', event, info);
                 if (CDNplayer.api('adblock')) {
                     window.abc = true;
                 }
             }
 
             if (event == 'subtitle') {
-                console.log('PlayerjsEvents', event, info);
+                // console.log('PlayerjsEvents', event, info);
                 var cc = document.getElementById('player_control_cc_icon0'),
                     cl = 'none',
                     arr,
@@ -690,13 +708,13 @@
             }
 
             if (event == "play" || event == "start" || event == "vast_init") {
-                console.log('PlayerjsEvents', event, info);
+                // console.log('PlayerjsEvents', event, info);
                 cdn.player.controlSelectors('hide');
                 $('#save-holder').remove();
             }
 
             if (event == "start") {
-                console.log('PlayerjsEvents', event, info);
+                // console.log('PlayerjsEvents', event, info);
                 $.ajax({
                     type: 'get',
                     url: '/apishow/shows.show',
@@ -710,7 +728,7 @@
             }
 
             if (event == "pause" || event == "end") {
-                console.log('PlayerjsEvents', event, info);
+                // console.log('PlayerjsEvents', event, info);
                 cdn.player.controlSelectors('show');
             }
 
@@ -732,7 +750,7 @@
             }
 
             if (event == "vast_load") {
-                console.log('PlayerjsEvents', event, info);
+                // console.log('PlayerjsEvents', event, info);
                 if (info == "preroll") {
                     cdn.player.iframeVastKey = 'p';
                 } else if (info == "midroll") {
@@ -749,7 +767,7 @@
             // GA AND CROSSFRAME EVENTS
 
             if (event == "loaderror") {
-                console.log('PlayerjsEvents', event, info);
+                // console.log('PlayerjsEvents', event, info);
                 if (typeof gtag !== 'undefined') {
                     gtag('event', 'Video load error', {'event_category': 'Videos'});
                 }
@@ -762,7 +780,7 @@
             }
 
             if (event == "quartile") {
-                console.log('PlayerjsEvents', event, info);
+                // console.log('PlayerjsEvents', event, info);
                 if (typeof gtag !== 'undefined') {
                     gtag('event', info + ' of timeline completed', {'event_category': 'Videos'});
                 }
@@ -776,7 +794,7 @@
             }
 
             if (event == "userplay") {
-                console.log('PlayerjsEvents', event, info);
+                // console.log('PlayerjsEvents', event, info);
                 $('#selectors').fadeOut('slow');
                 $('#save-holder').remove();
                 if (typeof gtag !== 'undefined') {
@@ -792,7 +810,7 @@
             }
 
             if (event == "userpause") {
-                console.log('PlayerjsEvents', event, info);
+                // console.log('PlayerjsEvents', event, info);
                 $('#selectors').fadeIn('slow');
                 if (typeof gtag !== 'undefined') {
                     gtag('event', 'Video paused', {'event_category': 'Videos'});
@@ -807,7 +825,7 @@
             }
 
             if (event == "line") {
-                console.log('PlayerjsEvents', event, info);
+                // console.log('PlayerjsEvents', event, info);
                 if (typeof gtag !== 'undefined') {
                     gtag('event', 'Video rewind(fwd/rwd)', {'event_category': 'Videos'});
                 }
@@ -821,7 +839,7 @@
             }
 
             if (event == "finish") {
-                console.log('PlayerjsEvents', event, info);
+                // console.log('PlayerjsEvents', event, info);
                 $.ajax({
                     type: 'get',
                     url: '/apishow/shows.fullshow',
