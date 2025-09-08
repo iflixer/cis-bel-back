@@ -17,7 +17,7 @@
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
-        gtag('set', 'transport_url', 'https://nginx.cis-bel-back.orb.local');
+        gtag('set', 'transport_url', 'https://<?php echo $_SERVER['HTTP_HOST'];?>');
         gtag('js', new Date());
         // gtag('config', 'G-ECHML7LBXL');
         gtag('config', 'G-ECHML7LBXL', {
