@@ -352,15 +352,18 @@ class ShowController extends Controller{
 
                     // episodes
 
-                    if ($season == $file['season'])
+                    if ($season == $file['season'] && !in_array($file['num'], $episodes)) {
                         $episodes[] = $file['num'];
+                    }
 
                     // seasons episodes
 
-                    if (!isset($seasons_episodes[$file['season']]))
+                    if (!isset($seasons_episodes[$file['season']])) {
                         $seasons_episodes[$file['season']] = [];
-
-                    $seasons_episodes[$file['season']][] = $file['num'];
+                    }
+                    if (!in_array($file['num'], $seasons_episodes[$file['season']])) {
+                        $seasons_episodes[$file['season']][] = $file['num'];
+                    }
                 }
 
                 // translations seasons episodes
@@ -373,7 +376,6 @@ class ShowController extends Controller{
 
                 $translations_episodes[$file['translation_id']][$file['season']][] = $file['num'];
             }
-
             $data['seasons'] = $seasons;
             $data['episodes'] = $episodes;
             $data['translations_episodes'] = $translations_episodes;
