@@ -23,7 +23,6 @@
         gtag('config', 'G-ECHML7LBXL', {
             // debug_mode: true,
             user_id: 'user42',
-            session_id: Date.now(),
             // user_properties: { plan: 'pro' },
             // consent: { analytics_storage: 'granted' },
             send_page_view: true
