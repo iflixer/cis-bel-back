@@ -71,7 +71,7 @@ class ApiController extends Controller{
             //   1 => "show"
             // ]
 
-            $tiket = new $nameClass( $this->request );
+            $tiket = app()->make($nameClass, ['request' => $this->request]);
             // return response()->json( $tiket->$metodElements[1]() );
             return response()->json(call_user_func([$tiket, $metodElements[1]]));
         }

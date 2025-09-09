@@ -19,11 +19,28 @@ class FrontMiddleware
      */
     public function handle($request, Closure $next)
     {
-        $token = substr( $request->header('Authorization'), 7);
+        $authHeader = $request->header('Authorization');
+
+        if (!$authHeader || substr($authHeader, 0, 7) !== 'Bearer ') {
+            $response['messages'][] = ['type'=>'error', 'message'=>'Неверный токен', 'code' => 412];
+            return response()->json($response);
+        }
+        
+        $token = substr($authHeader, 7);
+
+        if (empty($token)) {
+            $response['messages'][] = ['type'=>'error', 'message'=>'Неверный токен', 'code' => 412];
+            return response()->json($response);
+        }
 
         $userDB = User::where('bearer_token', $token)->first();
         if(!isset($userDB)){
-            $response['messages'][] = ['tupe'=>'error', 'message'=>'Неверный токен', 'code' => 412];
+            $response['messages'][] = ['type'=>'error', 'message'=>'Неверный токен', 'code' => 412];
+            return response()->json($response);
+        }
+
+        if ($userDB->time_token < time()) {
+            $response['messages'][] = ['type'=>'error', 'message'=>'Неверный токен', 'code' => 412];
             return response()->json($response);
         }
 
@@ -41,7 +58,7 @@ class FrontMiddleware
         // Определяем доступность метода
         if( !(array_key_exists($request->route('method'), $politic) || $request->segment(2) == "exits") ){
 
-            $response['messages'][] = ['tupe'=>'error', 'message'=>'Операция запрещена', 'code' => 4];
+            $response['messages'][] = ['type'=>'error', 'message'=>'Операция запрещена', 'code' => 4];
             return response()->json($response);
         }
         
