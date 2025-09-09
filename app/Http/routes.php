@@ -99,7 +99,7 @@ Route::get('/cronjob/videodb', ['middleware' => [], 'uses' => 'CronjobController
 
 // test
 // Route::get('/test/episode/{id}', ['middleware' => [], 'uses' => 'TestController@episode'])->where('id', '[0-9]+');
-// Route::get('/test/translations', ['middleware' => [], 'uses' => 'TestController@translations']);
+Route::get('/test/translations', ['middleware' => [], 'uses' => 'TestController@translations']);
 // Route::get('/test/setTranslationsInTableFiles', ['middleware' => [], 'uses' => 'TestController@setTranslationsInTableFiles']);
 // Route::get('/test/player', ['middleware' => [], 'uses' => 'TestController@player']);
 // Route::get('/test/restore/index', ['middleware' => [], 'uses' => 'TestController@restoreIndex']);

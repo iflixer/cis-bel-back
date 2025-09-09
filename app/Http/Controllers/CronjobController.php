@@ -11,6 +11,7 @@ use App\User;
 use App\Video;
 use App\File;
 use App\Domain;
+use App\Seting;
 
 use App\Translation;
 use App\Videodb;
@@ -48,8 +49,10 @@ class CronjobController extends Controller
 		$this->request = $request;
 		$this->kinoPoiskService = $kinoPoiskService;
 
-		$this->loginVDB = config('videodb.login');
-		$this->passVDB = config('videodb.password');
+		// $this->loginVDB = config('videodb.login');
+		// $this->passVDB = config('videodb.password');
+		$this->loginVDB = Seting::where('name', 'loginVDB')->first()->toArray()['value'];
+        $this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
 	}
 
 	public function videodb()
@@ -60,6 +63,7 @@ class CronjobController extends Controller
 
 		$videodb = Videodb::select('last_accepted_at')->where('method', 'sync')->first()->toArray();
 		$last_created_at = strtotime($videodb['last_accepted_at']);
+		echo "Last created at: $last_created_at\n";
 
 		//
 
@@ -70,7 +74,10 @@ class CronjobController extends Controller
 
 		$medias = [];
 
+
 		while (!$stop_update) {
+			$u = "https://videodb.win/api/v1/medias?ordering=-created&limit={$limit}&offset={$offset}";
+			echo "URL: $u\n";
 			$curl = curl_init();
 			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
 			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
@@ -78,13 +85,15 @@ class CronjobController extends Controller
 			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 			curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
 			curl_setopt($curl, CURLOPT_USERPWD, $this->loginVDB.':'.$this->passVDB);
-			curl_setopt($curl, CURLOPT_URL, "https://videodb.win/api/v1/medias?ordering=-created&limit={$limit}&offset={$offset}");
+			curl_setopt($curl, CURLOPT_URL, $u);
 			$rezult = json_decode(curl_exec($curl));
 			curl_close($curl);
+			echo "rezult count: " . count($rezult->results) . "\n";
 
 			foreach ($rezult->results as $key => $value) {
 				if (strtotime($value->created) < $last_created_at) {
 					$stop_update = true;
+					echo "Stop update\n";
 					break;
 				} else {
 					$medias[] = $value;
@@ -93,10 +102,13 @@ class CronjobController extends Controller
 
 			$offset += $limit;
 		}
+		echo "medias count: " . count($medias) . "\n";
 
 		krsort($medias);
 
-		//
+		$created_files_total = [];
+		$created_videos_total = [];
+		$created_translations_total = [];
 
 		if ($medias) {
 			foreach ($medias as $key => $value) {
@@ -119,6 +131,7 @@ class CronjobController extends Controller
 						'id_VDB' => $value->translation->id,
 						'title' => $value->translation->title
 					]);
+					$created_translations_total[] = $value->translation->title;
 
 					$translation = Translation::where('id_VDB', $value->translation->id)
 						->first();
@@ -143,7 +156,7 @@ class CronjobController extends Controller
 							'description' => '',
 							'img' => ''
 						])->id;
-						
+						$created_videos_total[] = $value->content_object->orig_title;
 						if ($value->content_object->kinopoisk_id) {
 							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
 						}
@@ -159,8 +172,8 @@ class CronjobController extends Controller
 								'imdb' => $value->content_object->imdb_id,
 								'quality' => $value->source_quality.' '.$value->max_quality
 							]);
-							
-						if ($value->content_object->kinopoisk_id && !$video->update_kino) {
+
+							if ($value->content_object->kinopoisk_id && !$video->update_kino) {
 							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
 						}
 					}
@@ -180,6 +193,7 @@ class CronjobController extends Controller
 							'translation' => $value->translation->title,
 							'sids' => 'VDB'
 						])->id;
+						$created_files_total[] = $value->content_object->orig_title;
 					}
 				}
 
@@ -202,6 +216,7 @@ class CronjobController extends Controller
 							'description' => '', 
 							'img' => ''
 						])->id;
+						$created_videos_total[] = $value->content_object->tv_series->orig_title;
 						
 						if ($value->content_object->kinopoisk_id) {
 							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
@@ -239,6 +254,7 @@ class CronjobController extends Controller
 							'translation' => $value->translation->title,
 							'sids' => 'VDB'
 						])->id;
+						$created_files_total[] = $value->content_object->orig_title;
 					}
 				}
 
@@ -248,7 +264,11 @@ class CronjobController extends Controller
 					'last_accepted_at' => $value->created
 				]);
 			}
+			echo "TOTAL videos created: " . count($created_videos_total) . "\n";
+			echo "TOTAL files created: " . count($created_files_total) . "\n";
+			echo "TOTAL translations created: " . count($created_translations_total) . "\n";
 		}
+		echo "No new videos found\n";
 	}
 
 	public function kinopoisk()

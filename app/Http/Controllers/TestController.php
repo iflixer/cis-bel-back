@@ -61,7 +61,7 @@ class TestController extends Controller
 
 	function translations()
 	{
-		exit;
+		// exit;
 
 		$translations = $this->api('https://videodb.win/api/v1/translations/?format=json');
 
