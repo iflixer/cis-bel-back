@@ -205,7 +205,20 @@ class ShowController extends Controller{
 
             $data['files'] = $files;
 
-            // media
+            // найти самый наполненный перевод
+            $translations_stat = [];
+            foreach ($files as $file) {
+                $tid = $file['translation_id'];
+                $translations_stat[$tid] = ($translations_stat[$tid] ?? 0) + 1;
+            }
+            $maxFilledTranslationId = array_search(max($translations_stat), $translations_stat);
+            $maxFilledFile = null;
+            foreach ($files as $file) {
+                if ($file['translation_id'] == $maxFilledTranslationId) {
+                    $maxFilledFile = $file;
+                    break;
+                }
+            }
 
             if ($translate) {
                 foreach ($files as $file) {
@@ -213,7 +226,7 @@ class ShowController extends Controller{
                         $media = $file;
                 }
             } else
-                $media = $files[0];
+                $media = $maxFilledFile;
 
             if (empty($media))
                 abort(404);
@@ -240,14 +253,29 @@ class ShowController extends Controller{
                 ->get()
                 ->toArray();
 
+            // найти самый наполненный перевод
+            $translations_stat = [];
+            foreach ($files as $file) {
+                $tid = $file['translation_id'];
+                $translations_stat[$tid] = ($translations_stat[$tid] ?? 0) + 1;
+            }
+            $maxFilledTranslationId = array_search(max($translations_stat), $translations_stat);
+            $maxFilledFile = null;
+            foreach ($files as $file) {
+                if ($file['translation_id'] == $maxFilledTranslationId) {
+                    $maxFilledFile = $file;
+                    break;
+                }
+            }
+
             $data['files'] = $files;
 
             $media = null;
 
-            if (!$translate && !$season && !$episode && isset($files[0]))
-                $media = $files[0];
+            if (!$translate && !$season && !$episode && !empty($maxFilledFile))
+                $media = $maxFilledFile;
 
-            if (isset($files[0])) {
+            if (isset($maxFilledFile)) {
                 foreach ($files as $file) {
                     /*if ($translate && $season && $episode && $translate == $file['translation_id'] && $season == $file['season'] && $episode == $file['num']) {
                         $media = $file;
@@ -363,32 +391,16 @@ class ShowController extends Controller{
 
     private function inject_translations(array $data): array {
         $translations = [];
-
-        // собираем статистику по translation_id
         foreach ($data['files'] as $file) {
             $id = $file['translation_id'];
             if (!isset($translations[$id])) {
                 $translations[$id] = [
                     'id'      => $id,
                     'title'   => $file['t_tag'] ?: $file['t_title'],
-                    'counter' => 0,
                 ];
             }
-            $translations[$id]['counter']++;
         }
-
-        // превращаем в индексированный массив и сортируем по counter DESC
-        $translations = array_values($translations);
-        usort($translations, fn($a, $b) => $b['counter'] <=> $a['counter']);
-
         $data['translations'] = $translations;
-
-        // override default translation which was set in inject_media() if not set by user
-        if (!$data['translate_was_set_by_user']) {
-            $data['translate'] = $translations[0]['id'] ?? null;
-            $data['translateTitle'] = $translations[0]['title'] ?? null;
-        }
-
         return $data;
     }
 
