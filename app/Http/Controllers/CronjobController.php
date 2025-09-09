@@ -59,11 +59,28 @@ class CronjobController extends Controller
 	{
 		set_time_limit(0);
 
-		//
+		$start_date = null;
+		$end_date = null;
+		$vdb_date_lte = "";
+		$is_update_last = false;
+		// optional ?start_date=2024-03-04&end_date=2024-03-05
+		if ($this->request->input('start_date'))
+            $start_date = $this->request->input('start_date');
+		if ($this->request->input('end_date'))
+            $end_date = $this->request->input('end_date');
 
-		$videodb = Videodb::select('last_accepted_at')->where('method', 'sync')->first()->toArray();
-		$last_created_at = strtotime($videodb['last_accepted_at']);
-		echo "Last created at: $last_created_at\n";
+		echo "start date: $start_date\n";
+		echo "end date: $end_date\n";
+
+		if ($start_date && $end_date) {
+			$last_created_at = strtotime($start_date);
+			$vdb_date_lte = "&created__lte=" . date('Y-m-d', strtotime($end_date));
+		} else {
+			$videodb = Videodb::select('last_accepted_at')->where('method', 'sync')->first()->toArray();
+			$last_created_at = strtotime($videodb['last_accepted_at']);
+			echo "Last created at: $last_created_at\n";
+			$is_update_last = true;
+		}
 
 		//
 
@@ -76,7 +93,7 @@ class CronjobController extends Controller
 
 
 		while (!$stop_update) {
-			$u = "https://videodb.win/api/v1/medias?ordering=-created&limit={$limit}&offset={$offset}";
+			$u = "https://videodb.win/api/v1/medias?ordering=-created&limit={$limit}&offset={$offset}{$vdb_date_lte}";
 			echo "URL: $u\n";
 			$curl = curl_init();
 			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
@@ -258,18 +275,17 @@ class CronjobController extends Controller
 					}
 				}
 
-				//
-
-				Videodb::where('method', 'sync')->update([
-					'last_accepted_at' => $value->created
-				]);
+				if ($is_update_last) {
+					Videodb::where('method', 'sync')->update([
+						'last_accepted_at' => $value->created
+					]);
+				}
 			}
 			echo "TOTAL videos created: " . count($created_videos_total) . "\n";
 			echo "TOTAL files created: " . count($created_files_total) . "\n";
 			echo "TOTAL translations created: " . count($created_translations_total) . "\n";
-		}
-		echo "No new videos found\n";
-	}
+		} // if medias
+	} // function
 
 	public function kinopoisk()
 	{
