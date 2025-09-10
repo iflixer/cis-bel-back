@@ -47,9 +47,24 @@ class KinoPoiskService
         ]);
 
         $response = curl_exec($curl);
+        $errno    = curl_errno($curl);
+        $errstr   = curl_error($curl);
+        $status   = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);
-
-        return json_decode($response);
+        if ($errno !== 0 || $response === false) {
+            // логируй по желанию: logger()->warning("KP staff cURL error", compact('errno','errstr'));
+            return [];
+        }
+        if ($status < 200 || $status >= 300) {
+            // logger()->warning("KP staff HTTP $status", ['body' => $response]);
+            return [];
+        }
+        $data = json_decode($response);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+            // logger()->warning("KP staff bad JSON", ['error' => json_last_error_msg()]);
+            return [];
+        }
+        return $data;
     }
 
     protected function parseDopElements($elements, $tableElement, $tableLink, $nameColumn, $id)
@@ -78,6 +93,10 @@ class KinoPoiskService
 
     protected function parseStaff(array $staff, int $videoId)
     {
+        if (!count($staff)) {
+            return;
+        }
+
         Link_actor::where('id_video', $videoId)->delete();
         Link_director::where('id_video', $videoId)->delete();
 
