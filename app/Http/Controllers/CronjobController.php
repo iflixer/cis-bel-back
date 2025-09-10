@@ -190,7 +190,7 @@ class CronjobController extends Controller
 								'quality' => $value->source_quality.' '.$value->max_quality
 							]);
 
-							if ($value->content_object->kinopoisk_id && !$video->update_kino) {
+						if ($value->content_object->kinopoisk_id && !$video->update_kino) {
 							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
 						}
 					}

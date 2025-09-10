@@ -105,22 +105,17 @@ class KinoPoiskService
 
     protected function storeActor($staffMember, $videoId)
     {
-        $actor = Actor::where('kinopoisk_id', $staffMember->staffId)->first();
-
-        if (!$actor) {
-            $actor = Actor::create([
-                'kinopoisk_id' => $staffMember->staffId,
-                'name_ru' => $staffMember->nameRu ?? null,
-                'name_en' => $staffMember->nameEn ?? null,
-                'poster_url' => $staffMember->posterUrl ?? null
-            ]);
-        } else {
-            $actor->update([
-                'name_ru' => $staffMember->nameRu ?? $actor->name_ru,
-                'name_en' => $staffMember->nameEn ?? $actor->name_en,
-                'poster_url' => $staffMember->posterUrl ?? $actor->poster_url
-            ]);
-        }
+        $values = array_filter([
+            'name_ru'    => $staffMember->nameRu ?? null,
+            'name_en'    => $staffMember->nameEn ?? null,
+            'poster_url' => $staffMember->posterUrl ?? null,
+        ], function ($v) {
+            return !empty($v); // уберёт null и пустые строки
+        });
+        $actor = Actor::updateOrCreate(
+            ['kinopoisk_id' => $staffMember->staffId],
+            $values
+        );
 
         $linkExists = Link_actor::where('id_video', $videoId)
             ->where('id_actor', $actor->id)
@@ -137,22 +132,17 @@ class KinoPoiskService
 
     protected function storeDirector($staffMember, $videoId)
     {
-        $director = Director::where('kinopoisk_id', $staffMember->staffId)->first();
-
-        if (!$director) {
-            $director = Director::create([
-                'kinopoisk_id' => $staffMember->staffId,
-                'name_ru' => $staffMember->nameRu ?? null,
-                'name_en' => $staffMember->nameEn ?? null,
-                'poster_url' => $staffMember->posterUrl ?? null
-            ]);
-        } else {
-            $director->update([
-                'name_ru' => $staffMember->nameRu ?? $director->name_ru,
-                'name_en' => $staffMember->nameEn ?? $director->name_en,
-                'poster_url' => $staffMember->posterUrl ?? $director->poster_url
-            ]);
-        }
+        $values = array_filter([
+            'name_ru'    => $staffMember->nameRu ?? null,
+            'name_en'    => $staffMember->nameEn ?? null,
+            'poster_url' => $staffMember->posterUrl ?? null,
+        ], function ($v) {
+            return !empty($v); // уберёт null и пустые строки
+        });
+        $director = Director::updateOrCreate(
+            ['kinopoisk_id' => $staffMember->staffId],
+            $values
+        );
 
         $linkExists = Link_director::where('id_video', $videoId)
             ->where('id_director', $director->id)
