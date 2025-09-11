@@ -161,16 +161,12 @@ class KinoPoiskService
             $values
         );
 
-        $linkExists = Link_director::where('id_video', $videoId)
-            ->where('id_director', $director->id)
-            ->exists();
-
-        if (!$linkExists) {
-            Link_director::create([
+        Link_director::firstOrCreate(
+            [
                 'id_video' => $videoId,
-                'id_director' => $director->id
-            ]);
-        }
+                'id_director' => $director->id,
+            ]
+        );
     }
 
     public function updateVideoWithKinoPoiskData($videoId, $updateNames = false)
