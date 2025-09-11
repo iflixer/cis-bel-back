@@ -136,17 +136,15 @@ class KinoPoiskService
             $values
         );
 
-        $linkExists = Link_actor::where('id_video', $videoId)
-            ->where('id_actor', $actor->id)
-            ->exists();
-
-        if (!$linkExists) {
-            Link_actor::create([
+        Link_actor::firstOrCreate(
+            [
                 'id_video' => $videoId,
                 'id_actor' => $actor->id,
-                'character_name' => $staffMember->description ?? null
-            ]);
-        }
+            ],
+            [
+                'character_name' => $staffMember->description ?? null,
+            ]
+        );
     }
 
     protected function storeDirector($staffMember, $videoId)
