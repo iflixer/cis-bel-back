@@ -24,6 +24,7 @@ use App\Link_genre;
 
 use Mail;
 use DB;
+use App\Services\KinoPoiskService;
 
 use JonnyW\PhantomJs\Client;
 
@@ -688,5 +689,20 @@ class TestController extends Controller
 
 		file_put_contents(__DIR__ . '/filterNetworkTraffic.log', $serverInfoData, LOCK_EX | FILE_APPEND);
 	}
+
+    public function importKinoPoisk(){
+        $messages = [];
+        $limit = 10;
+
+        DB::enableQueryLog();
+
+        $kinoPoiskService = new KinoPoiskService();
+
+        $response = $kinoPoiskService->updateMultipleVideos($limit);
+
+        $messages['requests'] = DB::getQueryLog();
+        return ['data' => $response, 'messages' => $messages];
+    }
+
 
 }
