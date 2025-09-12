@@ -3,6 +3,7 @@ namespace App\Http\Controllers\api;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
@@ -85,9 +86,12 @@ class videos extends Controller{
     public function addKinoPoisk(){
         $messages = [];
         $limit = $this->request->input('limit');
+
+        DB::enableQueryLog();
         
         $response = $this->kinoPoiskService->updateMultipleVideos($limit);
 
+        $messages['requests'] = DB::getQueryLog();
         return ['data' => $response, 'messages' => $messages];
     }
 
