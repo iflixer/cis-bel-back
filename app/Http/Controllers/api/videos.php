@@ -73,12 +73,9 @@ class videos extends Controller{
 
 
     public function info(){
-
         $count_vdb = File::where('sids','VDB')->count();
-
         $countVideo = Video::where('kinopoisk', '!=', null)->count();
         $countDropVideo = Video::where('update_kino', 1)->count();
-
         return [ 'data' => [ 'count' => $count_vdb, 'countVideo' => $countVideo, 'countDropVideo' => $countDropVideo, 'kinoPoisk' => '' ], 'messages' => [] ];
     }
 
@@ -86,12 +83,7 @@ class videos extends Controller{
     public function addKinoPoisk(){
         $messages = [];
         $limit = $this->request->input('limit');
-
-        DB::enableQueryLog();
-        
         $response = $this->kinoPoiskService->updateMultipleVideos($limit);
-
-        $messages['requests'] = DB::getQueryLog();
         return ['data' => $response, 'messages' => $messages];
     }
 
