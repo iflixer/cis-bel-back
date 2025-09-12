@@ -692,7 +692,8 @@ class TestController extends Controller
 
     public function importKinoPoisk(){
         $messages = [];
-        $limit = 10;
+		$start_time = microtime(true);
+        $limit = 2;
         $GLOBALS['debug_kinopoisk_import'] = 1;
 
         DB::enableQueryLog();
@@ -701,7 +702,13 @@ class TestController extends Controller
 
         $response = $kinoPoiskService->updateMultipleVideos($limit);
 
-        $messages['requests'] = DB::getQueryLog();
+        $reqs = DB::getQueryLog();
+
+		$totalMysqlTime = array_sum(array_column($reqs, 'time'));
+		echo "totalMysqlTime ms: {$totalMysqlTime}\n";
+		echo "totalTime: " . (microtime(true) - $start_time) . "\n";
+		die();
+
         return ['data' => $response, 'messages' => $messages];
     }
 
