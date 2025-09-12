@@ -693,6 +693,7 @@ class TestController extends Controller
     public function importKinoPoisk(){
         $messages = [];
         $limit = 10;
+        $GLOBALS['debug_kinopoisk_import'] = 1;
 
         DB::enableQueryLog();
 

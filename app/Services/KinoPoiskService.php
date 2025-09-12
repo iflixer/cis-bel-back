@@ -16,13 +16,15 @@ class KinoPoiskService
 {
     public function parseKinoPoisk($id)
     {
+        $start_time = microtime(true);
+        $u = 'https://kinopoiskapiunofficial.tech/api/v2.1/films/' . $id;
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-        curl_setopt($curl, CURLOPT_URL, 'https://kinopoiskapiunofficial.tech/api/v2.1/films/' . $id);
+        curl_setopt($curl, CURLOPT_URL, $u);
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
             'X-API-KEY: ' . config('kinopoisk.token')
         ));
@@ -30,18 +32,26 @@ class KinoPoiskService
         $response = curl_exec($curl);
         curl_close($curl);
 
+        if (!empty($GLOBALS['debug_kinopoisk_import'])) {
+            echo "parseKinoPoisk API request: $u\n";
+            // echo "parseKinoPoisk API response: $response\n";
+            echo "parseKinoPoisk API duration: " . (microtime(true) - $start_time) . " seconds\n";
+        }
+
         return json_decode($response);
     }
 
     public function parseKinoPoiskStaff($id): array
     {
+        $start_time = microtime(true);
+        $u = 'https://kinopoiskapiunofficial.tech/api/v1/staff?filmId=' . $id;
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-        curl_setopt($curl, CURLOPT_URL, 'https://kinopoiskapiunofficial.tech/api/v1/staff?filmId=' . $id);
+        curl_setopt($curl, CURLOPT_URL, $u);
         curl_setopt($curl, CURLOPT_HTTPHEADER, [
             'X-API-KEY: ' . config('kinopoisk.token')
         ]);
@@ -53,17 +63,34 @@ class KinoPoiskService
         curl_close($curl);
         if ($errno !== 0 || $response === false) {
             // логируй по желанию: logger()->warning("KP staff cURL error", compact('errno','errstr'));
+            if (!empty($GLOBALS['debug_kinopoisk_import'])) {
+                echo "parseKinoPoiskStaff API cURL error: $errstr ($errno)\n";
+            }
             return [];
         }
         if ($status < 200 || $status >= 300) {
             // logger()->warning("KP staff HTTP $status", ['body' => $response]);
+            if (!empty($GLOBALS['debug_kinopoisk_import'])) {
+                echo "parseKinoPoiskStaff API HTTP error: $status\n";
+            }
             return [];
         }
         $data = json_decode($response);
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
             // logger()->warning("KP staff bad JSON", ['error' => json_last_error_msg()]);
+            if (!empty($GLOBALS['debug_kinopoisk_import'])) {
+                echo "parseKinoPoiskStaff API bad JSON: " . json_last_error_msg() . "\n";
+            }
             return [];
         }
+
+
+        if (!empty($GLOBALS['debug_kinopoisk_import'])) {
+            echo "parseKinoPoiskStaff API request: $u\n";
+            // echo "parseKinoPoiskStaff API response: $response\n";
+            echo "parseKinoPoiskStaff API duration: " . (microtime(true) - $start_time) . " seconds\n";
+        }
+
         return $data;
     }
 
