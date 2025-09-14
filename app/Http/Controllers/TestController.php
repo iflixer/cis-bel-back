@@ -26,6 +26,7 @@ use Mail;
 use DB;
 use App\Services\KinoPoiskService;
 use App\Services\TmdbService;
+use App\Services\FanartService;
 
 use JonnyW\PhantomJs\Client;
 
@@ -724,6 +725,28 @@ class TestController extends Controller
         $tmdbService = new TmdbService();
 
         $response = $tmdbService->updateMultipleVideos($limit);
+
+        $reqs = DB::getQueryLog();
+
+		$totalMysqlTime = array_sum(array_column($reqs, 'time'));
+		echo "totalMysqlTime ms: {$totalMysqlTime}\n";
+		echo "totalTime: " . (microtime(true) - $start_time) . "\n";
+		die();
+
+        return ['data' => $response, 'messages' => $messages];
+    }
+
+	public function importFanart(){
+        $messages = [];
+		$start_time = microtime(true);
+        $limit = 10;
+        $GLOBALS['debug_tmdb_import'] = 1;
+
+        DB::enableQueryLog();
+
+        $fanartService = new FanartService();
+
+        $response = $fanartService->updateMultipleVideos($limit);
 
         $reqs = DB::getQueryLog();
 

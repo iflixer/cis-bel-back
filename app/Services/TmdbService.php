@@ -65,7 +65,7 @@ class TmdbService
 
 
 
-    public function updateVideoWithTmdbData($videoId, $updateNames = false)
+    public function updateVideoWithTmdbData($videoId)
     {
         $video = Video::find($videoId);
 

@@ -103,6 +103,7 @@ Route::get('/test/translations', ['middleware' => [], 'uses' => 'TestController@
 // Route::get('/test/setTranslationsInTableFiles', ['middleware' => [], 'uses' => 'TestController@setTranslationsInTableFiles']);
 Route::get('/test/import_kinopoisk', ['middleware' => [], 'uses' => 'TestController@importKinoPoisk']);
 Route::get('/test/import_tmdb', ['middleware' => [], 'uses' => 'TestController@importTmdb']);
+Route::get('/test/import_fanart', ['middleware' => [], 'uses' => 'TestController@importFanart']);
 // Route::get('/test/player', ['middleware' => [], 'uses' => 'TestController@player']);
 // Route::get('/test/restore/index', ['middleware' => [], 'uses' => 'TestController@restoreIndex']);
 // Route::get('/test/restore/{id}', ['middleware' => [], 'uses' => 'TestController@restore'])->where('id', '[0-9]+');
