@@ -50,6 +50,10 @@ class FanartService
 			$backdrop =  $response->moviethumb[0];
 		}
 
+        if (!empty($response->movieposter)) {
+            $res['img'] = $response->movieposter[0]->url;
+        }
+
        if (!empty($backdrop) && !empty($backdrop->url)) {
             $res['backdrop'] = $backdrop->url;
         }
@@ -80,6 +84,9 @@ class FanartService
         if (empty($video->backdrop) && !empty($film['backdrop'])) {
             $updateData['backdrop'] = $film['backdrop'];
         }
+        if (empty($video->img) && !empty($film['movieposter'])) {
+            $updateData['img'] = $film['movieposter'];
+        }
         
 
         if (empty($updateData)) {
@@ -93,9 +100,13 @@ class FanartService
     public function updateMultipleVideos($limit)
     {
         $response = [];
-        $videos = Video::where('update_fanart', '=', 0)
-            ->where('imdb', '!=', null)
+        $videos = Video::where('update_fanart', 0)
+            ->whereNotNull('imdb')
             ->where('imdb', '!=', '')
+            ->where(function($q) {
+                $q->where('img', '=', '')
+                ->orWhere('backdrop', '=', '');
+            })
             ->limit($limit)
             ->get();
 
