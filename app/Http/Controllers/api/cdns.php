@@ -43,6 +43,12 @@ class cdns extends Controller{
     foreach ($cdns as $key => $value) {
       $cdns[$key]['active_text'] = $value['active'] ? 'Активен' : 'Неактивен';
       $cdns[$key]['weight'] = intval($value['weight']);
+      
+      if ($value['rx5m'] > 0) {
+        $cdns[$key]['ratio'] = round($value['tx5m'] / $value['rx5m'], 2);
+      } else {
+        $cdns[$key]['ratio'] = 0;
+      }
     }
 
     return ['data' => $cdns, 'messages' => $messages];
