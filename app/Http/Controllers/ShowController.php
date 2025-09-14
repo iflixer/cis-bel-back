@@ -165,7 +165,7 @@ class ShowController extends Controller{
         // update stat for domain
         $this->do_stat($domain);
 
-        LocationTracker::logPlayerRequestFromHeaders($video->id, $this->request->domain);
+        LocationTracker::logPlayerRequestFromHeadersById($video->id, $domain ? $domain->id : null);
 
         // get view for player
         $player_view = 'player';

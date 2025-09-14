@@ -390,7 +390,8 @@ class ShowControllerOrig extends Controller{
             // return $this->fallback_player($id);
         }
 
-        LocationTracker::logPlayerRequestFromHeaders($video->id, $this->request->domain);
+        $domain = Domain::where('name', $this->request->domain)->first();
+        LocationTracker::logPlayerRequestFromHeadersById($video->id, $domain ? $domain->id : null);
 
         // if ($this->request->domain != 'api.kholobok.biz' && $this->request->domain != 'kholobok.biz') {
             if (isset($video) && $video->lock != null && $video->lock != '') {

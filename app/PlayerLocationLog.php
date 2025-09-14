@@ -11,7 +11,7 @@ class PlayerLocationLog extends Model
     protected $fillable = [
         'country_id',
         'video_id', 
-        'domain_name'
+        'domain_id'
     ];
 
     protected $dates = ['created_at'];
@@ -24,5 +24,10 @@ class PlayerLocationLog extends Model
     public function video()
     {
         return $this->belongsTo('App\Video');
+    }
+
+    public function domain()
+    {
+        return $this->belongsTo('App\Domain');
     }
 }
