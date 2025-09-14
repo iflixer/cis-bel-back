@@ -16,7 +16,7 @@ class FanartService
 {
     public function parseFanartByImdbId($imdb_id)
     {
-        $u = "https://webservice.fanart.tv/v3/movies/{$imdb_id}?api_key=2d91143bea175a2959d5a383be23425c";
+        $u = "https://webservice.fanart.tv/v3/movies/{$imdb_id}?api_key=" . config('fanart.token');
 
         $start_time = microtime(true);
         $curl = curl_init();

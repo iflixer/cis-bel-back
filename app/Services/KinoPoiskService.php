@@ -244,7 +244,7 @@ class KinoPoiskService
         $updateData = [
             'year' => $kinoPoisk->year,
             'description' => $kinoPoisk->description,
-            'img' => $kinoPoisk->posterUrl,
+            'img' => $kinoPoisk->posterUrl ?? '',
             'update_kino' => 1,
             'film_length' => $kinoPoisk->filmLength,
             'slogan' => $kinoPoisk->slogan,
