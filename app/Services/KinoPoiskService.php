@@ -217,6 +217,7 @@ class KinoPoiskService
         }
 
         $kinoPoisk = $film->data;
+        $imdb_id = $film->externalId->imdbId ?? '';
 
         $this->parseDopElements(
             array_map(function ($item) {
@@ -241,10 +242,11 @@ class KinoPoiskService
         $staff = $this->parseKinoPoiskStaff($video->kinopoisk);
         $this->parseStaff($staff, $videoId);
 
+
         $updateData = [
             'year' => $kinoPoisk->year,
             'description' => $kinoPoisk->description,
-            'img' => $kinoPoisk->posterUrl,
+            'img' => $kinoPoisk->posterUrl ?? '',
             'update_kino' => 1,
             'film_length' => $kinoPoisk->filmLength,
             'slogan' => $kinoPoisk->slogan,
@@ -262,6 +264,11 @@ class KinoPoiskService
             'seasons' => json_encode($kinoPoisk->seasons),
         ];
 
+        if (!empty($imdb_id)) {
+            $updateData['imdb'] = $imdb_id;
+        }
+
+
         if ($updateNames) {
             $updateData['ru_name'] = $kinoPoisk->nameRu;
             $updateData['name'] = $kinoPoisk->nameEn;
@@ -272,11 +279,29 @@ class KinoPoiskService
         return true;
     }
 
+    public function updateVideoWithKinoPoiskDataImdbOnly($videoId, $kpId)
+    {
+        $film = $this->parseKinoPoisk($kpId);
+        Video::where('id', $videoId)->update(['update_kino' => 1]);
+        if (!$film) {
+            return false;
+        }
+        $imdb_id = $film->externalId->imdbId ?? '';
+        if (empty($imdb_id)) {
+            return;
+        }
+        $updateData = [];
+        $updateData['imdb'] = $imdb_id;
+        $updateData['update_kino'] = 2;
+        Video::where('id', $videoId)->update($updateData);
+        return true;
+    }
+
     public function updateMultipleVideos($limit)
     {
         $response = [];
         $videos = Video::where('update_kino', null)
-            ->where('kinopoisk', '!=', null)
+            ->whereNotNull('kinopoisk')
             ->limit($limit)
             ->get();
 
@@ -287,6 +312,22 @@ class KinoPoiskService
 
             $response[] = ['id' => $video->id];
             $this->updateVideoWithKinoPoiskData($video->id);
+        }
+
+        return $response;
+    }
+
+    public function updateMultipleVideosOnlyImdb($limit)
+    {
+        $response = [];
+        $videos = Video::where('update_kino', null)
+            ->whereNotNull('kinopoisk')
+            ->limit($limit)
+            ->get();
+
+        foreach ($videos as $video) {
+            $response[] = ['id' => $video->id];
+            $this->updateVideoWithKinoPoiskDataImdbOnly($video->id, $video->kinopoisk);
         }
 
         return $response;

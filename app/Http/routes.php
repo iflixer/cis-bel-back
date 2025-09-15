@@ -102,7 +102,11 @@ Route::get('/cronjob/videodb', ['middleware' => [], 'uses' => 'CronjobController
 Route::get('/test/translations', ['middleware' => [], 'uses' => 'TestController@translations']);
 // Route::get('/test/setTranslationsInTableFiles', ['middleware' => [], 'uses' => 'TestController@setTranslationsInTableFiles']);
 Route::get('/test/import_kinopoisk', ['middleware' => [], 'uses' => 'TestController@importKinoPoisk']);
+Route::get('/test/import_kinopoisk_only_imdb', ['middleware' => [], 'uses' => 'TestController@importKinoPoiskOnlyImdb']);
 Route::get('/test/import_tmdb', ['middleware' => [], 'uses' => 'TestController@importTmdb']);
+Route::get('/test/import_fanart', ['middleware' => [], 'uses' => 'TestController@importFanart']);
+Route::get('/test/import_openai', ['middleware' => [], 'uses' => 'TestController@importOpenai']);
+Route::get('/test/import_thetvdb', ['middleware' => [], 'uses' => 'TestController@importThetvdb']);
 // Route::get('/test/player', ['middleware' => [], 'uses' => 'TestController@player']);
 // Route::get('/test/restore/index', ['middleware' => [], 'uses' => 'TestController@restoreIndex']);
 // Route::get('/test/restore/{id}', ['middleware' => [], 'uses' => 'TestController@restore'])->where('id', '[0-9]+');

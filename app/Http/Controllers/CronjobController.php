@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\TmdbService;
+use App\Services\FanartService;
 use Illuminate\Http\Request;
 use App\Http\Requests;
 
@@ -37,6 +39,8 @@ class CronjobController extends Controller
 	protected $loginVDB; // = 'kolobock'
 	protected $passVDB; // = '5HxL2P2Yw1yq'
 	protected $kinoPoiskService;
+	protected $tmdbService;
+	protected $fanartService;
 
 	// protected $adress = 'https://api.kholobok.biz/show/';
 	// protected $adress = 'https://cdnhub.help/show/';
@@ -48,6 +52,8 @@ class CronjobController extends Controller
 	{
 		$this->request = $request;
 		$this->kinoPoiskService = $kinoPoiskService;
+		$this->tmdbService = new TmdbService();
+		$this->fanartService = new FanartService();
 
 		// $this->loginVDB = config('videodb.login');
 		// $this->passVDB = config('videodb.password');
@@ -176,6 +182,8 @@ class CronjobController extends Controller
 						$created_videos_total[] = $value->content_object->orig_title;
 						if ($value->content_object->kinopoisk_id) {
 							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
+							$this->tmdbService->updateVideoWithTmdbData($lastId);
+							$this->fanartService->updateVideoWithFanartData($lastId);
 						}
 					} else {
 						$lastId = $video->id;
@@ -192,6 +200,8 @@ class CronjobController extends Controller
 
 						if ($value->content_object->kinopoisk_id && !$video->update_kino) {
 							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
+							$this->tmdbService->updateVideoWithTmdbData($lastId);
+							$this->fanartService->updateVideoWithFanartData($lastId);
 						}
 					}
 

@@ -26,8 +26,14 @@ use Mail;
 use DB;
 use App\Services\KinoPoiskService;
 use App\Services\TmdbService;
+use App\Services\FanartService;
+use App\Services\OpenaiService;
+use App\Services\ThetvdbService;
 
 use JonnyW\PhantomJs\Client;
+
+use App\Helpers\Debug;
+
 
 require_once __DIR__ . '/simplexlsxgen-master/src/SimpleXLSXGen.php';
 use Shuchkin\SimpleXLSXGen;
@@ -692,49 +698,63 @@ class TestController extends Controller
 	}
 
     public function importKinoPoisk(){
-        $messages = [];
 		$start_time = microtime(true);
         $limit = 2;
         $GLOBALS['debug_kinopoisk_import'] = 1;
-
         DB::enableQueryLog();
-
         $kinoPoiskService = new KinoPoiskService();
-
         $response = $kinoPoiskService->updateMultipleVideos($limit);
+        Debug::dump_queries($start_time);
+    }
 
-        $reqs = DB::getQueryLog();
-
-		$totalMysqlTime = array_sum(array_column($reqs, 'time'));
-		echo "totalMysqlTime ms: {$totalMysqlTime}\n";
-		echo "totalTime: " . (microtime(true) - $start_time) . "\n";
-		die();
-
-        return ['data' => $response, 'messages' => $messages];
+	public function importKinoPoiskOnlyImdb(){
+		$start_time = microtime(true);
+        $limit = 10;
+        $GLOBALS['debug_kinopoisk_import'] = 1;
+        DB::enableQueryLog();
+        $kinoPoiskService = new KinoPoiskService();
+        $response = $kinoPoiskService->updateMultipleVideosOnlyImdb($limit);
+		Debug::dump_queries($start_time);
     }
 
 	public function importTmdb(){
-        $messages = [];
 		$start_time = microtime(true);
         $limit = 10;
         $GLOBALS['debug_tmdb_import'] = 1;
-
         DB::enableQueryLog();
-
         $tmdbService = new TmdbService();
-
         $response = $tmdbService->updateMultipleVideos($limit);
-
-        $reqs = DB::getQueryLog();
-
-		$totalMysqlTime = array_sum(array_column($reqs, 'time'));
-		echo "totalMysqlTime ms: {$totalMysqlTime}\n";
-		echo "totalTime: " . (microtime(true) - $start_time) . "\n";
-		die();
-
-        return ['data' => $response, 'messages' => $messages];
+		Debug::dump_queries($start_time);
     }
 
+	public function importFanart(){
+		$start_time = microtime(true);
+        $limit = 10;
+        $GLOBALS['debug_tmdb_import'] = 1;
+        DB::enableQueryLog();
+        $fanartService = new FanartService();
+        $response = $fanartService->updateMultipleVideos($limit);
+		Debug::dump_queries($start_time);
+    }
 
+	public function importOpenai(){
+		$start_time = microtime(true);
+        $limit = 10;
+        $GLOBALS['debug_tmdb_import'] = 1;
+        DB::enableQueryLog();
+        $openaiService = new OpenaiService();
+        $response = $openaiService->updateMultipleVideos($limit);
+        Debug::dump_queries($start_time);
+    }
+
+	public function importThetvdb(){
+		$start_time = microtime(true);
+        $limit = 10;
+        $GLOBALS['debug_tmdb_import'] = 1;
+        DB::enableQueryLog();
+        $thetvdbService = new ThetvdbService();
+        $response = $thetvdbService->updateMultipleVideosIds($limit);
+        Debug::dump_queries($start_time);
+    }
 
 }
