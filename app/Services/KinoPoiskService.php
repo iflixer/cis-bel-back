@@ -287,13 +287,13 @@ class KinoPoiskService
             return false;
         }
         $imdb_id = $film->externalId->imdbId ?? '';
-        $updateData = [];
-        if (!empty($imdb_id)) {
-            $updateData['imdb'] = $imdb_id;
-            $updateData['update_kino'] = 2;
+        if (empty($imdb_id)) {
+            return;
         }
+        $updateData = [];
+        $updateData['imdb'] = $imdb_id;
+        $updateData['update_kino'] = 2;
         Video::where('id', $videoId)->update($updateData);
-
         return true;
     }
 
@@ -301,7 +301,7 @@ class KinoPoiskService
     {
         $response = [];
         $videos = Video::where('update_kino', null)
-            ->where('kinopoisk', '!=', null)
+            ->whereNotNull('kinopoisk')
             ->limit($limit)
             ->get();
 
