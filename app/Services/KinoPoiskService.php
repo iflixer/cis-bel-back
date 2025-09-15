@@ -217,6 +217,7 @@ class KinoPoiskService
         }
 
         $kinoPoisk = $film->data;
+        $imdb_id = $film->externalId->imdbId ?? '';
 
         $this->parseDopElements(
             array_map(function ($item) {
@@ -241,6 +242,7 @@ class KinoPoiskService
         $staff = $this->parseKinoPoiskStaff($video->kinopoisk);
         $this->parseStaff($staff, $videoId);
 
+
         $updateData = [
             'year' => $kinoPoisk->year,
             'description' => $kinoPoisk->description,
@@ -261,6 +263,11 @@ class KinoPoiskService
             'facts' => json_encode($kinoPoisk->facts),
             'seasons' => json_encode($kinoPoisk->seasons),
         ];
+
+        if (!empty($imdb_id)) {
+            $updateData['imdb'] = $imdb_id;
+        }
+
 
         if ($updateNames) {
             $updateData['ru_name'] = $kinoPoisk->nameRu;
