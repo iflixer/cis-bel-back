@@ -250,8 +250,14 @@
             "domaintags.setForDomain": true,
 
             "cdns.get": true,
-            "cdns.update": true
-            
+            "cdns.update": true,
+
+            "geogroups.get": true,
+            "geogroups.countries": true,
+            "geogroups.create": true,
+            "geogroups.update": true,
+            "geogroups.delete": true
+
         }
     }
 }
