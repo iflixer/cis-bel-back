@@ -14,9 +14,11 @@ use App\Link_director;
 use DB;
 class FanartService
 {
-    public function parseFanartByImdbId($imdb_id)
+    public function parseFanartByImdbId($tupe, $ext_id)
     {
-        $u = "https://webservice.fanart.tv/v3/movies/{$imdb_id}?api_key=" . config('fanart.token');
+        $type = 'tv';
+        if ($tupe=='movie') $type = 'movies';
+        $u = "https://webservice.fanart.tv/v3/{$type}/{$ext_id}?api_key=" . config('fanart.token');
 
         $start_time = microtime(true);
         $curl = curl_init();
@@ -42,16 +44,21 @@ class FanartService
 
         $response = json_decode($response);
         $res = [];
-		if (!empty($response->moviebackground)) {
-			$backdrop =  $response->moviebackground[0];
-		} elseif (!empty($response->movie4kbackground)) {
-			$backdrop =  $response->movie4kbackground[0];
-		} elseif (!empty($response->moviethumb)) {
-			$backdrop =  $response->moviethumb[0];
-		}
 
-        if (!empty($response->movieposter)) {
-            $res['img'] = $response->movieposter[0]->url;
+        if ($type == 'movies') {
+            if (!empty($response->moviebackground)) {
+                $backdrop =  $response->moviebackground[0];
+            } elseif (!empty($response->movie4kbackground)) {
+                $backdrop =  $response->movie4kbackground[0];
+            } elseif (!empty($response->moviethumb)) {
+                $backdrop =  $response->moviethumb[0];
+            }
+        }
+
+        if ($type == 'tv') {
+            if (!empty($response->showbackground)) {
+                $backdrop =  $response->showbackground[0];
+            }
         }
 
        if (!empty($backdrop) && !empty($backdrop->url)) {
@@ -70,7 +77,9 @@ class FanartService
             return false;
         }
 
-        $film = $this->parseFanartByImdbId($video->imdb);
+        $ext_id = $video->imdb;
+        if (!empty($video->thetvdb)) $ext_id = $video->thetvdb;
+        $film = $this->parseFanartByImdbId($video->tupe, $ext_id);
         // $film->backdrop
 
         Video::where('id', $videoId)->update(['update_fanart' => 1]);
