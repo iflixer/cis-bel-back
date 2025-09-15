@@ -279,6 +279,24 @@ class KinoPoiskService
         return true;
     }
 
+    public function updateVideoWithKinoPoiskDataImdbOnly($videoId, $kpId)
+    {
+        $film = $this->parseKinoPoisk($kpId);
+        if (!$film) {
+            Video::where('id', $videoId)->update(['update_kino' => 1]);
+            return false;
+        }
+        $imdb_id = $film->externalId->imdbId ?? '';
+        $updateData = [];
+        if (!empty($imdb_id)) {
+            $updateData['imdb'] = $imdb_id;
+            $updateData['update_kino'] = 2;
+        }
+        Video::where('id', $videoId)->update($updateData);
+
+        return true;
+    }
+
     public function updateMultipleVideos($limit)
     {
         $response = [];
@@ -294,6 +312,22 @@ class KinoPoiskService
 
             $response[] = ['id' => $video->id];
             $this->updateVideoWithKinoPoiskData($video->id);
+        }
+
+        return $response;
+    }
+
+    public function updateMultipleVideosOnlyImdb($limit)
+    {
+        $response = [];
+        $videos = Video::where('update_kino', null)
+            ->whereNotNull('kinopoisk')
+            ->limit($limit)
+            ->get();
+
+        foreach ($videos as $video) {
+            $response[] = ['id' => $video->id];
+            $this->updateVideoWithKinoPoiskDataImdbOnly($video->id, $video->kinopoisk);
         }
 
         return $response;

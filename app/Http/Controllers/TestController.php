@@ -716,6 +716,28 @@ class TestController extends Controller
         return ['data' => $response, 'messages' => $messages];
     }
 
+	public function importKinoPoiskOnlyImdb(){
+        $messages = [];
+		$start_time = microtime(true);
+        $limit = 20;
+        $GLOBALS['debug_kinopoisk_import'] = 1;
+
+        DB::enableQueryLog();
+
+        $kinoPoiskService = new KinoPoiskService();
+
+        $response = $kinoPoiskService->updateMultipleVideosOnlyImdb($limit);
+
+        $reqs = DB::getQueryLog();
+
+		$totalMysqlTime = array_sum(array_column($reqs, 'time'));
+		echo "totalMysqlTime ms: {$totalMysqlTime}\n";
+		echo "totalTime: " . (microtime(true) - $start_time) . "\n";
+		die();
+
+        return ['data' => $response, 'messages' => $messages];
+    }
+
 	public function importTmdb(){
         $messages = [];
 		$start_time = microtime(true);
