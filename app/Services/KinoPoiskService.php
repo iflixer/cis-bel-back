@@ -282,8 +282,8 @@ class KinoPoiskService
     public function updateVideoWithKinoPoiskDataImdbOnly($videoId, $kpId)
     {
         $film = $this->parseKinoPoisk($kpId);
+        Video::where('id', $videoId)->update(['update_kino' => 1]);
         if (!$film) {
-            Video::where('id', $videoId)->update(['update_kino' => 1]);
             return false;
         }
         $imdb_id = $film->externalId->imdbId ?? '';
