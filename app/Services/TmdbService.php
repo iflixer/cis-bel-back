@@ -55,10 +55,10 @@ class TmdbService
 
        if (!empty($res->backdrop_path)) {
             // "https://image.tmdb.org/t/p/original"
-            $res->backdrop_path = "https://image.tmdb.org/t/p/w500".$res->backdrop_path;
+            $res->backdrop_path = "https://image.tmdb.org/t/p/original".$res->backdrop_path;
         }
         if (!empty($res->poster_path)) {
-            $res->poster_path = "https://image.tmdb.org/t/p/w500".$res->poster_path;
+            $res->poster_path = "https://image.tmdb.org/t/p/original".$res->poster_path;
         }
         return $res;
     }
@@ -120,6 +120,7 @@ class TmdbService
         $videos = Video::where('update_tmdb', '=', 0)
             ->where('imdb', '!=', null)
             ->where('imdb', '!=', '')
+            ->where('backdrop', '=', '')
             ->limit($limit)
             ->get();
 

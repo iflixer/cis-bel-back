@@ -28,6 +28,8 @@ use App\Services\KinoPoiskService;
 use Mail;
 use DB;
 
+use App\Helpers\Debug;
+
 // include $_SERVER['DOCUMENT_ROOT'].'/resources/simple_html_dom.php';
 
 use JonnyW\PhantomJs\Client;
@@ -63,6 +65,8 @@ class CronjobController extends Controller
 
 	public function videodb()
 	{
+		$start_time = microtime(true);
+		DB::enableQueryLog();
 		set_time_limit(0);
 
 		$start_date = null;
@@ -128,6 +132,9 @@ class CronjobController extends Controller
 		echo "medias count: " . count($medias) . "\n";
 
 		krsort($medias);
+
+		// var_dump($medias);
+		// die();
 
 		$created_files_total = [];
 		$created_videos_total = [];
@@ -295,6 +302,9 @@ class CronjobController extends Controller
 			echo "TOTAL files created: " . count($created_files_total) . "\n";
 			echo "TOTAL translations created: " . count($created_translations_total) . "\n";
 		} // if medias
+
+		Debug::dump_queries($start_time);
+
 	} // function
 
 	public function kinopoisk()

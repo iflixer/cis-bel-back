@@ -1,106 +1,58 @@
 <?php
 
 namespace App\Services;
-use Aws\S3\S3Client;
-
-use App\Video;
+use AsyncAws\S3\S3Client;
+use Throwable;
 
 class R2Service
 {
-    private $r2client;
+    private S3Client $r2client;
 
     private $bucket;
 
     public function __construct()
 	{
         $this->bucket = 'tpfx-sng';
-		$this->r2client = new \AsyncAws\S3\S3Client([
-            'version' => 'latest',
-            'region'  => 'auto', // для R2 всегда auto
-            'endpoint' => 'https://e259c83419213e1913b0a406cb9b1173.r2.cloudflarestorage.com',
-            'credentials' => [
-                'key'    => '13a526df08c4f484e46a776affc4e61a',
-                'secret' => config('r2.token'),
-            ],
+         $this->r2client = new S3Client([
+            'endpoint'          => config('r2.endpoint'),
+            'region'            => 'auto',
+            'accessKeyId'       => config('r2.key_id'),
+            'accessKeySecret'   => config('r2.token'),
+            'pathStyleEndpoint' => true,                   // важное для R2 (URL вида /{bucket}/{key})
+            // 'retries'        => 3,
+            //'debug'          => true,
         ]);
+		// $this->r2client = new S3Client([
+        //     'version' => 'latest',
+        //     'region'  => 'auto',
+        //     'endpoint' => 'https://e259c83419213e1913b0a406cb9b1173.r2.cloudflarestorage.com',
+        //     'credentials' => [
+        //         'key'    => '13a526df08c4f484e46a776affc4e61a',
+        //         'secret' => config('r2.token'),
+        //     ],
+        // ]);
 	}
 
-    public function uploadFileToStorage($filename, $url)
+    /**
+     * Загрузить файл в R2 по внешнему URL.
+     */
+    public function uploadFileToStorage(string $filename, string $contentType, $data)
     {
-        // Открываем поток (скачивается напрямую)
-        $stream = fopen($url, 'r');
-
-        // Отправляем в R2
-        $result = $this->r2client->putObject([
-            'Bucket' => $this->bucket,
-            'Key'    => $filename,    
-            'Body'   => $stream,
-            'ACL'    => 'public-read',     
-        ]);
-
-        fclose($stream);
-
-        return $result;
+        try {
+            $result = $this->r2client->putObject([
+                'Bucket'      => $this->bucket,
+                'Key'         => ltrim($filename, '/'),
+                'Body'        => $data,           
+                'ACL'         => 'public-read',     
+                'ContentType' => $contentType,     
+                // 'CacheControl'=> 'public, max-age=31536000',
+            ]);
+            return $result; // AsyncAws\Result
+        } catch (Throwable $e) {
+            throw new \RuntimeException('R2 upload error: '.$e->getMessage(), 0, $e);
+        } finally {
+        }
     }
 
 
-
-    public function updateVideoWithFanartData($videoId)
-    {
-        $video = Video::find($videoId);
-
-        if (!$video || !$video->imdb) {
-            return false;
-        }
-
-        $film = $this->parseFanartByImdbId($video->imdb);
-        // $film->backdrop
-
-        Video::where('id', $videoId)->update(['update_fanart' => 1]);
-
-        if (empty($film)) {
-            return false;
-        }
-
-        $updateData = [];
-
-        if (empty($video->backdrop) && !empty($film['backdrop'])) {
-            $updateData['backdrop'] = $film['backdrop'];
-        }
-        if (empty($video->img) && !empty($film['movieposter'])) {
-            $updateData['img'] = $film['movieposter'];
-        }
-        
-
-        if (empty($updateData)) {
-            return false;
-        }
-        $updateData['update_fanart'] = 2;
-        Video::where('id', $videoId)->update($updateData);
-        return true;
-    }
-
-    public function updateMultipleVideos($limit)
-    {
-        $response = [];
-        $videos = Video::where('update_fanart', 0)
-            ->whereNotNull('imdb')
-            ->where('imdb', '!=', '')
-            ->where(function($q) {
-                $q->where('img', '=', '')
-                ->orWhere('backdrop', '=', '');
-            })
-            ->limit($limit)
-            ->get();
-
-        foreach ($videos as $video) {
-            if (!$video->imdb) {
-                continue;
-            }
-            $response[] = ['id' => $video->id];
-            $this->updateVideoWithFanartData($video->id);
-        }
-
-        return $response;
-    }
 }

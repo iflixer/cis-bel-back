@@ -29,6 +29,7 @@ use App\Services\TmdbService;
 use App\Services\FanartService;
 use App\Services\OpenaiService;
 use App\Services\ThetvdbService;
+use App\Services\R2Service;
 
 use JonnyW\PhantomJs\Client;
 
@@ -755,6 +756,53 @@ class TestController extends Controller
         $thetvdbService = new ThetvdbService();
         $response = $thetvdbService->updateMultipleVideosIds($limit);
         Debug::dump_queries($start_time);
+    }
+
+	public function sss($vid, $md5) {
+		$video = Video::find($vid);
+		if (empty($video)) {
+			header("HTTP/1.1 404 Not Found");
+			die();
+		}
+
+		$md5 = explode(".", $md5)[0]; // remove any extensions
+		
+		$remote_url = '';
+		if (md5($video->img) == $md5) {
+			$remote_url =$video->img;
+		}
+		if (md5($video->backdrop) == $md5) {
+			$remote_url =$video->backdrop;
+		}
+
+		if (empty($remote_url)) {
+			header("HTTP/1.1 404 Not Found");
+			die();
+		}
+
+		$r2Service = new R2Service();
+		$storage_file_name = "cdnhub/sss/{$vid}/{$md5}";
+
+        $context = stream_context_create([
+            'http' => [
+                'method' => "GET",
+                'timeout' => 20,
+            ]
+        ]);
+        $data = file_get_contents($remote_url, false, $context);
+
+        $contentType = '';
+        foreach ($http_response_header as $h) {
+            if (stripos($h, 'Content-Type:') === 0) {
+                $contentType = trim(substr($h, 13));
+            }
+        }
+
+		$r2Service->uploadFileToStorage($storage_file_name, $contentType, $data);
+
+		header("Content-type: {$contentType}");
+		echo $data;
+		die();
     }
 
 }

@@ -7,14 +7,15 @@
     "require": {
         "php": ">=5.5.9",
         "laravel/framework": "5.2.*",
-        "predis/predis": "^2.3"
+        "predis/predis": "^2.3",
+        "async-aws/s3": "^2.10"
     },
     "require-dev": {
-        "fzaninotto/faker": "~1.4",
-        "phpunit/phpunit": "~4.0",
+        "phpunit/phpunit": "^5.7",
+        "fakerphp/faker": "^1.23",
         "mockery/mockery": "0.9.*",
-        "symfony/css-selector": "2.8.*|3.0.*",
-        "symfony/dom-crawler": "2.8.*|3.0.*"
+        "symfony/css-selector": "3.0.*",
+        "symfony/dom-crawler": "3.0.*"
     },
     "autoload": {
         "classmap": [
@@ -41,10 +42,12 @@
     },
     "config": {
         "preferred-install": "dist",
-
         "bin-dir": "bin",
         "allow-plugins": {
             "kylekatarnls/update-helper": true
+        },
+        "platform": {
+            "php": "7.4.0"
         }
     }
 }

@@ -1,0 +1,16 @@
+services:
+  nginx-sss:
+    image: nginx:1.21-alpine
+    container_name: sss
+    restart: unless-stopped
+    # ports:
+    #   - "80:80"
+    #   - "443:443"
+    volumes:
+      - ./docker/nginx/sss.conf:/etc/nginx/templates/default.conf.template
+    networks:
+      - kolobok_network
+
+networks:
+  kolobok_network:
+    driver: bridge

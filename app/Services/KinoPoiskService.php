@@ -201,6 +201,7 @@ class KinoPoiskService
         $video = Video::find($videoId);
 
         if (!$video || !$video->kinopoisk) {
+            echo "Error updateVideoWithKinoPoiskData - kinopoisk empty for video {$videoId}";
             return false;
         }
 
@@ -212,6 +213,7 @@ class KinoPoiskService
         $film = $this->parseKinoPoisk($video->kinopoisk);
 
         if (!$film || !isset($film->data)) {
+            echo "Error updateVideoWithKinoPoiskData - parseKinoPoisk empty for video {$videoId}";
             Video::where('id', $videoId)->update(['update_kino' => 1]);
             return false;
         }
@@ -313,6 +315,8 @@ class KinoPoiskService
             $response[] = ['id' => $video->id];
             $this->updateVideoWithKinoPoiskData($video->id);
         }
+
+
 
         return $response;
     }
