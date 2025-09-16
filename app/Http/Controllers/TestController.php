@@ -762,6 +762,7 @@ class TestController extends Controller
 		$video = Video::find($vid);
 		if (empty($video)) {
 			header("HTTP/1.1 404 Not Found");
+			header("Reason: No video");
 			die();
 		}
 
@@ -777,6 +778,7 @@ class TestController extends Controller
 
 		if (empty($remote_url)) {
 			header("HTTP/1.1 404 Not Found");
+			header("Reason: No url");
 			die();
 		}
 
