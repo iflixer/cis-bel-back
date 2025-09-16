@@ -10,7 +10,41 @@
     <script src="/player/js/jquery.min.js"></script>
     <script src="/player/js/jquery.nice-select.min.js"></script>
     <script src="/player/js/player21.js?v={{ hash_file('md5', public_path('player/js/player21.js')) }}"></script>
-
+    <style>
+        #nomedia-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 1em 2em;
+            border-radius: 5px;
+            font-size: 16px;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+            z-index: 9999;
+        }
+        .small-loader {
+            display: inline-block;
+            margin-left: 10px;
+            width: 10px;
+            height: 10px;
+            border: 3px solid #fff;
+            border-top: 3px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-ECHML7LBXL"></script>
@@ -37,7 +71,6 @@
             page_referrer: document.referrer
         });
     </script> --}}
-
 </head>
 <body>
 
@@ -755,7 +788,6 @@
                 } else if (info == "midroll") {
                     cdn.player.iframeVastKey = 'm';
                 }
-
                 if (typeof cdn.player.iframeVastValue[cdn.player.iframeVastKey] != 'undefined') {
                     cdn.player.iframeVastValue[cdn.player.iframeVastKey]++;
                 }
@@ -764,6 +796,12 @@
 
 
             // GA AND CROSSFRAME EVENTS
+
+            if (event == "error") {
+                if(info === 'Failed to open media'){
+                    showPopupAndChangeTranslation();
+                }
+            }
 
             if (event == "loaderror") {
                 // console.log('PlayerjsEvents', event, info);
@@ -863,16 +901,13 @@
             console.error('Error handling player event:', e);
         }
     }
-
     let hideTimeout;
-
     function showSelectors() {
         if (!$('#selectors').is(':visible')) {
             $('#selectors').fadeIn('fast');
         }
         clearTimeout(hideTimeout); // prevent hiding if quickly moving between elements
     }
-
     function hideSelectors() {
         hideTimeout = setTimeout(function () {
             if (!$('#player').is(':hover') && !$('#selectors').is(':hover')) {
@@ -880,11 +915,38 @@
             }
         }, 200); // 200ms delay to allow moving between elements
     }
-
     // Bind events to both #player and #selectors
     $('#player, #selectors').on('mouseenter', showSelectors);
     $('#player, #selectors').on('mouseleave', hideSelectors);
+</script>
 
+
+<div id="nomedia-message">Озвучка недоступна → поиск доступной <div class="small-loader"></div></div>
+<script>
+    function showPopupAndChangeTranslation() {
+        const popup = document.getElementById('nomedia-message');
+        const select = document.querySelector('#translator-name');
+        const currentIndex = select.selectedIndex;
+        const lastIndex = select.options.length - 1;
+        if (currentIndex === lastIndex) {
+            popup.textContent = "Извините, файл временно недоступен.";
+            return;
+        }
+        popup.style.display = 'block';
+        popup.style.opacity = '1';
+        setTimeout(() => {
+            popup.style.opacity = '0';
+            setTimeout(() => {
+                popup.style.display = 'none';
+                const select = document.querySelector('#translator-name');
+                const niceSelect = $(select).next('.nice-select');
+                const nextIndex = (currentIndex + 1) % select.options.length;
+                select.selectedIndex = nextIndex;
+                niceSelect.find('span').text(select.options[nextIndex].text);
+                $(select).trigger('change');
+            }, 500);
+        }, 2500);
+    }
 </script>
 
 <!-- Yandex.Metrika counter -->
@@ -900,8 +962,6 @@
 </script>
 <noscript><div><img src="https://mc.yandex.ru/watch/104007594" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 <!-- /Yandex.Metrika counter -->
-
-
 
 
 </body>
