@@ -2,6 +2,9 @@
 
 namespace App\Services;
 use AsyncAws\S3\S3Client;
+use AsyncAws\Core\Exception\Http\ClientException;
+use AsyncAws\S3\Result\PutObjectOutput;
+
 use Throwable;
 
 class R2Service
@@ -36,7 +39,7 @@ class R2Service
     /**
      * Загрузить файл в R2 по внешнему URL.
      */
-    public function uploadFileToStorage(string $filename, string $contentType, $data)
+    public function uploadFileToStorage(string $filename, string $contentType, $data): PutObjectOutput   
     {
         try {
             $result = $this->r2client->putObject([
@@ -54,5 +57,46 @@ class R2Service
         }
     }
 
+
+    public function getFileFromStorage(string $filename): array
+    {
+        $key = ltrim($filename, '/');
+
+        try {
+            $res = $this->r2client->getObject([
+                'Bucket' => $this->bucket,
+                'Key'    => $key,
+                // опционально: 'Range' => 'bytes=0-1048575', // если нужен частичный скач
+            ]);
+
+            // тело (строкой). Можно также получить поток: $res->getBody();
+            $body = $res->getBody()->getContentAsString();
+
+            return [
+                'ok'            => true,
+                'key'           => $key,
+                'body'          => $body,
+                'content_type'  => $res->getContentType(),
+                'content_length'=> $res->getContentLength(),
+                'etag'          => $res->getETag(),
+                'last_modified' => $res->getLastModified(), // \DateTimeImmutable|null
+            ];
+        } catch (ClientException $e) {
+            // например, нет такого ключа (404) или нет доступа
+            return [
+                'ok'      => false,
+                'key'     => $key,
+                'status'  => $e->getCode(),   // 404, 403 и т.п.
+                'error'   => $e->getMessage(),
+            ];
+        } catch (Throwable $e) {
+            return [
+                'ok'    => false,
+                'key'   => $key,
+                'status'=> 0,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
 
 }

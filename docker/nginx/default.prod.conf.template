@@ -24,6 +24,23 @@ server {
         try_files $uri $uri/ /index.php?$query_string;
     }
 
+    # specific locatin for storage images
+    location ^~ /sss/ {
+        fastcgi_pass   ${BACKEND_ADDRESS};
+        fastcgi_index  index.php;
+        include        fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root/index.php;
+        fastcgi_param SCRIPT_NAME     /index.php;
+        fastcgi_param PATH_INFO       $uri;
+        fastcgi_param QUERY_STRING    $query_string;
+
+        fastcgi_read_timeout  15;
+        fastcgi_send_timeout  15;
+        fastcgi_connect_timeout 5;
+        # скрыть куки от ответа fastcgi-бэкенда
+        fastcgi_hide_header Set-Cookie;
+    }
+
     location ~ \.php$ {
         try_files $uri =404;
         fastcgi_split_path_info ^(.+\.php)(/.+)$;

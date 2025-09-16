@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-enable redis \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --version=1.10.26
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 RUN apt-get update && apt-get install -y \
     libfontconfig1 \
@@ -35,12 +35,12 @@ RUN apt-get update && apt-get install -y \
     bzip2 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN cd /tmp && \
-    wget -O phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2 && \
-    tar -xjf phantomjs.tar.bz2 && \
-    mv phantomjs-2.1.1-linux-x86_64/bin/phantomjs /usr/local/bin/ && \
-    chmod +x /usr/local/bin/phantomjs && \
-    rm -rf /tmp/phantomjs*
+# RUN cd /tmp && \
+#     wget -O phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2 && \
+#     tar -xjf phantomjs.tar.bz2 && \
+#     mv phantomjs-2.1.1-linux-x86_64/bin/phantomjs /usr/local/bin/ && \
+#     chmod +x /usr/local/bin/phantomjs && \
+#     rm -rf /tmp/phantomjs*
 
 RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
 

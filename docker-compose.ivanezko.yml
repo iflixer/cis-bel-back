@@ -26,7 +26,7 @@ services:
       - BACKEND_ADDRESS=app:9000
     volumes:
       - .:/var/www/html
-      - ./docker/nginx/default.conf:/etc/nginx/templates/default.conf.template
+      - ./docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template
     networks:
       - kolobok_network
     depends_on:

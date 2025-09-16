@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Requests;
-
+use Throwable;
 
 use App\LinkRight;
 use App\Right;
@@ -759,31 +759,46 @@ class TestController extends Controller
     }
 
 	public function sss($vid, $md5) {
+		$md5 = explode(".", $md5)[0]; // remove any extensions
+
+		$r2Service = new R2Service();
+		$storage_file_name = "cdnhub/sss/{$vid}/{$md5}";
+
+		// first check - maybe we already got this url to storage earlier?
+		// this block is actually redundant - edge nginx is getting files from storage directly
+		$storage_object = $r2Service->getFileFromStorage($storage_file_name);
+		if ($storage_object['ok']) {
+			return response($storage_object['body'], 200)
+				->header('X-B-Source', 'storage')
+				->header('Content-Type', $storage_object['content_type'] ?? 'application/octet-stream')
+				->header('Cache-Control', 'public, immutable')
+				->header('Content-Length', (string)($storage_object['content_length'] ?? strlen($storage_object['body'])))
+				->header('ETag', $storage_object['etag'] ?? '');
+		} 
+
+
+		// not found in strage - load from original source
 		$video = Video::find($vid);
 		if (empty($video)) {
-			header("HTTP/1.1 404 Not Found");
-			header("Reason: No video");
-			die();
+			// header("HTTP/1.1 404 Not Found");
+			// header("Reason: No video");
+			// die();
+			return response('Video not fund', 404);
 		}
-
-		$md5 = explode(".", $md5)[0]; // remove any extensions
-		
 		$remote_url = '';
-		if (md5($video->img) == $md5) {
+		if (empty($remote_url) && md5($video->img) == $md5) {
 			$remote_url =$video->img;
 		}
-		if (md5($video->backdrop) == $md5) {
+		if (empty($remote_url) && md5($video->backdrop) == $md5) {
 			$remote_url =$video->backdrop;
 		}
 
 		if (empty($remote_url)) {
-			header("HTTP/1.1 404 Not Found");
-			header("Reason: No url");
-			die();
+			// header("HTTP/1.1 404 Not Found");
+			// header("Reason: No url");
+			// die();
+			return response('Md5 not found', 404);
 		}
-
-		$r2Service = new R2Service();
-		$storage_file_name = "cdnhub/sss/{$vid}/{$md5}";
 
         $context = stream_context_create([
             'http' => [
@@ -800,11 +815,22 @@ class TestController extends Controller
             }
         }
 
-		$r2Service->uploadFileToStorage($storage_file_name, $contentType, $data);
-
-		header("Content-type: {$contentType}");
-		echo $data;
-		die();
+		try {
+			$result = $r2Service->uploadFileToStorage($storage_file_name, $contentType, $data);
+		} catch (Throwable $e) {
+			return response('R2 upload error: '.$e->getMessage(), 502);
+        }
+		$result->resolve(); // wait to finish upload!
+		// header("Content-type: {$contentType}");
+		// echo $data;
+		// die();
+		
+		return response($data, 200)
+			->header('X-B-Source', 'orig')
+			->header('Content-Type', $contentType)
+			->header('Cache-Control', 'public, immutable')
+			->header('Content-Length', (string)strlen($data))
+			->header('ETag', $result->getETag() ?? '');
     }
 
 }
