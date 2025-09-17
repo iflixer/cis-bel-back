@@ -761,6 +761,7 @@ class TestController extends Controller
 
 	public function sss($vid, $md5) {
 		// $md5 - ewewe, wewe@500, wewee@500.jpg
+		$md5 = explode("?", $md5)[0]; // remove any get-params
 		$md5 = explode(".", $md5)[0]; // remove any extensions
 		$md5_parts = explode('@', $md5);
 		$md5_hash = $md5;
@@ -847,10 +848,10 @@ class TestController extends Controller
 		}
 		
 		if (!empty($data_resized)) { // upload resized 
-			try { // upload resized
+			try { 
 				$result = $r2Service->uploadFileToStorage($storage_file_name, $contentType, $data_resized);
 			} catch (Throwable $e) {
-				return response('R2 upload error: '.$e->getMessage(), 502);
+				return response('R2 resized upload error: '.$e->getMessage(), 502);
 			}
 			$result->resolve(); // wait to finish upload!
 			return response($data_resized, 200)
