@@ -24,6 +24,7 @@ use App\Link_country;
 use App\Link_genre;
 
 use App\Services\KinoPoiskService;
+use App\Services\ThetvdbService;
 
 use Mail;
 use DB;
@@ -42,6 +43,7 @@ class CronjobController extends Controller
 	protected $passVDB; // = '5HxL2P2Yw1yq'
 	protected $kinoPoiskService;
 	protected $tmdbService;
+	protected $thetvdbService;
 	protected $fanartService;
 
 	// protected $adress = 'https://api.kholobok.biz/show/';
@@ -55,6 +57,7 @@ class CronjobController extends Controller
 		$this->request = $request;
 		$this->kinoPoiskService = $kinoPoiskService;
 		$this->tmdbService = new TmdbService();
+		$this->thetvdbService = new ThetvdbService();
 		$this->fanartService = new FanartService();
 
 		// $this->loginVDB = config('videodb.login');
@@ -190,6 +193,7 @@ class CronjobController extends Controller
 						if ($value->content_object->kinopoisk_id) {
 							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
 							$this->tmdbService->updateVideoWithTmdbData($lastId);
+							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($lastId, $value->content_object->imdb_id);
 							$this->fanartService->updateVideoWithFanartData($lastId);
 						}
 					} else {
@@ -208,6 +212,7 @@ class CronjobController extends Controller
 						if ($value->content_object->kinopoisk_id && !$video->update_kino) {
 							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
 							$this->tmdbService->updateVideoWithTmdbData($lastId);
+							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($lastId, $value->content_object->imdb_id);
 							$this->fanartService->updateVideoWithFanartData($lastId);
 						}
 					}
@@ -254,6 +259,9 @@ class CronjobController extends Controller
 						
 						if ($value->content_object->kinopoisk_id) {
 							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
+							$this->tmdbService->updateVideoWithTmdbData($lastId);
+							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($lastId, $value->content_object->imdb_id);
+							$this->fanartService->updateVideoWithFanartData($lastId);
 						}
 					} else {
 						$lastId = $video->id;
@@ -270,6 +278,9 @@ class CronjobController extends Controller
 							
 						if ($value->content_object->kinopoisk_id && !$video->update_kino) {
 							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
+							$this->tmdbService->updateVideoWithTmdbData($lastId);
+							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($lastId, $value->content_object->imdb_id);
+							$this->fanartService->updateVideoWithFanartData($lastId);
 						}
 					}
 

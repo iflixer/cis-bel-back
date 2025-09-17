@@ -96,6 +96,9 @@ Route::get('/parse', ['middleware'=>[], 'uses'=>'ApiController@parse']);
 Route::get('/cronjob/videodb', ['middleware' => [], 'uses' => 'CronjobController@videodb']);
 
 
+// storage
+Route::get('/sss/{vid}/{md5}', ['middleware' => [], 'uses' => 'TestController@sss']);
+
 
 // test
 // Route::get('/test/episode/{id}', ['middleware' => [], 'uses' => 'TestController@episode'])->where('id', '[0-9]+');
@@ -107,7 +110,6 @@ Route::get('/test/import_tmdb', ['middleware' => [], 'uses' => 'TestController@i
 Route::get('/test/import_fanart', ['middleware' => [], 'uses' => 'TestController@importFanart']);
 Route::get('/test/import_openai', ['middleware' => [], 'uses' => 'TestController@importOpenai']);
 Route::get('/test/import_thetvdb', ['middleware' => [], 'uses' => 'TestController@importThetvdb']);
-Route::get('/sss/{vid}/{md5}', ['middleware' => [], 'uses' => 'TestController@sss']);
 // Route::get('/test/player', ['middleware' => [], 'uses' => 'TestController@player']);
 // Route::get('/test/restore/index', ['middleware' => [], 'uses' => 'TestController@restoreIndex']);
 // Route::get('/test/restore/{id}', ['middleware' => [], 'uses' => 'TestController@restore'])->where('id', '[0-9]+');
