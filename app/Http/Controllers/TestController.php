@@ -827,6 +827,11 @@ class TestController extends Controller
 				if (stripos($h, 'Content-Type:') === 0) {
 					$contentType = trim(substr($h, 13));
 				}
+				if (stripos($h, 'Location:') === 0) {
+					if (strpos($h, 'no-poster.gif') !== false) { // image not found!
+						return response('Original not found', 404);
+					}
+				}
 			}
 		}
 
