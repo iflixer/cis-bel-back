@@ -10,6 +10,8 @@ use App\LinkRight;
 use App\Right;
 use App\User;
 use App\Video;
+use App\Actor;
+use App\Director;
 use App\File;
 use App\Domain;
 use App\Seting;
@@ -759,7 +761,7 @@ class TestController extends Controller
         Debug::dump_queries($start_time);
     }
 
-	public function sss($vid, $md5) {
+	public function sss($type, $id, $md5) {
 		// $md5 - ewewe, wewe@500, wewee@500.jpg
 		$md5 = explode("?", $md5)[0]; // remove any get-params
 		$md5 = explode(".", $md5)[0]; // remove any extensions
@@ -774,8 +776,8 @@ class TestController extends Controller
 		$data = '';
 
 		$r2Service = new R2Service();
-		$storage_file_name = "cdnhub/sss/{$vid}/{$md5}";
-		$storage_file_name_orig = "cdnhub/sss/{$vid}/{$md5_hash}";
+		$storage_file_name = "cdnhub/sss/{$type}/{$id}/{$md5}";
+		$storage_file_name_orig = "cdnhub/sss/{$type}/{$id}/{$md5_hash}";
 
 		$orig_stored = false;
 		// check if we already have original image in storage - no need to load it from original source
@@ -788,17 +790,26 @@ class TestController extends Controller
 
 		// not found in storage - load orig from original source
 		if (empty($data)) {
-			$video = Video::find($vid);
-			if (empty($video)) {
-				return response('Video not fund', 404);
-			}
 			$remote_url = '';
-
-			if (empty($remote_url) && md5($video->img) == $md5_hash) {
-				$remote_url =$video->img;
-			}
-			if (empty($remote_url) && md5($video->backdrop) == $md5_hash) {
-				$remote_url =$video->backdrop;
+			switch ($type) {
+				case 'videos':
+					$video = Video::find($id);
+					if (empty($video)) return response('Video not found', 404);
+					if (empty($remote_url) && md5($video->img) == $md5_hash) $remote_url = $video->img;
+					if (empty($remote_url) && md5($video->backdrop) == $md5_hash) $remote_url = $video->backdrop;
+					break;
+				case 'actors':
+					$actor = Actor::find($id);
+					if (empty($actor)) return response('Actor not found', 404);
+					if (empty($remote_url) && md5($actor->poster_url) == $md5_hash) $remote_url = $actor->poster_url;
+					break;
+				case 'directors':
+					$director = Director::find($id);
+					if (empty($director)) return response('Director not found', 404);
+					if (empty($remote_url) && md5($director->poster_url) == $md5_hash) $remote_url = $director->poster_url;
+					break;
+				default:
+					return response('type not found', 404);
 			}
 
 			if (empty($remote_url)) {

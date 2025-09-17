@@ -97,7 +97,7 @@ Route::get('/cronjob/videodb', ['middleware' => [], 'uses' => 'CronjobController
 
 
 // storage
-Route::get('/sss/{vid}/{md5}', ['middleware' => [], 'uses' => 'TestController@sss']);
+Route::get('/sss/{type}/{id}/{md5}', ['middleware' => [], 'uses' => 'TestController@sss']);
 
 
 // test
