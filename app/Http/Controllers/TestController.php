@@ -760,7 +760,9 @@ class TestController extends Controller
     }
 
 	public function sss($vid, $md5) {
+		// $md5 - ewewe, wewe@500, wewee@500.jpg
 		$md5 = explode(".", $md5)[0]; // remove any extensions
+		// $md5 - ewewe, wewe@500, wewee@500
 
 		$r2Service = new R2Service();
 		$storage_file_name = "cdnhub/sss/{$vid}/{$md5}";
