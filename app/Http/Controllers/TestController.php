@@ -762,33 +762,6 @@ class TestController extends Controller
 	public function sss($vid, $md5) {
 		// $md5 - ewewe, wewe@500, wewee@500.jpg
 		$md5 = explode(".", $md5)[0]; // remove any extensions
-		// $md5 - ewewe, wewe@500, wewee@500
-
-		$r2Service = new R2Service();
-		$storage_file_name = "cdnhub/sss/{$vid}/{$md5}";
-
-		// first check - maybe we already got this url to storage earlier?
-		// this block is actually redundant - edge nginx is getting files from storage directly
-		// $storage_object = $r2Service->getFileFromStorage($storage_file_name);
-		// if ($storage_object['ok']) {
-		// 	return response($storage_object['body'], 200)
-		// 		->header('X-B-Source', 'storage')
-		// 		->header('Content-Type', $storage_object['content_type'] ?? 'application/octet-stream')
-		// 		->header('Cache-Control', 'public, immutable')
-		// 		->header('Content-Length', (string)($storage_object['content_length'] ?? strlen($storage_object['body'])))
-		// 		->header('ETag', $storage_object['etag'] ?? '');
-		// } 
-
-
-		// not found in strage - load from original source
-		$video = Video::find($vid);
-		if (empty($video)) {
-			// header("HTTP/1.1 404 Not Found");
-			// header("Reason: No video");
-			// die();
-			return response('Video not fund', 404);
-		}
-		$remote_url = '';
 		$md5_parts = explode('@', $md5);
 		$md5_hash = $md5;
 		$md5_resize = '';
@@ -796,27 +769,54 @@ class TestController extends Controller
 			$md5_hash = $md5_parts[0];
 			$md5_resize = $md5_parts[1];
 		} 
-		if (empty($remote_url) && md5($video->img) == $md5_hash) {
-			$remote_url =$video->img;
-		}
-		if (empty($remote_url) && md5($video->backdrop) == $md5_hash) {
-			$remote_url =$video->backdrop;
-		}
+        $contentType = '';
+		$data = '';
 
-		if (empty($remote_url)) {
-			// header("HTTP/1.1 404 Not Found");
-			// header("Reason: No url");
-			// die();
-			return response('Md5 not found', 404);
-		}
+		$r2Service = new R2Service();
+		$storage_file_name = "cdnhub/sss/{$vid}/{$md5}";
+		$storage_file_name_orig = "cdnhub/sss/{$vid}/{$md5_hash}";
 
-        $context = stream_context_create([
-            'http' => [
-                'method' => "GET",
-                'timeout' => 20,
-            ]
-        ]);
-        $data = file_get_contents($remote_url, false, $context);
+		$orig_stored = false;
+		// check if we already have original image in storage - no need to load it from original source
+		$storage_object_orig = $r2Service->getFileFromStorage($storage_file_name_orig);
+		if ($storage_object_orig['ok']) {
+			$orig_stored = true;
+			$data = $storage_object_orig['body'];
+			$contentType = $storage_object_orig['content_type'];
+		} 
+
+		// not found in storage - load orig from original source
+		if (empty($data)) {
+			$video = Video::find($vid);
+			if (empty($video)) {
+				return response('Video not fund', 404);
+			}
+			$remote_url = '';
+
+			if (empty($remote_url) && md5($video->img) == $md5_hash) {
+				$remote_url =$video->img;
+			}
+			if (empty($remote_url) && md5($video->backdrop) == $md5_hash) {
+				$remote_url =$video->backdrop;
+			}
+
+			if (empty($remote_url)) {
+				return response('Md5 not found', 404);
+			}
+
+			$context = stream_context_create([
+				'http' => [
+					'method' => "GET",
+					'timeout' => 20,
+				]
+			]);
+			$data = file_get_contents($remote_url, false, $context);
+			foreach ($http_response_header as $h) {
+				if (stripos($h, 'Content-Type:') === 0) {
+					$contentType = trim(substr($h, 13));
+				}
+			}
+		}
 
 		if (!empty($md5_resize)) {
 			$w = (int)$md5_resize;
@@ -825,35 +825,41 @@ class TestController extends Controller
 				$w = 0;
 				$h = (int)str_replace( 'h', '', $md5_resize);
 			}
-			// if ($w > 0) $w = ceil($w / 100) * 100;
-			// if ($h > 0) $h = ceil($h / 100) * 100;
 			if ($w>1000 || $h>1000) {
 				return response('Resize error: width and height should be <= 1000', 502);
 			}
 			$img = new \Imagick();
 			$img->readImageBlob($data);
 			$img->resizeImage($w, $h, \Imagick::FILTER_LANCZOS, 1);
-			$img->setImageFormat('jpg');
-			$data = $img->getImageBlob();
+			$img->setImageFormat('webp');
+			$data_resized = $img->getImageBlob();
 		}
 
-
-        $contentType = '';
-        foreach ($http_response_header as $h) {
-            if (stripos($h, 'Content-Type:') === 0) {
-                $contentType = trim(substr($h, 13));
-            }
-        }
-
-		try {
-			$result = $r2Service->uploadFileToStorage($storage_file_name, $contentType, $data);
-		} catch (Throwable $e) {
-			return response('R2 upload error: '.$e->getMessage(), 502);
-        }
-		$result->resolve(); // wait to finish upload!
-		// header("Content-type: {$contentType}");
-		// echo $data;
-		// die();
+		if (!$orig_stored) { // upload original 
+			try {
+				$result = $r2Service->uploadFileToStorage($storage_file_name_orig, $contentType, $data);
+			} catch (Throwable $e) {
+				return response('R2 orig upload error: '.$e->getMessage(), 502);
+			}
+			if (empty($data_resized)) {
+				$result->resolve(); // wait to finish upload if we will return original
+			}
+		}
+		
+		if (!empty($data_resized)) { // upload resized 
+			try { // upload resized
+				$result = $r2Service->uploadFileToStorage($storage_file_name, $contentType, $data_resized);
+			} catch (Throwable $e) {
+				return response('R2 upload error: '.$e->getMessage(), 502);
+			}
+			$result->resolve(); // wait to finish upload!
+			return response($data_resized, 200)
+				->header('X-B-Source', 'sss')
+				->header('Content-Type', $contentType)
+				->header('Cache-Control', 'public, immutable')
+				->header('Content-Length', (string)strlen($data_resized))
+				->header('ETag', $result->getETag() ?? '');
+		}
 		
 		return response($data, 200)
 			->header('X-B-Source', 'orig')
