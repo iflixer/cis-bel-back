@@ -1272,7 +1272,10 @@ class ApiController extends Controller{
             if(array_key_exists($element['id'], $idsCountrysInVideos)){ $element['country'] = $idsCountrysInVideos[$element['id']]; } // Страны
             if(array_key_exists($element['id'], $idsActorsInVideos)){ $element['actors'] = $idsActorsInVideos[$element['id']]; }
             if(array_key_exists($element['id'], $idsDirectorsInVideos)){ $element['directors'] = $idsDirectorsInVideos[$element['id']]; }
-
+            
+            // replace images with internal links
+            $element['img'] = "https://sss.cdnhub.help/".$element['id']."/".md5($element['img']).".jpg";
+            $element['backdrop'] = "https://sss.cdnhub.help/".$element['id']."/".md5($element['backdrop']).".jpg";
             
             $data['items'][] = $element;
 
