@@ -1274,8 +1274,8 @@ class ApiController extends Controller{
             if(array_key_exists($element['id'], $idsDirectorsInVideos)){ $element['directors'] = $idsDirectorsInVideos[$element['id']]; }
             
             // replace images with internal links
-            $element['img'] = "https://sss.cdnhub.help/".$element['id']."/".md5($element['img']).".jpg";
-            $element['backdrop'] = "https://sss.cdnhub.help/".$element['id']."/".md5($element['backdrop']).".jpg";
+            if ($element['img']) $element['img'] = "https://sss.cdnhub.help/".$element['id']."/".md5($element['img']).".jpg";
+            if ($element['backdrop']) $element['backdrop'] = "https://sss.cdnhub.help/".$element['id']."/".md5($element['backdrop']).".jpg";
             
             $data['items'][] = $element;
 
