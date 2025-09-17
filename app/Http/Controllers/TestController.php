@@ -838,10 +838,14 @@ class TestController extends Controller
 				$h = (int)str_replace( 'h', '', $md5_resize);
 			}
 			if ($w>1000 || $h>1000) {
-				return response('Resize error: width and height should be <= 1000', 502);
+				return response('Resize error: width and height should be <= 1000', 400);
 			}
 			$img = new \Imagick();
 			$img->readImageBlob($data);
+			$origWidth = $img->getImageWidth();
+			$origHeight = $img->getImageHeight();
+			if ($w>0 && $w>$origWidth) $w = $origWidth;
+			if ($h>0 && $h>$origHeight) $h = $origHeight;
 			$img->resizeImage($w, $h, \Imagick::FILTER_LANCZOS, 1);
 			$img->setImageFormat('webp');
 			$data_resized = $img->getImageBlob();
@@ -851,7 +855,7 @@ class TestController extends Controller
 			try {
 				$result = $r2Service->uploadFileToStorage($storage_file_name_orig, $contentType, $data);
 			} catch (Throwable $e) {
-				return response('R2 orig upload error: '.$e->getMessage(), 502);
+				return response('R2 orig upload error: '.$e->getMessage(), 424);
 			}
 			if (empty($data_resized)) {
 				$result->resolve(); // wait to finish upload if we will return original
@@ -862,7 +866,7 @@ class TestController extends Controller
 			try { 
 				$result = $r2Service->uploadFileToStorage($storage_file_name, $contentType, $data_resized);
 			} catch (Throwable $e) {
-				return response('R2 resized upload error: '.$e->getMessage(), 502);
+				return response('R2 resized upload error: '.$e->getMessage(), 424);
 			}
 			$result->resolve(); // wait to finish upload!
 			return response($data_resized, 200)
