@@ -774,6 +774,7 @@ class TestController extends Controller
 		} 
         $contentType = '';
 		$data = '';
+		$response_code = 200;
 
 		$r2Service = new R2Service();
 		$storage_file_name = "cdnhub/sss/{$type}/{$id}/{$md5}";
@@ -828,8 +829,9 @@ class TestController extends Controller
 					$contentType = trim(substr($h, 13));
 				}
 				if (stripos($h, 'Location:') === 0) {
-					if (strpos($h, 'no-poster.gif') !== false) { // image not found!
-						return response('Original not found', 404);
+					if (strpos($h, 'no-poster.gif') !== false) { 
+						// image not found! вернем заглушку но с кодом 404 чтобы кешировалась на небольшое время
+						$response_code = 404;
 					}
 				}
 			}
@@ -874,7 +876,7 @@ class TestController extends Controller
 				return response('R2 resized upload error: '.$e->getMessage(), 424);
 			}
 			$result->resolve(); // wait to finish upload!
-			return response($data_resized, 200)
+			return response($data_resized, $response_code)
 				->header('X-B-Source', 'sss')
 				->header('Content-Type', $contentType)
 				->header('Cache-Control', 'public, immutable')
@@ -882,7 +884,7 @@ class TestController extends Controller
 				->header('ETag', $result->getETag() ?? '');
 		}
 		
-		return response($data, 200)
+		return response($data, $response_code)
 			->header('X-B-Source', 'orig')
 			->header('Content-Type', $contentType)
 			->header('Cache-Control', 'public, immutable')

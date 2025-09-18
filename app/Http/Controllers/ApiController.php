@@ -44,8 +44,7 @@ class ApiController extends Controller{
     protected $passVDB; //  = '5HxL2P2Yw1yq'
 
     // protected $adress = 'https://api.kholobok.biz/show/';
-    // protected $adress = 'https://cdnhub.help/show/';
-    protected $adress = 'https://cdnhub.help/show/';
+    protected $domain = 'cdnhub.help';
 
     protected $usesApi = "App\Http\Controllers\api\\";
 
@@ -53,6 +52,7 @@ class ApiController extends Controller{
 
     public function __construct(Request $request){
         $this->request = $request;
+        $this->domain = 'cdnhub.help';
 
         $this->loginVDB = Seting::where('name', 'loginVDB')->first()->toArray()['value'];
         $this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
@@ -584,7 +584,6 @@ class ApiController extends Controller{
         else
             $domain = 'api.kholobok.biz';*/
 
-        $domain = 'cdnhub.help';
 
         // build data
 
@@ -598,7 +597,8 @@ class ApiController extends Controller{
 
             $videos[$key]['quality'] = explode(' ', $video['quality'])[0];
 
-            $videos[$key]['iframe_url'] = "https://{$domain}/show/{$video['id']}";
+            $videos[$key]['iframe_url'] = "https://{$this->domain}/show/{$video['id']}";
+            //$videos[$key]['poster'] = $this->makeInternalImageURL('videos', $video['id'], $video['poster']);
 
             $genres = Link_genre::select('genres.name')->where('id_video', $video['id'])->join('genres', 'link_genres.id_genre', '=', 'genres.id')->get()->toArray();
             if ($genres) {
@@ -612,24 +612,24 @@ class ApiController extends Controller{
                     $videos[$key]['countries'][] = $country['name'];
             }
 
-            $actors = Link_actor::select('actors.name_ru', 'actors.name_en', 'actors.poster_url', 'link_actors.character_name')->where('id_video', $video['id'])->join('actors', 'link_actors.id_actor', '=', 'actors.id')->get()->toArray();
+            $actors = Link_actor::select('actors.id', 'actors.name_ru', 'actors.name_en', 'actors.poster_url', 'link_actors.character_name')->where('id_video', $video['id'])->join('actors', 'link_actors.id_actor', '=', 'actors.id')->get()->toArray();
             if ($actors) {
                 foreach ($actors as $actor)
                     $videos[$key]['actors'][] = [
                         'name_ru' => $actor['name_ru'],
                         'name_en' => $actor['name_en'],
                         'character_name' => $actor['character_name'],
-                        'poster_url' => $actor['poster_url']
+                        'poster_url' => $this->makeInternalImageURL('actors', $actor['id'], $actor['poster_url'])
                     ];
             }
 
-            $directors = Link_director::select('directors.name_ru', 'directors.name_en', 'directors.poster_url')->where('id_video', $video['id'])->join('directors', 'link_directors.id_director', '=', 'directors.id')->get()->toArray();
+            $directors = Link_director::select('directors.id', 'directors.name_ru', 'directors.name_en', 'directors.poster_url')->where('id_video', $video['id'])->join('directors', 'link_directors.id_director', '=', 'directors.id')->get()->toArray();
             if ($directors) {
                 foreach ($directors as $director)
                     $videos[$key]['directors'][] = [
                         'name_ru' => $director['name_ru'],
                         'name_en' => $director['name_en'],
-                        'poster_url' => $director['poster_url']
+                        'poster_url' => $this->makeInternalImageURL('directors', $director['id'], $director['poster_url'])
                     ];
             }
 
@@ -831,8 +831,6 @@ class ApiController extends Controller{
             else
                 $domain = 'api.kholobok.biz';*/
 
-            $domain = 'cdnhub.help';
-
             $result = [];
 
             $data = File::select('files.id', 'id_parent', 'created_at', 'season', 'num as episode', 'translations.id as t_id', 'translations.title as t_title', 'translations.tag as t_tag')
@@ -914,7 +912,7 @@ class ApiController extends Controller{
                 $_data['content']['title_rus'] = $video['title_rus'] ?: null;
                 $_data['content']['year'] = $video['year'] ?: null;
                 $_data['content']['description'] = $video['description'] ?: null;
-                $_data['content']['poster'] = $video['poster'] ?: null;
+                $_data['content']['poster'] = $this->makeInternalImageURL('videos', $video['id'], $video['poster']) ?: null;
                 $_data['content']['duration'] = $video['duration'] ?: null;
                 $_data['content']['slogan'] = $video['slogan'] ?: null;
                 $_data['content']['age'] = $video['age'] ?: null;
@@ -923,7 +921,7 @@ class ApiController extends Controller{
 
                 $_data['content']['quality'] = explode(' ', $video['quality'])[0];
 
-                $_data['content']['iframe_url'] = "https://{$domain}/show/{$video['id']}";
+                $_data['content']['iframe_url'] = "https://{$this->domain}/show/{$video['id']}";
 
                 $genres = Link_genre::select('genres.name')->where('id_video', $video['id'])->join('genres', 'link_genres.id_genre', '=', 'genres.id')->get()->toArray();
                 if ($genres) {
@@ -937,24 +935,24 @@ class ApiController extends Controller{
                         $_data['content']['countries'][] = $country['name'];
                 }
 
-                $actors = Link_actor::select('actors.name_ru', 'actors.name_en', 'actors.poster_url', 'link_actors.character_name')->where('id_video', $video['id'])->join('actors', 'link_actors.id_actor', '=', 'actors.id')->get()->toArray();
+                $actors = Link_actor::select('actors.id', 'actors.name_ru', 'actors.name_en', 'actors.poster_url', 'link_actors.character_name')->where('id_video', $video['id'])->join('actors', 'link_actors.id_actor', '=', 'actors.id')->get()->toArray();
                 if ($actors) {
                     foreach ($actors as $actor)
                         $_data['content']['actors'][] = [
                             'name_ru' => $actor['name_ru'],
                             'name_en' => $actor['name_en'],
                             'character_name' => $actor['character_name'],
-                            'poster_url' => $actor['poster_url']
+                            'poster_url' => $this->makeInternalImageURL('actors', $actor['id'], $actor['poster_url'])
                         ];
                 }
 
-                $directors = Link_director::select('directors.name_ru', 'directors.name_en', 'directors.poster_url')->where('id_video', $video['id'])->join('directors', 'link_directors.id_director', '=', 'directors.id')->get()->toArray();
+                $directors = Link_director::select('directors.id', 'directors.name_ru', 'directors.name_en', 'directors.poster_url')->where('id_video', $video['id'])->join('directors', 'link_directors.id_director', '=', 'directors.id')->get()->toArray();
                 if ($directors) {
                     foreach ($directors as $director)
                         $_data['content']['directors'][] = [
                             'name_ru' => $director['name_ru'],
                             'name_en' => $director['name_en'],
-                            'poster_url' => $director['poster_url']
+                            'poster_url' => $this->makeInternalImageURL('directors', $director['id'], $director['poster_url'])
                         ];
                 }
 
@@ -1192,8 +1190,6 @@ class ApiController extends Controller{
             $domain = 'api.kholobok.biz';
         }*/
 
-        $domain = 'cdnhub.help';
-
         $timeDomains = microtime(false);
         
         
@@ -1225,7 +1221,7 @@ class ApiController extends Controller{
                     'name_ru' => $actors[$link['id_actor']]['name_ru'],
                     'name_en' => $actors[$link['id_actor']]['name_en'],
                     'character_name' => $link['character_name'],
-                    'poster_url' => $actors[$link['id_actor']]['poster_url']
+                    'poster_url' => $this->makeInternalImageURL('actors', $link['id_actor'], $actors[$link['id_actor']]['poster_url'])
                 ];
             }
         }
@@ -1239,7 +1235,7 @@ class ApiController extends Controller{
                 $idsDirectorsInVideos[$link['id_video']][] = [
                     'name_ru' => $directors[$link['id_director']]['name_ru'],
                     'name_en' => $directors[$link['id_director']]['name_en'],
-                    'poster_url' => $directors[$link['id_director']]['poster_url']
+                    'poster_url' => $this->makeInternalImageURL('directors', $link['id_director'], $directors[$link['id_director']]['poster_url'])
                 ];
             }
         }
@@ -1266,7 +1262,7 @@ class ApiController extends Controller{
             if ($files)
                 $element['translations'] = $files;
 
-            $element['adress'] = 'https://'.$domain.'/show/'.$element['id']; // Ссылка
+            $element['adress'] = 'https://'.$this->domain.'/show/'.$element['id']; // Ссылка
 
             if(array_key_exists($element['id'], $idsGenresInVideos)){ $element['genre'] = $idsGenresInVideos[$element['id']]; } // Жанры
             if(array_key_exists($element['id'], $idsCountrysInVideos)){ $element['country'] = $idsCountrysInVideos[$element['id']]; } // Страны
@@ -1274,8 +1270,8 @@ class ApiController extends Controller{
             if(array_key_exists($element['id'], $idsDirectorsInVideos)){ $element['directors'] = $idsDirectorsInVideos[$element['id']]; }
             
             // replace images with internal links
-            if ($element['img']) $element['img'] = "https://sss.cdnhub.help/videos/".$element['id']."/".md5($element['img']);
-            if ($element['backdrop']) $element['backdrop'] = "https://sss.cdnhub.help/videos/".$element['id']."/".md5($element['backdrop']);
+            if ($element['img']) $element['img'] = $this->makeInternalImageURL('videos', $element['id'], $element['img']);
+            if ($element['backdrop']) $element['backdrop'] = $this->makeInternalImageURL('videos', $element['id'], $element['backdrop']);
             
             $data['items'][] = $element;
 
@@ -1343,7 +1339,12 @@ class ApiController extends Controller{
     }
 
 
-
+    private function makeInternalImageURL($type, $id, $url) {
+        if (empty($url) || empty($type) || empty($url)) {
+            return '';
+        }
+        return "https://sss.{$this->domain}/{$type}/".$id."/".md5($url);
+    }
 
 
 
