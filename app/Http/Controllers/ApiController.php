@@ -533,6 +533,10 @@ class ApiController extends Controller{
             'videos.imdb as imdb_id',
             'videos.description',
             'videos.img as poster',
+            'videos.backdrop',
+            'videos.tmdb_popularity',
+            'videos.tmdb_vote_average',
+            'videos.tmdb_vote_count',
             'videos.film_length as duration',
             'videos.slogan',
             'videos.rating_age_limits as age'
@@ -598,7 +602,8 @@ class ApiController extends Controller{
             $videos[$key]['quality'] = explode(' ', $video['quality'])[0];
 
             $videos[$key]['iframe_url'] = "https://{$this->domain}/show/{$video['id']}";
-            //$videos[$key]['poster'] = $this->makeInternalImageURL('videos', $video['id'], $video['poster']);
+            $videos[$key]['poster'] = $this->makeInternalImageURL('videos', $video['id'], $video['poster']);
+            $videos[$key]['backdrop'] = $this->makeInternalImageURL('videos', $video['id'], $video['backdrop']);
 
             $genres = Link_genre::select('genres.name')->where('id_video', $video['id'])->join('genres', 'link_genres.id_genre', '=', 'genres.id')->get()->toArray();
             if ($genres) {
@@ -820,6 +825,8 @@ class ApiController extends Controller{
 
         $result = \Cache::get('updates');
 
+        //$result = null;
+
         if ($result === null) {
 
             // domain
@@ -891,6 +898,10 @@ class ApiController extends Controller{
                     'imdb as imdb_id',
                     'description',
                     'img as poster',
+                    'backdrop',
+                    'tmdb_popularity',
+                    'tmdb_vote_average',
+                    'tmdb_vote_count',
                     'film_length as duration',
                     'slogan',
                     'rating_age_limits as age'
@@ -913,7 +924,11 @@ class ApiController extends Controller{
                 $_data['content']['year'] = $video['year'] ?: null;
                 $_data['content']['description'] = $video['description'] ?: null;
                 $_data['content']['poster'] = $this->makeInternalImageURL('videos', $video['id'], $video['poster']) ?: null;
+                $_data['content']['backdrop'] = $this->makeInternalImageURL('videos', $video['id'], $video['backdrop']) ?: null;
                 $_data['content']['duration'] = $video['duration'] ?: null;
+                $_data['content']['tmdb_popularity'] = $video['tmdb_popularity'] ?: null;
+                $_data['content']['tmdb_vote_average'] = $video['tmdb_vote_average'] ?: null;
+                $_data['content']['tmdb_vote_count'] = $video['tmdb_vote_count'] ?: null;
                 $_data['content']['slogan'] = $video['slogan'] ?: null;
                 $_data['content']['age'] = $video['age'] ?: null;
                 $_data['content']['kinopoisk_id'] = $video['kinopoisk_id'] ?: null;
