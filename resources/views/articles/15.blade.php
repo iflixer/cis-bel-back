@@ -37,6 +37,16 @@
 </style>
 
 <blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
+    <code style="display:inline-block;margin-bottom:2px;padding-left:7px;padding-right:7px;font-size:16px !important;font-family: Montserrat-Medium !important">v3.3</code>
+    <div style="margin-bottom:5px">
+        <ul style="padding-left: 0;">
+            <li style="margin-top: 7px;">Совместимость DLE 18.1+</li>
+            <li style="margin-top: 7px;">Добавлена возможность автоматической публикации импортированых новостей без модерации</li>
+        </ul>
+    </div>
+</blockquote>
+
+<blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
     <code style="display:inline-block;margin-bottom:2px;padding-left:7px;padding-right:7px;font-size:16px !important;font-family: Montserrat-Medium !important">v3.2</code>
     <div style="margin-bottom:5px">
         <ul style="padding-left: 0;">
@@ -46,9 +56,11 @@
 </blockquote>
 
 <blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
+
     <code style="display:inline-block;margin-bottom:2px;padding-left:7px;padding-right:7px;font-size:16px !important;font-family: Montserrat-Medium !important">v3.1</code>
     <div style="margin-bottom:5px">
         <ul style="padding-left: 0;">
+            <li style="margin-top: 7px;">Исправлена проблема со стиранием заполненных доп. полей, связанная с конфликтом с другими модулями для расширения доп. полей</li>
             <li style="margin-top: 7px;">Исправлена проблема со стиранием заполненных доп. полей, связанная с конфликтом с другими модулями для расширения доп. полей</li>
             <li style="margin-top: 7px;">Переработана и улучшена логика автоматического обновления</li>
             <li style="margin-top: 7px;">В ручном поиске в добавлении/редактировании новости добавлена возможность вставлять только ссылку без данных, так же добавлена отдельная кнопка, для заполнения всех данных с возможностью выбора конкретных доп. полей в модальном окне</li>

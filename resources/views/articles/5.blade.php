@@ -144,7 +144,7 @@
 <br>
 
 <h3 class="doch3">Архив с модулем</h3>
-<p><a href="https://futmax.info/dle-plugins/dle-plugins/cdnhub-v3.2.zip">cdnhub-v3.2.zip</a> [1,85 МБ] &middot; <a
+<p><a href="/dle-plugins/cdnhub-v3.3.zip">cdnhub-v3.3.zip</a> &middot; <a
             href="/articles/15">История
         обновлений модуля</a></p>
 <div class="spoiled">
