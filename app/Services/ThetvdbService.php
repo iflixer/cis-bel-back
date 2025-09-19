@@ -70,10 +70,12 @@ class ThetvdbService
 
 
 
-    public function updateVideoWithThetvdbIdByImdbId($videoId, $imdb_id)
+    public function updateVideoWithThetvdbIdByImdbId(&$video)
     {
-        $thetvdb_id = $this->parseThetvdbByImdbId($imdb_id);
-        Video::where('id', $videoId)->update(['thetvdb' => $thetvdb_id]);
+        $thetvdb_id = $this->parseThetvdbByImdbId($video->imdb);
+        if (!empty($thetvdb_id)) {
+            $video->thetvdb = $thetvdb_id;
+        }
         return true;
     }
 
@@ -89,7 +91,7 @@ class ThetvdbService
 
         foreach ($videos as $video) {
             $response[] = ['id' => $video->id];
-            $this->updateVideoWithThetvdbIdByImdbId($video->id, $video->imdb);
+            $this->updateVideoWithThetvdbIdByImdbId($video);
         }
 
         return $response;

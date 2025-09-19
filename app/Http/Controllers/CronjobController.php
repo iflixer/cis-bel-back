@@ -136,23 +136,16 @@ class CronjobController extends Controller
 
 		krsort($medias);
 
+		// debug
+		array_splice($medias, 10);
 		// var_dump($medias);
-		// die();
-
-		$created_files_total = [];
-		$created_videos_total = [];
-		$created_translations_total = [];
 
 		if ($medias) {
 			foreach ($medias as $key => $value) {
 				$i = 0;
 				$resolution = '';
 				foreach ($value->qualities as $resol) {
-					if($i == 0){
-						$resolution = $resol->resolution;
-					} else {
-						$resolution = $resolution.','.$resol->resolution;
-					}
+					$resolution = ($i == 0) ? $resol->resolution : "{$resolution},{$resol->resolution}";
 					$i++;
 				}
 
@@ -164,8 +157,6 @@ class CronjobController extends Controller
 						'id_VDB' => $value->translation->id,
 						'title' => $value->translation->title
 					]);
-					$created_translations_total[] = $value->translation->title;
-
 					$translation = Translation::where('id_VDB', $value->translation->id)
 						->first();
 				}
@@ -175,53 +166,55 @@ class CronjobController extends Controller
 				if ($value->content_object->content_type == 'movie') {
 					$video = Video::where('id_VDB', $value->content_object->id)->where('tupe', 'movie')->first();
 
-					if (!isset($video)) {
-						$lastId = Video::create([
-							'id_VDB' => $value->content_object->id, 
+					if (empty($video)) {
+						$video = new Video([
+							'id_VDB' => $value->content_object->tv_series->id, 
 							'tupe' => $value->content_object->content_type,
-							'name' => $value->content_object->orig_title, 
-							'ru_name' => $value->content_object->ru_title, 
+							'name' => $value->content_object->tv_series->orig_title, 
+							'ru_name' => $value->content_object->tv_series->ru_title,
 							'kinopoisk' => $value->content_object->kinopoisk_id,
 							'imdb' => $value->content_object->imdb_id,
-							'quality' => $value->source_quality.' '.$value->max_quality,
-							'year' => '',
-							'country' => '', 
-							'description' => '',
-							'img' => ''
-						])->id;
-						$created_videos_total[] = $value->content_object->orig_title;
-						if ($value->content_object->kinopoisk_id) {
-							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
-							$this->tmdbService->updateVideoWithTmdbData($lastId);
-							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($lastId, $value->content_object->imdb_id);
-							$this->fanartService->updateVideoWithFanartData($lastId);
+							'quality' => "{$value->source_quality} {$value->max_quality}",
+						]);
+						if ($video->kinopoisk) {
+							$this->kinoPoiskService->updateVideoWithKinoPoiskData($video);
 						}
+						if (!empty($video->imdb)) {
+							$this->tmdbService->updateVideoWithTmdbData($video);
+							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($video);
+							$this->fanartService->updateVideoWithFanartData($video);
+						}	
 					} else {
-						$lastId = $video->id;
-						Video::where('id', $video->id)->
-							update([
+						$video->fill([
 								'id_VDB' => $value->content_object->id, 
 								'tupe' => $value->content_object->content_type,
 								'name' => $value->content_object->orig_title, 
 								'ru_name' => $value->content_object->ru_title, 
 								'kinopoisk' => $value->content_object->kinopoisk_id,
 								'imdb' => $value->content_object->imdb_id,
-								'quality' => $value->source_quality.' '.$value->max_quality
+								'quality' => "{$value->source_quality} {$value->max_quality}"
 							]);
-
-						if ($value->content_object->kinopoisk_id && !$video->update_kino) {
-							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
-							$this->tmdbService->updateVideoWithTmdbData($lastId);
-							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($lastId, $value->content_object->imdb_id);
-							$this->fanartService->updateVideoWithFanartData($lastId);
-						}
+						echo "\name:{$video->name}\n";
+						echo "\nkinopoisk:{$video->kinopoisk}\n";
+						//if (!$video->update_kino) {
+							if (!empty($video->kinopoisk)) {
+								$this->kinoPoiskService->updateVideoWithKinoPoiskData($video);
+							}
+							if (!empty($video->imdb)) {
+								$this->tmdbService->updateVideoWithTmdbData($video);
+								$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($video);
+								$this->fanartService->updateVideoWithFanartData($video);
+							}	
+						//}
 					}
 
+					$video->save();
+
 					$file = File::where('id_VDB', $value->id)->where('sids', 'VDB')->first();
-					if (!isset($file)) {
+					if (empty($file)) {
 						File::create([
 							'id_VDB' => $value->id,
-							'id_parent' => $lastId,
+							'id_parent' => $video->id,
 							'path' => $value->path,
 							'name' => $value->content_object->orig_title,
 							'ru_name' => $value->content_object->ru_title,
@@ -231,8 +224,7 @@ class CronjobController extends Controller
 							'translation_id' => $translation->id,
 							'translation' => $value->translation->title,
 							'sids' => 'VDB'
-						])->id;
-						$created_files_total[] = $value->content_object->orig_title;
+						]);
 					}
 				}
 
@@ -241,54 +233,52 @@ class CronjobController extends Controller
 				if ($value->content_object->content_type == 'episode') {
 					$video = Video::where('id_VDB', $value->content_object->tv_series->id)->where('tupe', 'episode')->first();
 
-					if (!isset($video)) {
-						$lastId = Video::create([
+					if (empty($video)) {
+						$video = new Video([
 							'id_VDB' => $value->content_object->tv_series->id, 
 							'tupe' => $value->content_object->content_type,
 							'name' => $value->content_object->tv_series->orig_title, 
 							'ru_name' => $value->content_object->tv_series->ru_title,
 							'kinopoisk' => $value->content_object->kinopoisk_id,
-							//'imdb' => $value->content_object->imdb_id,
-							'quality' => $value->source_quality.' '.$value->max_quality,
-							'year' => '',
-							'country' => '', 
-							'description' => '', 
-							'img' => ''
-						])->id;
-						$created_videos_total[] = $value->content_object->tv_series->orig_title;
-						
-						if ($value->content_object->kinopoisk_id) {
-							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
-							$this->tmdbService->updateVideoWithTmdbData($lastId);
-							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($lastId, $value->content_object->imdb_id);
-							$this->fanartService->updateVideoWithFanartData($lastId);
+							'quality' => "{$value->source_quality} {$value->max_quality}",
+						]);
+						if (!empty($video->kinopoisk)) {
+							$this->kinoPoiskService->updateVideoWithKinoPoiskData($video);
 						}
+						if (!empty($video->imdb)) {
+							$this->tmdbService->updateVideoWithTmdbData($video);
+							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($video);
+							$this->fanartService->updateVideoWithFanartData($video);
+						}	
 					} else {
-						$lastId = $video->id;
-						Video::where('id', $video->id)->
-							update([
+						$video->fill([
 								'id_VDB' => $value->content_object->tv_series->id, 
 								'tupe' => $value->content_object->content_type,
 								'name' => $value->content_object->tv_series->orig_title, 
 								'ru_name' => $value->content_object->tv_series->ru_title,
 								'kinopoisk' => $value->content_object->kinopoisk_id,
-								//'imdb' => $value->content_object->imdb_id,
-								'quality' => $value->source_quality.' '.$value->max_quality
+								'quality' => "{$value->source_quality} {$value->max_quality}"
 							]);
 							
-						if ($value->content_object->kinopoisk_id && !$video->update_kino) {
-							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
-							$this->tmdbService->updateVideoWithTmdbData($lastId);
-							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($lastId, $value->content_object->imdb_id);
-							$this->fanartService->updateVideoWithFanartData($lastId);
-						}
+						//if (!$video->update_kino) {
+							if (!empty($video->kinopoisk)) {
+								$this->kinoPoiskService->updateVideoWithKinoPoiskData($video);
+							}
+							if (!empty($video->imdb)) {
+								$this->tmdbService->updateVideoWithTmdbData($video);
+								$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($video);
+								$this->fanartService->updateVideoWithFanartData($video);
+							}
+						//}
 					}
 
+					$video->save();
+
 					$file = File::where('id_VDB', $value->id)->where('sids', 'VDB')->first();
-					if (!isset($file)) {
+					if (empty($file)) {
 						File::create([
 							'id_VDB' => $value->id,
-							'id_parent' => $lastId,
+							'id_parent' => $video->id,
 							'path' => $value->path,
 							'name' => $value->content_object->orig_title,
 							'ru_name' => $value->content_object->ru_title,
@@ -298,8 +288,7 @@ class CronjobController extends Controller
 							'translation_id' => $translation->id,
 							'translation' => $value->translation->title,
 							'sids' => 'VDB'
-						])->id;
-						$created_files_total[] = $value->content_object->orig_title;
+						]);
 					}
 				}
 
@@ -309,9 +298,6 @@ class CronjobController extends Controller
 					]);
 				}
 			}
-			echo "TOTAL videos created: " . count($created_videos_total) . "\n";
-			echo "TOTAL files created: " . count($created_files_total) . "\n";
-			echo "TOTAL translations created: " . count($created_translations_total) . "\n";
 		} // if medias
 
 		Debug::dump_queries($start_time);
