@@ -137,7 +137,7 @@ class CronjobController extends Controller
 		krsort($medias);
 
 		// debug
-		array_splice($medias, 10);
+		//array_splice($medias, 10);
 		// var_dump($medias);
 
 		if ($medias) {
