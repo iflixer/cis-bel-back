@@ -248,7 +248,7 @@ class CronjobController extends Controller
 							'name' => $value->content_object->tv_series->orig_title, 
 							'ru_name' => $value->content_object->tv_series->ru_title,
 							'kinopoisk' => $value->content_object->kinopoisk_id,
-							'imdb' => $value->content_object->imdb_id,
+							//'imdb' => $value->content_object->imdb_id,
 							'quality' => $value->source_quality.' '.$value->max_quality,
 							'year' => '',
 							'country' => '', 
@@ -272,7 +272,7 @@ class CronjobController extends Controller
 								'name' => $value->content_object->tv_series->orig_title, 
 								'ru_name' => $value->content_object->tv_series->ru_title,
 								'kinopoisk' => $value->content_object->kinopoisk_id,
-								'imdb' => $value->content_object->imdb_id,
+								//'imdb' => $value->content_object->imdb_id,
 								'quality' => $value->source_quality.' '.$value->max_quality
 							]);
 							

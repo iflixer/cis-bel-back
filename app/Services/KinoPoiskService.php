@@ -269,7 +269,7 @@ class KinoPoiskService
         ];
 
         if (!empty($imdb_id)) {
-            $updateData['imdb'] = $imdb_id;
+            $updateData['imdb'] = $imdb_id; 
         }
 
 
