@@ -252,6 +252,8 @@ class KinoPoiskService
             'update_kino' => 1,
             'film_length' => $kinoPoisk->filmLength,
             'slogan' => $kinoPoisk->slogan,
+            'rating_kp' => $kinoPoisk->ratingKinopoisk,
+            'rating_kp_votes' => $kinoPoisk->ratingKinopoiskVoteCount,
             'rating_mpaa' => $kinoPoisk->ratingMpaa,
             'rating_age_limits' => $kinoPoisk->ratingAgeLimits,
             'premiere_ru' => $kinoPoisk->premiereRu,
@@ -315,8 +317,6 @@ class KinoPoiskService
             $response[] = ['id' => $video->id];
             $this->updateVideoWithKinoPoiskData($video->id);
         }
-
-
 
         return $response;
     }
