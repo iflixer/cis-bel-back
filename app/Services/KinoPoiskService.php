@@ -17,7 +17,7 @@ class KinoPoiskService
     public function parseKinoPoisk($id)
     {
         $start_time = microtime(true);
-        $u = 'https://kinopoiskapiunofficial.tech/api/v2.1/films/' . $id;
+        $u = 'https://kinopoiskapiunofficial.tech/api/v2.2/films/' . $id;
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
@@ -252,8 +252,8 @@ class KinoPoiskService
             'update_kino' => 1,
             'film_length' => $kinoPoisk->filmLength,
             'slogan' => $kinoPoisk->slogan,
-            'rating_kp' => $kinoPoisk->ratingKinopoisk,
-            'rating_kp_votes' => $kinoPoisk->ratingKinopoiskVoteCount,
+            'rating_kp' => $kinoPoisk->ratingKinopoisk ?? 0,
+            'rating_kp_votes' => $kinoPoisk->ratingKinopoiskVoteCount ?? 0,
             'rating_mpaa' => $kinoPoisk->ratingMpaa,
             'rating_age_limits' => $kinoPoisk->ratingAgeLimits,
             'premiere_ru' => $kinoPoisk->premiereRu,
