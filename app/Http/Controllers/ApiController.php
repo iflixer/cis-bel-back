@@ -539,6 +539,8 @@ class ApiController extends Controller{
             'videos.tmdb_vote_count',
             'videos.film_length as duration',
             'videos.slogan',
+            'videos.rating_kp',
+            'videos.rating_kp_votes',
             'videos.rating_age_limits as age'
         );
 
@@ -904,6 +906,8 @@ class ApiController extends Controller{
                     'tmdb_vote_count',
                     'film_length as duration',
                     'slogan',
+                    'videos.rating_kp as rating_kp',
+                    'videos.rating_kp_votes as rating_kp_votes',
                     'rating_age_limits as age'
                 )
                 ->where('id', $item['id_parent'])
@@ -933,6 +937,8 @@ class ApiController extends Controller{
                 $_data['content']['age'] = $video['age'] ?: null;
                 $_data['content']['kinopoisk_id'] = $video['kinopoisk_id'] ?: null;
                 $_data['content']['imdb_id'] = $video['imdb_id'] ?: null;
+                $_data['content']['rating_kp'] = $video['rating_kp'] ?: null;
+                $_data['content']['rating_kp_votes'] = $video['rating_kp_votes'] ?: null;
 
                 $_data['content']['quality'] = explode(' ', $video['quality'])[0];
 
