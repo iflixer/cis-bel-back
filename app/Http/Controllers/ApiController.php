@@ -28,6 +28,7 @@ use App\Actor;
 use App\Director;
 use App\Link_actor;
 use App\Link_director;
+use App\Screenshot;
 
 use Mail;
 use DB;
@@ -44,18 +45,17 @@ class ApiController extends Controller{
     protected $passVDB; //  = '5HxL2P2Yw1yq'
 
     // protected $adress = 'https://api.kholobok.biz/show/';
-    protected $domain = 'cdnhub.help';
-
+    protected $cdnhub_api_domain;
+    protected $cdnhub_player_domain;
     protected $usesApi = "App\Http\Controllers\api\\";
-
-
 
     public function __construct(Request $request){
         $this->request = $request;
-        $this->domain = 'cdnhub.help';
 
         $this->loginVDB = Seting::where('name', 'loginVDB')->first()->toArray()['value'];
         $this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
+		$this->cdnhub_api_domain = Seting::where('name', 'cdnhub_api_domain')->first()->toArray()['value'];
+		$this->cdnhub_player_domain = Seting::where('name', 'cdnhub_player_domain')->first()->toArray()['value'];
     }
 
 
@@ -603,7 +603,7 @@ class ApiController extends Controller{
 
             $videos[$key]['quality'] = explode(' ', $video['quality'])[0];
 
-            $videos[$key]['iframe_url'] = "https://{$this->domain}/show/{$video['id']}";
+            $videos[$key]['iframe_url'] = "https://cdn0.$this->cdnhub_player_domain/show/{$video['id']}";
             $videos[$key]['poster'] = $this->makeInternalImageURL('videos', $video['id'], $video['poster']);
             $videos[$key]['backdrop'] = $this->makeInternalImageURL('videos', $video['id'], $video['backdrop']);
 
@@ -641,56 +641,74 @@ class ApiController extends Controller{
             }
 
             if ($video['type'] == 'movie') {
-                $translations = File::select('translations.id as id', 'translations.title as title', 'translations.tag as tag')
-                ->where('id_parent', $video['id'])
-                ->join('translations', 'files.translation_id', '=', 'translations.id')
-                ->orderBy('priority', 'desc')
-                ->groupBy('files.translation_id')
-                ->get()
-                ->toArray();
+                $translations = File::select('files.id as id_file', 'translations.id as id', 'translations.title as title', 'translations.tag as tag')
+                    ->where('id_parent', $video['id'])
+                    ->join('translations', 'files.translation_id', '=', 'translations.id')
+                    ->orderBy('priority', 'desc')
+                    ->groupBy('files.translation_id')
+                    ->get()
+                    ->toArray();
 
                 if ($translations) {
-                    foreach ($translations as $translation)
+                    foreach ($translations as $translation) {
+                        $ss = Screenshot::select('url')
+                            ->where('id_file', $translation['id_file'])
+                            ->orderBy('num')
+                            ->pluck('url')
+                            ->toArray();
+                        $ss = array_map(function($url)  use ($translation) {
+                            return $this->makeInternalImageURL('screenshots', $translation['id_file'], $url);
+                        }, $ss);
                         $videos[$key]['translations'][] = [
                             'id' => $translation['id'],
-                            'title' => $translation['tag'] ?: $translation['title']
+                            'title' => $translation['tag'] ?: $translation['title'],
+                            'screens' => $ss
                         ];
+                    }
                 }
             }
 
             if ($video['type'] == 'serial') {
-                $translations = File::select('translations.id as id', 'translations.title as title', 'translations.tag as tag')
-                ->where('id_parent', $video['id'])
-                ->join('translations', 'files.translation_id', '=', 'translations.id')
-                ->orderBy('priority', 'desc')
-                ->groupBy('files.translation_id')
-                ->get()
-                ->toArray();
+                $translations = File::select('files.id as id_file', 'translations.id as id', 'translations.title as title', 'translations.tag as tag')
+                    ->where('id_parent', $video['id'])
+                    ->join('translations', 'files.translation_id', '=', 'translations.id')
+                    ->orderBy('priority', 'desc')
+                    ->groupBy('files.translation_id')
+                    ->get()
+                    ->toArray();
 
                 if ($translations) {
                     foreach ($translations as $translation) {
                         $last_season_episode = File::select('season', 'num as episode')
-                        ->where('id_parent', $video['id'])
-                        ->where('translation_id', $translation['id'])
-                        ->orderBy('season', 'desc')
-                        ->orderBy('num', 'desc')
-                        ->first()
-                        ->toArray();
-
+                            ->where('id_parent', $video['id'])
+                            ->where('translation_id', $translation['id'])
+                            ->orderBy('season', 'desc')
+                            ->orderBy('num', 'desc')
+                            ->first()
+                            ->toArray();
+                        $ss = Screenshot::select('url')
+                            ->where('id_file', $translation['id_file'])
+                            ->orderBy('num')
+                            ->pluck('url')
+                            ->toArray();
+                        $ss = array_map(function($url)  use ($translation) {
+                            return $this->makeInternalImageURL('screenshots', $translation['id_file'], $url);
+                        }, $ss);
                         $videos[$key]['translations'][] = [
                             'id' => $translation['id'],
                             'title' => $translation['tag'] ?: $translation['title'],
                             'season' => $last_season_episode['season'],
                             'episode' => $last_season_episode['episode'],
+                            'screens' => $ss
                         ];
                     }
 
                     $last_season_episode = File::select('season', 'num as episode')
-                    ->where('id_parent', $video['id'])
-                    ->orderBy('season', 'desc')
-                    ->orderBy('num', 'desc')
-                    ->first()
-                    ->toArray();
+                        ->where('id_parent', $video['id'])
+                        ->orderBy('season', 'desc')
+                        ->orderBy('num', 'desc')
+                        ->first()
+                        ->toArray();
 
                     $videos[$key]['season'] = $last_season_episode['season'];
                     $videos[$key]['episode'] = $last_season_episode['episode'];
@@ -942,7 +960,7 @@ class ApiController extends Controller{
 
                 $_data['content']['quality'] = explode(' ', $video['quality'])[0];
 
-                $_data['content']['iframe_url'] = "https://{$this->domain}/show/{$video['id']}";
+                $_data['content']['iframe_url'] = "https://cdn0.{$this->cdnhub_player_domain}/show/{$video['id']}";
 
                 $genres = Link_genre::select('genres.name')->where('id_video', $video['id'])->join('genres', 'link_genres.id_genre', '=', 'genres.id')->get()->toArray();
                 if ($genres) {
@@ -1283,7 +1301,7 @@ class ApiController extends Controller{
             if ($files)
                 $element['translations'] = $files;
 
-            $element['adress'] = 'https://'.$this->domain.'/show/'.$element['id']; // Ссылка
+            $element['adress'] = "https://cdn0.{$this->cdnhub_player_domain}/show/{$element['id']}"; // Ссылка
 
             if(array_key_exists($element['id'], $idsGenresInVideos)){ $element['genre'] = $idsGenresInVideos[$element['id']]; } // Жанры
             if(array_key_exists($element['id'], $idsCountrysInVideos)){ $element['country'] = $idsCountrysInVideos[$element['id']]; } // Страны
@@ -1364,7 +1382,7 @@ class ApiController extends Controller{
         if (empty($url) || empty($type) || empty($url)) {
             return '';
         }
-        return "https://sss.{$this->domain}/{$type}/".$id."/".md5($url);
+        return "https://sss.{$this->cdnhub_api_domain}/{$type}/".$id."/".md5($url);
     }
 
 

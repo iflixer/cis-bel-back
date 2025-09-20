@@ -12,6 +12,7 @@ use App\User;
 use App\Video;
 use App\Actor;
 use App\Director;
+use App\Screenshot;
 use App\File;
 use App\Domain;
 use App\Seting;
@@ -45,8 +46,8 @@ use function Sabre\Uri\split;
 class TestController extends Controller
 {
 
-	protected $loginVDB; //  = 'kolobock'
-	protected $passVDB; //  = '5HxL2P2Yw1yq'
+	protected $loginVDB; 
+	protected $passVDB; 
 
 	public function __construct()
 	{
@@ -808,6 +809,11 @@ class TestController extends Controller
 					$director = Director::find($id);
 					if (empty($director)) return response('Director not found', 404);
 					if (empty($remote_url) && md5($director->poster_url) == $md5_hash) $remote_url = $director->poster_url;
+					break;
+				case 'screenshots':
+					$ss = Screenshot::find($id);
+					if (empty($ss)) return response('Screenshot not found', 404);
+					if (empty($remote_url) && md5($ss->url) == $md5_hash) $remote_url = $ss->url;
 					break;
 				default:
 					return response('type not found', 404);
