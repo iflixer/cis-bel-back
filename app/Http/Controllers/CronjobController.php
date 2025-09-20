@@ -95,10 +95,12 @@ class CronjobController extends Controller
 
 		echo "start date: $start_date\n";
 		echo "end date: $end_date\n";
+		$order = "-created";
 
 		if ($start_date && $end_date) {
 			$last_created_at = strtotime($start_date);
 			$vdb_date_lte = "&created__lte=" . date('Y-m-d', strtotime($end_date));
+			$order = "created";
 		} else {
 			$videodb = Videodb::select('last_accepted_at')->where('method', 'sync')->first()->toArray();
 			$last_created_at = strtotime($videodb['last_accepted_at']);
@@ -117,7 +119,7 @@ class CronjobController extends Controller
 
 
 		while (!$stop_update) {
-			$u = "https://videodb.win/api/v1/medias?ordering=-created&limit={$limit}&offset={$offset}{$vdb_date_lte}";
+			$u = "https://videodb.win/api/v1/medias?ordering={$order}&limit={$limit}&offset={$offset}{$vdb_date_lte}";
 			echo "URL: $u\n";
 			$curl = curl_init();
 			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
