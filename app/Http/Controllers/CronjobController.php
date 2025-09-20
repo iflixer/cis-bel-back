@@ -371,6 +371,7 @@ class CronjobController extends Controller
 		} // if medias
 
 		Debug::dump_queries($start_time);
+		echo "END import start date: $start_date to $end_date\n";
 
 	} // function
 
