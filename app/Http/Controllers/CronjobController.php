@@ -80,46 +80,38 @@ class CronjobController extends Controller
 	public function videodb()
 	{
 		$start_time = microtime(true);
-		DB::enableQueryLog();
 		set_time_limit(0);
+		$limit = 100;
+		$offset = 0;
+		$debug_mysql = 0;
+		$mode = 'fresh';
+		if ($this->request->input('mode'))
+        	$mode = $this->request->input('mode');
+		if ($this->request->input('offset'))
+        	$offset = (int) $this->request->input('offset');
+		if ($this->request->input('limit'))
+        	$limit = (int) $this->request->input('limit');
+		if ($this->request->input('debug_mysql'))
+        	$debug_mysql = $this->request->input('debug_mysql');
 
-		$start_date = null;
-		$end_date = null;
-		$vdb_date_lte = "";
-		$is_update_last = false;
-		// optional ?start_date=2024-03-04&end_date=2024-03-05
-		if ($this->request->input('start_date'))
-            $start_date = $this->request->input('start_date');
-		if ($this->request->input('end_date'))
-            $end_date = $this->request->input('end_date');
+		if ($debug_mysql) {
+			DB::enableQueryLog();
+		}
 
-		echo "start date: $start_date\n";
-		echo "end date: $end_date\n";
-		$order = "-created";
+		$order = "created";
 
-		if ($start_date && $end_date) {
-			$last_created_at = strtotime($start_date);
-			$vdb_date_lte = "&created__lte=" . date('Y-m-d', strtotime($end_date));
-			$order = "created";
-		} else {
+		echo "import start {$mode} {$order} {$offset} {$limit}\n";
+
+		if ($mode == 'fresh') {
+			$order = "-created";
 			$videodb = Videodb::select('last_accepted_at')->where('method', 'sync')->first()->toArray();
 			$last_created_at = strtotime($videodb['last_accepted_at']);
 			echo "Last created at: $last_created_at\n";
-			$is_update_last = true;
 		}
-
-		//
-
-		$limit = 100;
-		$offset = 0;
-
 		$stop_update = false;
-
 		$medias = [];
-
-
 		while (!$stop_update) {
-			$u = "https://videodb.win/api/v1/medias?ordering={$order}&limit={$limit}&offset={$offset}{$vdb_date_lte}";
+			$u = "https://videodb.win/api/v1/medias?ordering={$order}&limit={$limit}&offset={$offset}";
 			echo "URL: $u\n";
 			$curl = curl_init();
 			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
@@ -131,10 +123,10 @@ class CronjobController extends Controller
 			curl_setopt($curl, CURLOPT_URL, $u);
 			$rezult = json_decode(curl_exec($curl));
 			curl_close($curl);
-			echo "rezult count: " . count($rezult->results) . "\n";
+			//echo "rezult count: " . count($rezult->results) . "\n";
 
 			foreach ($rezult->results as $key => $value) {
-				if (strtotime($value->created) < $last_created_at) {
+				if (($mode=='fresh') && ( strtotime($value->created) < $last_created_at ) ) {
 					$stop_update = true;
 					echo "Stop update\n";
 					break;
@@ -142,8 +134,11 @@ class CronjobController extends Controller
 					$medias[] = $value;
 				}
 			}
-
-			$offset += $limit;
+			if ($mode=='fresh') {
+				$offset += $limit;
+			} else {
+				$stop_update = true;
+			}
 		}
 		echo "medias count: " . count($medias) . "\n";
 
@@ -364,7 +359,7 @@ class CronjobController extends Controller
 
 				$video->save();
 
-				if ($is_update_last) {
+				if ($mode=='fresh') {
 					Videodb::where('method', 'sync')->update([
 						'last_accepted_at' => $value->created
 					]);
@@ -372,8 +367,11 @@ class CronjobController extends Controller
 			}
 		} // if medias
 
-		Debug::dump_queries($start_time);
-		echo "END import start date: $start_date to $end_date\n";
+		if ($debug_mysql) {
+			Debug::dump_queries($start_time);
+		}
+		echo "import END {$mode} {$order} {$offset} {$limit}\n";
+
 
 	} // function
 
