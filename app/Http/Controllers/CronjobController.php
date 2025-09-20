@@ -151,7 +151,7 @@ class CronjobController extends Controller
 		$updated_serials_id_vdb = [];
 
 		// debug
-		array_splice($medias, 4);
+		//array_splice($medias, 4);
 		// var_dump($medias);
 
 		if ($medias) {
