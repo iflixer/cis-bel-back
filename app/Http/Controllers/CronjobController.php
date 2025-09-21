@@ -283,11 +283,6 @@ class CronjobController extends Controller
 						$video = Video::where('id_VDB', $value->content_object->tv_series->id)->where('tupe', $content_type)->first();
 					}
 
-					if (empty($video)) {
-						var_dump($value);
-						die();
-					}
-
 					$file = File::where('id_VDB', $value->id)->where('sids', 'VDB')->first();
 					if (empty($file)) {
 						$file = File::create([
