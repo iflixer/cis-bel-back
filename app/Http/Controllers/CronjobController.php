@@ -165,16 +165,17 @@ class CronjobController extends Controller
 					['title'=>$value->translation->title]
 				);
 
-				echo "congtent-type: {$value->content_object->content_type}\n";
 				$video = null;
+				$content_type = $value->content_object->content_type;
+
 				// movie
-				if ($value->content_object->content_type == 'movie') {
-					$video = Video::where('id_VDB', $value->content_object->id)->where('tupe', 'movie')->first();
+				if (in_array($content_type, ['movie','anime','show'])) {
+					$video = Video::where('id_VDB', $value->content_object->id)->where('tupe', $content_type)->first();
 
 					if (empty($video)) {
 						$video = new Video([
 							'id_VDB' => $value->content_object->id, 
-							'tupe' => $value->content_object->content_type,
+							'tupe' => $content_type,
 							'name' => $value->content_object->orig_title, 
 							'ru_name' => $value->content_object->ru_title,
 							'kinopoisk' => $value->content_object->kinopoisk_id,
@@ -193,7 +194,7 @@ class CronjobController extends Controller
 					} else {
 						$video->fill([
 								'id_VDB' => $value->content_object->id, 
-								'tupe' => $value->content_object->content_type,
+								'tupe' => $content_type,
 								'name' => $value->content_object->orig_title, 
 								'ru_name' => $value->content_object->ru_title, 
 								'kinopoisk' => $value->content_object->kinopoisk_id,
@@ -233,15 +234,14 @@ class CronjobController extends Controller
 				}
 
 				// episode
-
-				if ($value->content_object->content_type == 'episode') {
+				if (in_array($content_type, ['episode','animeepisode','showepisode'])) {
 					if (!in_array($value->content_object->tv_series->id, $updated_serials_id_vdb)) {
-						$video = Video::where('id_VDB', $value->content_object->tv_series->id)->where('tupe', 'episode')->first();
+						$video = Video::where('id_VDB', $value->content_object->tv_series->id)->where('tupe', $content_type)->first();
 						$updated_serials_id_vdb[] = $value->content_object->tv_series->id;
 						if (empty($video)) {
 							$video = new Video([
 								'id_VDB' => $value->content_object->tv_series->id, 
-								'tupe' => $value->content_object->content_type,
+								'tupe' => $content_type,
 								'name' => $value->content_object->tv_series->orig_title, 
 								'ru_name' => $value->content_object->tv_series->ru_title,
 								'kinopoisk' => $value->content_object->kinopoisk_id,
@@ -259,7 +259,7 @@ class CronjobController extends Controller
 						} else {
 							$video->fill([
 									'id_VDB' => $value->content_object->tv_series->id, 
-									'tupe' => $value->content_object->content_type,
+									'tupe' => $content_type,
 									'name' => $value->content_object->tv_series->orig_title, 
 									'ru_name' => $value->content_object->tv_series->ru_title,
 									'kinopoisk' => $value->content_object->kinopoisk_id,
@@ -279,6 +279,13 @@ class CronjobController extends Controller
 						}
 
 						$video->save();
+					} else {
+						$video = Video::where('id_VDB', $value->content_object->tv_series->id)->where('tupe', $content_type)->first();
+					}
+
+					if (empty($video)) {
+						var_dump($value);
+						die();
 					}
 
 					$file = File::where('id_VDB', $value->id)->where('sids', 'VDB')->first();
@@ -360,6 +367,8 @@ class CronjobController extends Controller
 						}
 					}
 					$video->save();
+				} else {
+					echo "video is empty for content-type {$content_type}\n";
 				}
 
 				if ($mode=='fresh') {
