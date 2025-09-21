@@ -165,6 +165,8 @@ class CronjobController extends Controller
 					['title'=>$value->translation->title]
 				);
 
+				echo "congtent-type: {$value->content_object->content_type}\n";
+				$video = null;
 				// movie
 				if ($value->content_object->content_type == 'movie') {
 					$video = Video::where('id_VDB', $value->content_object->id)->where('tupe', 'movie')->first();
@@ -297,67 +299,68 @@ class CronjobController extends Controller
 					}
 				}
 
-				// import screenshots
-				$first_screenshot = '';
-				if (!empty($file)) {
-					if (!empty($value->screens)) {
-						for($i=0; $i<count($value->screens); $i++) {
-							$ss = Screenshot::updateOrCreate(
-								[
-									'id_file' => $file->id,
-									'num' => $i
-								],
-								[
-									'url' => $this->makeZeroCdnProtectedLink($value->screens[$i])
-									]
-							);
-							if ($i==1) $first_screenshot = $ss->url;
+				if (!empty($video)) {
+					// import screenshots
+					$first_screenshot = '';
+					if (!empty($file)) {
+						if (!empty($value->screens)) {
+							for($i=0; $i<count($value->screens); $i++) {
+								$ss = Screenshot::updateOrCreate(
+									[
+										'id_file' => $file->id,
+										'num' => $i
+									],
+									[
+										'url' => $this->makeZeroCdnProtectedLink($value->screens[$i])
+										]
+								);
+								if ($i==1) $first_screenshot = $ss->url;
+							}
 						}
 					}
-				}
 
-				// if we dont have any backdrop - use first screenshot as backdrop
-				if (empty($video->backdrop) && !empty($first_screenshot)) {
-					$video->backdrop = $first_screenshot;
-				}
+					// if we dont have any backdrop - use first screenshot as backdrop
+					if (empty($video->backdrop) && !empty($first_screenshot)) {
+						$video->backdrop = $first_screenshot;
+					}
 
-				// insane! if we dont have a poster - make it from backdrop!
-				if (empty($video->img) && !empty($video->backdrop)) {
-					$data = file_get_contents($video->backdrop, false);
-					if (!empty($data)) {
-						$img = new \Imagick();
-						$img->readImageBlob($data);
-						$origW = $img->getImageWidth();
-						$origH = $img->getImageHeight();
-						$ratio = 0.749;
-						$cropH = $origH;
-						$cropW = (int) round($cropH * $ratio);
-						if ($cropW > $origW) {
-							$cropW = $origW;
-							$cropH = (int) round($cropW / $ratio);
-						}
-						$offsetX = (int)(($origW - $cropW) / 2);
-						$offsetY = (int)(($origH - $cropH) / 2);
-						$img->cropImage($cropW, $cropH, $offsetX, $offsetY);
-						$img->setImagePage(0, 0, 0, 0); // сброс смещений
-						$img->setImageFormat('webp');
-						$data = $img->getImageBlob();
-						$ok = true;
-						$fname = md5(time());
-						try {
-							$storage_file_name_orig = "cdnhub/sss/videos/{$video->id}/{$fname}";
-							$this->r2Service->uploadFileToStorage($storage_file_name_orig, 'image/webp', $data);
-						} catch (Throwable $e) {
-							echo 'ERROR saving to R2: '.$e->getMessage();
-							$ok = false;
-						}
-						if ($ok) {
-							$video->img = "https://sss.{$this->cdnhub_api_domain}/videos/{$video->id}/{$fname}";
+					// insane! if we dont have a poster - make it from backdrop!
+					if (empty($video->img) && !empty($video->backdrop)) {
+						$data = file_get_contents($video->backdrop, false);
+						if (!empty($data)) {
+							$img = new \Imagick();
+							$img->readImageBlob($data);
+							$origW = $img->getImageWidth();
+							$origH = $img->getImageHeight();
+							$ratio = 0.749;
+							$cropH = $origH;
+							$cropW = (int) round($cropH * $ratio);
+							if ($cropW > $origW) {
+								$cropW = $origW;
+								$cropH = (int) round($cropW / $ratio);
+							}
+							$offsetX = (int)(($origW - $cropW) / 2);
+							$offsetY = (int)(($origH - $cropH) / 2);
+							$img->cropImage($cropW, $cropH, $offsetX, $offsetY);
+							$img->setImagePage(0, 0, 0, 0); // сброс смещений
+							$img->setImageFormat('webp');
+							$data = $img->getImageBlob();
+							$ok = true;
+							$fname = md5(time());
+							try {
+								$storage_file_name_orig = "cdnhub/sss/videos/{$video->id}/{$fname}";
+								$this->r2Service->uploadFileToStorage($storage_file_name_orig, 'image/webp', $data);
+							} catch (Throwable $e) {
+								echo 'ERROR saving to R2: '.$e->getMessage();
+								$ok = false;
+							}
+							if ($ok) {
+								$video->img = "https://sss.{$this->cdnhub_api_domain}/videos/{$video->id}/{$fname}";
+							}
 						}
 					}
+					$video->save();
 				}
-
-				$video->save();
 
 				if ($mode=='fresh') {
 					Videodb::where('method', 'sync')->update([
