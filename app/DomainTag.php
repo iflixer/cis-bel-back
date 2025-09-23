@@ -10,6 +10,7 @@ class DomainTag extends Model
 
     protected $fillable = [
         'name', 
-        'value'
+        'value',
+        'type'
     ];
 }

@@ -60,6 +60,7 @@ class domaintags extends Controller
 
         $name = $this->request->input('name');
         $value = $this->request->input('value');
+        $type = $this->request->input('type', 'domain_type');
 
         if($name == ''){
             return ['data' => $response,'messages' => [['tupe'=>'error', 'message'=>'Не указано название тега']] ];
@@ -76,7 +77,8 @@ class domaintags extends Controller
 
         $tag = DomainTag::create([
             'name' => $name,
-            'value' => $value
+            'value' => $value,
+            'type' => $type
         ]);
 
         $response = [ 'status' => true, 'data' => $tag->toArray() ];
@@ -96,6 +98,7 @@ class domaintags extends Controller
         $id = $this->request->input('id');
         $name = $this->request->input('name');
         $value = $this->request->input('value');
+        $type = $this->request->input('type', 'domain_type');
 
         if($id == ''){
             return ['data' => $response,'messages' => [['tupe'=>'error', 'message'=>'Не указан ID тега']] ];
@@ -121,7 +124,8 @@ class domaintags extends Controller
 
         DomainTag::where('id', $id)->update([
             'name' => $name,
-            'value' => $value
+            'value' => $value,
+            'type' => $type
         ]);
 
         $response = [ 'status' => true ];
@@ -193,7 +197,7 @@ class domaintags extends Controller
     }
 
     public function getAll(){
-        $response = DomainTag::all(['id','name','value'])->toArray();
+        $response = DomainTag::all(['id','name','value','type'])->toArray();
         return ['data' => $response, 'messages' => []];
     }
 
