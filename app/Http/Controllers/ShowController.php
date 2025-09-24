@@ -195,8 +195,7 @@ class ShowController extends Controller{
         $domain_name = $ref_host ?? $this->request->input('domain');
 
         $domain = Domain::get_main_info($domain_name);
-        $file_id = (int)$this->request->input('file_id');
-        PlayerPay::save_event('load', $domain, $file_id);
+        PlayerPay::save_event('load', $domain, $data['media']['id']);
         // Debug::dump_queries(0);
         // die();
 
@@ -208,7 +207,7 @@ class ShowController extends Controller{
     private function inject_media(array $data, $translate, $season, $episode): array {
         $video = $data['video'];
         $id = $video['id'];
-        if ($video['tupe'] == 'movie') {
+        if (in_array($video['tupe'], ['movie', 'anime'])) {
             
             // files
 
@@ -252,14 +251,9 @@ class ShowController extends Controller{
 
             $translateTitle = $media['t_tag'] ?: $media['t_title'];
 
-        }
-
-        // serial
-
-        if ($video['tupe'] == 'episode') {
+        } else { // serial
             
             // files
-
             $files = File::select('files.*', 'translations.title as t_title', 'translations.tag as t_tag')
                 ->where('id_parent', $id)
                 ->join('translations', 'files.translation_id', '=', 'translations.id')
