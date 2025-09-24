@@ -60,6 +60,7 @@
       "system.getMessage": true,
       "stats.get": true,
       "domaintags.getAll": true,
+      "domaintypes.getAll": true,
       "domains.importFromCsv": true
     }
   },
@@ -300,6 +301,12 @@
       "domaintags.domainsList": true,
       "domaintags.getAll": true,
       "domaintags.setForDomain": true,
+      
+      "domaintypes.get": true,
+      "domaintypes.add": true,
+      "domaintypes.update": true,
+      "domaintypes.delete": true,
+      "domaintypes.getAll": true,
       "cdns.get": true,
       "cdns.update": true,
       "geogroups.get": true,

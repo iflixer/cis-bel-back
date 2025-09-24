@@ -10,6 +10,7 @@ class Domain extends Model
 
     protected $fillable = [
         'id_parent', 
+        'domain_type_id',
         'name', 
         'status', 
         'player', 
@@ -18,4 +19,9 @@ class Domain extends Model
         'new_player', 
         'black_ad_on'
     ];
+
+    public function domainType()
+    {
+        return $this->belongsTo(DomainType::class, 'domain_type_id');
+    }
 }

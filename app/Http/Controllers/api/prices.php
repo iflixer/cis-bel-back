@@ -8,7 +8,7 @@ use App\User;
 use App\Right;
 use App\LinkRight;
 use App\Services\PriceService;
-use App\DomainTag;
+use App\DomainType;
 
 class prices extends Controller
 {
@@ -99,15 +99,14 @@ class prices extends Controller
         }
 
         try {
-            $domainType = DomainTag::where('type', 'domain_type')
-                ->where('name', $domainTypeName)
-                ->first();
+            $domainType = DomainType::where('name', $domainTypeName)->first();
             
             if (!$domainType) {
                 return ['data' => $response, 'messages' => [['tupe' => 'error', 'message' => 'Тип домена не найден']]];
             }
-            
-            $priceRecord = $this->priceService->setVideoPrice($geoGroupId, $domainType->value, $priceCents);
+
+            $priceRecord = $this->priceService->setVideoPriceById($geoGroupId, $domainType->id, $priceCents);
+
             $response = [
                 'status' => true,
                 'price_record' => $priceRecord->toArray()
