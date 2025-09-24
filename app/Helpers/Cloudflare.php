@@ -18,8 +18,8 @@ class Cloudflare
 
     public static function visitor_country(): string
     {
-        if (!empty($_SERVER['HTTP_CF_CONNECTING_COUNTRY'])) {
-            return $_SERVER['HTTP_CF_CONNECTING_COUNTRY'];
+        if (!empty($_SERVER['HTTP_CF_IPCOUNTRY'])) {
+            return $_SERVER['HTTP_CF_IPCOUNTRY'];
         }
         return '';
     }
