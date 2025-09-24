@@ -226,7 +226,7 @@ class domains extends Controller
         $messages = [];
         
         $domains = $this->request->input('domains');
-        $domainTagId = $this->request->input('domain_tag_id');
+        $domainTagId = $this->request->input('domain_type_id');
         
         if (!is_array($domains) || empty($domains)) {
             return ['data' => ['success_count' => 0, 'errors' => ['Не предоставлен список доменов']], 'messages' => [['tupe'=>'error', 'message'=>'Не предоставлен список доменов']]];
