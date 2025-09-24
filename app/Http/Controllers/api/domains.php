@@ -296,7 +296,7 @@ class domains extends Controller
                     'player' => file_get_contents($_SERVER['DOCUMENT_ROOT'].'/player.json'),
                     'new_player' => file_get_contents($_SERVER['DOCUMENT_ROOT'].'/player.json')
                 ]);
-                
+
                 $successCount++;
             } catch (\Exception $e) {
                 $errors[] = "Ошибка при импорте домена {$domain}: " . $e->getMessage();

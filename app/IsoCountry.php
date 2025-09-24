@@ -25,4 +25,9 @@ class IsoCountry extends Model
     {
         return $this->belongsTo('App\GeoGroup', 'geo_group_id');
     }
+
+    public static function get_group_id_by_iso(string $iso): ?int
+    {
+        return self::where('iso_code', $iso)->value('geo_group_id');
+    }
 }

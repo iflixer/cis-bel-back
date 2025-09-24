@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\api;
 
+use App\Helpers\Cloudflare;
+use App\IsoCountry;
 use Illuminate\Http\Request;
 
 use Carbon\Carbon;
@@ -14,9 +16,13 @@ use App\Right;
 use App\LinkRight;
 
 use App\Domain;
+use App\LinkDomainTag;
+use App\PlayerPay;
 use App\Ad;
 use App\Show;
 use App\Seting;
+use App\Helpers\Debug;
+use DB;
 
 class shows extends Controller{
 
@@ -33,34 +39,30 @@ class shows extends Controller{
             $messages = [];
             $response = [];
 
-            $domain = $this->request->input('domain');
+            $domain_name = $this->request->input('domain') ?? null;
+            $tgc = $this->request->input('tgc') ?? null;
+            if ($tgc) $domain_name = "@{$tgc}";
 
-            // tgc
+            if (empty($domain_name)) {
+                abort(401, 'Domain or tgc not registered');
+            }
 
-            if ($this->request->input('tgc'))
-                $tgc = $this->request->input('tgc');
-            else
-                $tgc = null;
+            $domain = Domain::get_main_info($domain_name);
+            $file_id = (int)$this->request->input('file_id');
+            PlayerPay::save_event('vast_complete', $domain, $file_id);
 
-            if ($tgc)
-                $domain = "@{$tgc}";
 
-            /*if($domain == null){ 
-                $domain = 'localhost:8040'; 
-            }*/
 
+            // TODO: remove this shit
             $dateNow = date("Y-m-d");
 
             $id = $this->request->input('id'); 
+            $id_domain = Domain::select('id', 'show')->where('name', $domain_name)->first();
 
-            // $id_domain = Domain::select('id')->where('name', $domain)->first();
-
-                $id_domain = Domain::select('id', 'show')->where('name', $domain)->first();
-
-                if (!$id_domain) {
-                    $domain = substr($domain, strpos($domain, '.') + 1, strlen($domain));
-                    $id_domain = Domain::select('id', 'show')->where('name', $domain)->first();
-                }
+            if (!$id_domain) {
+                $domain_name = substr($domain_name, strpos($domain_name, '.') + 1, strlen($domain_name));
+                $id_domain = Domain::select('id', 'show')->where('name', $domain_name)->first();
+            }
 
             $shows = Show::where('id_ad', $id)->where('id_domain', $id_domain->id)->whereBetween('updated_at', [ date('Y-m-d'), date('Y-m-d', strtotime("+1 days")) ])->first();
 
@@ -70,14 +72,14 @@ class shows extends Controller{
             else
                 $stats[$dateNow]['showads'] = 1;
             $stats = json_encode($stats);
-            Domain::where('name', $domain)->update(['show' => $stats ]);
+            Domain::where('name', $domain_name)->update(['show' => $stats ]);
 
 
 
             $ad = Ad::select('sale', 'procent')->where('id', $id)->first();
             $summ = ($ad->sale * ($ad->procent / 100)) / 1000;
 
-            $idUser = Domain::select('id_parent')->where('name', $domain)->first();
+            $idUser = Domain::select('id_parent')->where('name', $domain_name)->first();
             $scoreUser = User::select('score')->where('id', $idUser->id_parent)->first();
 
             User::where('id', $idUser->id_parent)->update(['score' => $scoreUser->score + $summ]);
@@ -249,27 +251,30 @@ class shows extends Controller{
 
     public function show(){
         if (!$this->isBot($_SERVER['HTTP_USER_AGENT'])) {
-            $domain = $this->request->input('domain');
+            $domain_name = $this->request->input('domain') ?? null;
+            $tgc = $this->request->input('tgc') ?? null;
+            if ($tgc) $domain_name = "@{$tgc}";
+
+            if (empty($domain_name)) {
+                abort(401, 'Domain or tgc not registered');
+            }
+
+            // DB::enableQueryLog();
+            $domain = Domain::get_main_info($domain_name);
+            $file_id = (int)$this->request->input('file_id');
+            PlayerPay::save_event('play', $domain, $file_id);
+            PlayerPay::save_event('pay', $domain, $file_id);
+            // Debug::dump_queries(0);
+            // die();
+
+            // это пиздец. будем удалять
             $dateNow = date("Y-m-d");
+            $domainStats = Domain::select('show')->where('name', $domain_name)->first();
 
-            // tgc
-
-            if ($this->request->input('tgc'))
-                $tgc = $this->request->input('tgc');
-            else
-                $tgc = null;
-
-            if ($tgc)
-                $domain = "@{$tgc}";
-
-            // $domainStats = Domain::select('show')->where('name', $domain)->first();
-
-                $domainStats = Domain::select('show')->where('name', $domain)->first();
-
-                if (!$domainStats) {
-                    $domain = substr($domain, strpos($domain, '.') + 1, strlen($domain));
-                    $domainStats = Domain::select('show')->where('name', $domain)->first();
-                }
+            if (!$domainStats) {
+                $domain_name = substr($domain_name, strpos($domain_name, '.') + 1, strlen($domain_name));
+                $domainStats = Domain::select('show')->where('name', $domain_name)->first();
+            }
 
             $stats = [];
             if($domainStats->show != ''){
@@ -283,7 +288,7 @@ class shows extends Controller{
                 $stats[$dateNow]['showads'] = 0;
             }
             $stats = json_encode($stats);
-            Domain::where('name', $domain)->update(['show' => $stats ]);
+            Domain::where('name', $domain_name)->update(['show' => $stats ]);
         }
     }
 
