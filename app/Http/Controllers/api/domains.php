@@ -14,6 +14,7 @@ use App\LinkRight;
 use App\Domain;
 use App\DomainTag;
 use App\LinkDomainTag;
+use App\DomainType;
 
 class domains extends Controller
 {
@@ -226,18 +227,18 @@ class domains extends Controller
         $messages = [];
         
         $domains = $this->request->input('domains');
-        $domainTagId = $this->request->input('domain_type_id');
+        $domainTypeId = $this->request->input('domain_type_id');
         
         if (!is_array($domains) || empty($domains)) {
             return ['data' => ['success_count' => 0, 'errors' => ['Не предоставлен список доменов']], 'messages' => [['tupe'=>'error', 'message'=>'Не предоставлен список доменов']]];
         }
         
-        if (!$domainTagId) {
+        if (!$domainTypeId) {
             return ['data' => ['success_count' => 0, 'errors' => ['Не выбран тип домена']], 'messages' => [['tupe'=>'error', 'message'=>'Не выбран тип домена']]];
         }
         
-        $domainTag = DomainTag::where('id', $domainTagId)->where('type', 'domain_type')->first();
-        if (!$domainTag) {
+        $domainType = DomainType::where('id', $domainTypeId)->first();
+        if (!$domainType) {
             return ['data' => ['success_count' => 0, 'errors' => ['Некорректный тип домена']], 'messages' => [['tupe'=>'error', 'message'=>'Некорректный тип домена']]];
         }
         
@@ -289,17 +290,13 @@ class domains extends Controller
                 
                 $newDomain = Domain::create([
                     'id_parent' => $this->user['id'],
+                    'domain_type_id' => $domainTypeId,
                     'name' => $domain,
                     'status' => $status,
                     'player' => file_get_contents($_SERVER['DOCUMENT_ROOT'].'/player.json'),
                     'new_player' => file_get_contents($_SERVER['DOCUMENT_ROOT'].'/player.json')
                 ]);
-                
-                LinkDomainTag::create([
-                    'id_domain' => $newDomain->id,
-                    'id_tag' => $domainTagId
-                ]);
-                
+
                 $successCount++;
             } catch (\Exception $e) {
                 $errors[] = "Ошибка при импорте домена {$domain}: " . $e->getMessage();
