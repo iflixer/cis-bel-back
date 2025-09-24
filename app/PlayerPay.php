@@ -18,17 +18,17 @@ class PlayerPay extends Model
     /**
      * Create player event record in DB
      */
-    public static function save_event(string $event_name, int $user_id, int $domain_id, int $domain_tag_id, int $geo_group_id, int $file_id)
+    public static function save_event(string $event_name,  $domain, int $file_id)
     {
         if (!in_array($event_name, self::$event_names)) {
             return;
         }
-
+        $geo_group_id = (int)IsoCountry::get_group_id_by_iso(Cloudflare::visitor_country());
         self::create([
             'event' => $event_name,
-            'user_id' => $user_id,
-            'domain_id' => $domain_id,
-            'domain_tag_id' => $domain_tag_id,
+            'user_id' => $domain->id_parent,
+            'domain_id' => $domain->id,
+            'domain_type_id' => $domain->domain_type_id,
             'geo_group_id' => $geo_group_id,
             'visitor_ip' =>  DB::raw("INET6_ATON('" . Cloudflare::visitor_ip() . "')"),
             'file_id' => $file_id,

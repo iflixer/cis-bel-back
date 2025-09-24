@@ -195,12 +195,8 @@ class ShowController extends Controller{
         $domain_name = $ref_host ?? $this->request->input('domain');
 
         $domain = Domain::get_main_info($domain_name);
-        $user_id = $domain->id_parent;
-        $domain_tag_id = (int)$domain->tag_id;
-        $geo_group_id = (int)IsoCountry::get_group_id_by_iso(Cloudflare::visitor_country());
-        $file_id = (int)$id;
-        // DB::enableQueryLog();
-        PlayerPay::save_event('load', $user_id, $domain->id, $domain_tag_id, $geo_group_id, $file_id);
+        $file_id = (int)$this->request->input('file_id');
+        PlayerPay::save_event('load', $domain, $file_id);
         // Debug::dump_queries(0);
         // die();
 

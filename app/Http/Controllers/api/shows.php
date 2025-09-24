@@ -48,11 +48,8 @@ class shows extends Controller{
             }
 
             $domain = Domain::get_main_info($domain_name);
-            $user_id = $domain->id_parent;
-            $domain_tag_id = (int)$domain->tag_id;
-            $geo_group_id = (int)IsoCountry::get_group_id_by_iso(Cloudflare::visitor_country());
             $file_id = (int)$this->request->input('file_id');
-            PlayerPay::save_event('vast_complete', $user_id, $domain->id, $domain_tag_id, $geo_group_id, $file_id);
+            PlayerPay::save_event('vast_complete', $domain, $file_id);
 
 
 
@@ -264,12 +261,9 @@ class shows extends Controller{
 
             // DB::enableQueryLog();
             $domain = Domain::get_main_info($domain_name);
-            $user_id = $domain->id_parent;
-            $domain_tag_id = (int)$domain->tag_id;
-            $geo_group_id = (int)IsoCountry::get_group_id_by_iso(Cloudflare::visitor_country());
             $file_id = (int)$this->request->input('file_id');
-            PlayerPay::save_event('play', $user_id, $domain->id, $domain_tag_id, $geo_group_id, $file_id);
-            PlayerPay::save_event('pay', $user_id, $domain->id, $domain_tag_id, $geo_group_id, $file_id);
+            PlayerPay::save_event('play', $domain, $file_id);
+            PlayerPay::save_event('pay', $domain, $file_id);
             // Debug::dump_queries(0);
             // die();
 
