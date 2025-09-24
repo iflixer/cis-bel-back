@@ -166,7 +166,9 @@
 
             "translations":{ "update":true,"name":"Переводы", "visible":true },
 
-            "domain-tags":{ "update":true,"name":"Теги доменов", "visible":true }
+            "domain-tags":{ "update":true,"name":"Теги доменов", "visible":true },
+
+            "prices":{ "update":true,"name":"Управление ценами", "visible":true }
         },
         "methods":{
             "getVideo": true,
@@ -248,7 +250,14 @@
             "domaintags.delete": true,
 
             "cdns.get": true,
-            "cdns.update": true
+            "cdns.update": true,
+
+            "prices.get": true,
+            "prices.update": true,
+            "prices.getMatrix": true,
+            "prices.getDomainTypes": true,
+            "prices.getPrice": true,
+            "prices.clearCache": true
             
         }
     }
