@@ -255,20 +255,13 @@ class shows extends Controller{
 
     public function show(){
         if (!$this->isBot($_SERVER['HTTP_USER_AGENT'])) {
-            $ref = $this->request->header('referer');
-            $ref_host = $ref ? parse_url($ref, PHP_URL_HOST) : null;
-            
-            $domain_name = $ref_host ?? $this->request->input('domain');
+            $domain_name = $this->request->input('domain') ?? null;
+            $tgc = $this->request->input('tgc') ?? null;
+            if ($tgc) $domain_name = "@{$tgc}";
 
-            // tgc
-
-            if ($this->request->input('tgc'))
-                $tgc = $this->request->input('tgc');
-            else
-                $tgc = null;
-
-            if ($tgc)
-                $domain_name = "@{$tgc}";
+            if (empty($domain_name)) {
+                abort(401, 'Domain or tgc not registered');
+            }
 
             // DB::enableQueryLog();
             $domain = Domain::get_main_info($domain_name);
