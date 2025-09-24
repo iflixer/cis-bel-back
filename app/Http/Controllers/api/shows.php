@@ -14,9 +14,13 @@ use App\Right;
 use App\LinkRight;
 
 use App\Domain;
+use App\LinkDomainTag;
+use App\PlayerPay;
 use App\Ad;
 use App\Show;
 use App\Seting;
+use App\Helpers\Debug;
+use DB;
 
 class shows extends Controller{
 
@@ -249,7 +253,7 @@ class shows extends Controller{
 
     public function show(){
         if (!$this->isBot($_SERVER['HTTP_USER_AGENT'])) {
-            $domain = $this->request->input('domain');
+            $domain_name = $this->request->input('domain');
             $dateNow = date("Y-m-d");
 
             // tgc
@@ -260,16 +264,25 @@ class shows extends Controller{
                 $tgc = null;
 
             if ($tgc)
-                $domain = "@{$tgc}";
+                $domain_name = "@{$tgc}";
 
-            // $domainStats = Domain::select('show')->where('name', $domain)->first();
+            DB::enableQueryLog();
+            $domain = Domain::get_main_info($domain_name);
+            $user_id = $domain->id_parent;
+            $geo_group_id = 0;
+            $file_id = 0;
+            // save event
+            PlayerPay::save_event('play', $user_id, $domain->id, $geo_group_id, $file_id);
+            Debug::dump_queries(0);
+die();
 
-                $domainStats = Domain::select('show')->where('name', $domain)->first();
+            // это пиздец. будем удалять
+            $domainStats = Domain::select('show')->where('name', $domain_name)->first();
 
-                if (!$domainStats) {
-                    $domain = substr($domain, strpos($domain, '.') + 1, strlen($domain));
-                    $domainStats = Domain::select('show')->where('name', $domain)->first();
-                }
+            if (!$domainStats) {
+                $domain_name = substr($domain_name, strpos($domain_name, '.') + 1, strlen($domain_name));
+                $domainStats = Domain::select('show')->where('name', $domain_name)->first();
+            }
 
             $stats = [];
             if($domainStats->show != ''){
@@ -283,7 +296,7 @@ class shows extends Controller{
                 $stats[$dateNow]['showads'] = 0;
             }
             $stats = json_encode($stats);
-            Domain::where('name', $domain)->update(['show' => $stats ]);
+            Domain::where('name', $domain_name)->update(['show' => $stats ]);
         }
     }
 

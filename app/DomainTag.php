@@ -12,4 +12,5 @@ class DomainTag extends Model
         'name', 
         'value'
     ];
+
 }

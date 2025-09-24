@@ -594,10 +594,12 @@ class ApiController extends Controller{
         // build data
 
         foreach ($videos as $key => $video) {
-            if ($video['type'] !== 'movie') {
-                $videos[$key]['type'] = 'serial';
-                $video['type'] = 'serial';
-            }
+            // if ($video['type'] !== 'movie') {
+            //     $videos[$key]['type'] = 'serial';
+            //     $video['type'] = 'serial';
+            // }
+
+            $is_serial = $this->setContentType($videos, $video, $key);
 
             // $videos[$key]['created'] = $video['created_at'];
 
@@ -640,7 +642,7 @@ class ApiController extends Controller{
                     ];
             }
 
-            if ($video['type'] == 'movie') {
+            if (!$is_serial) {
                 $translations = File::select('files.id as id_file', 'translations.id as id', 'translations.title as title', 'translations.tag as tag')
                     ->where('id_parent', $video['id'])
                     ->join('translations', 'files.translation_id', '=', 'translations.id')
@@ -668,7 +670,7 @@ class ApiController extends Controller{
                 }
             }
 
-            if ($video['type'] == 'serial') {
+            if ($is_serial) {
                 $translations = File::select('files.id as id_file', 'translations.id as id', 'translations.title as title', 'translations.tag as tag')
                     ->where('id_parent', $video['id'])
                     ->join('translations', 'files.translation_id', '=', 'translations.id')
@@ -785,6 +787,35 @@ class ApiController extends Controller{
         ];
     }
 
+    protected function setContentType(&$videos, &$video, $key) {
+        $is_serial = false;
+        switch ($video['type']) {
+            case 'movie':
+                $videos[$key]['type'] = 'movie';
+                $video['type'] = 'movie';     
+                break;
+            case 'episode':
+                $videos[$key]['type'] = 'serial';
+                $video['type'] = 'serial';   
+                $is_serial = true;  
+                break;
+            case 'anime':
+                $videos[$key]['type'] = 'anime';
+                $video['type'] = 'anime';     
+                break;
+            case 'animeepisode':
+                $videos[$key]['type'] = 'animeserial';
+                $video['type'] = 'animeserial'; 
+                $is_serial = true;    
+                break;
+            case 'showepisode':
+                $videos[$key]['type'] = 'showserial';
+                $video['type'] = 'showserial';   
+                $is_serial = true;  
+                break;
+        }
+        return $is_serial;
+    }
     public function translations()
     {
         $data = Translation::select('id', 'title', 'tag')
@@ -845,7 +876,7 @@ class ApiController extends Controller{
 
         $result = \Cache::get('updates');
 
-        //$result = null;
+        $result = null;
 
         if ($result === null) {
 
@@ -898,12 +929,12 @@ class ApiController extends Controller{
                     'title' => $item['t_tag'] ?: $item['t_title'],
                 ];
 
-                if ($item['season'] && $item['episode']) {
-                    $_data['type'] = 'episode';
-                    $_data['season'] = $item['season'];
-                    $_data['episode'] = $item['episode'];
-                } else
-                    $_data['type'] = 'movie';
+                // if ($item['season'] && $item['episode']) {
+                //     $_data['type'] = 'episode';
+                //     $_data['season'] = $item['season'];
+                //     $_data['episode'] = $item['episode'];
+                // } else
+                //     $_data['type'] = 'movie';
 
                 // build content data
 
@@ -936,10 +967,18 @@ class ApiController extends Controller{
 
                 $_data['content']['id'] = $video['id'] ?: null;
 
-                if ($video['type'] !== 'movie') {
-                    $_data['content']['type'] = 'serial';
-                    $video['type'] = 'serial';
+                $is_serial = $this->setContentType($_data, $video, 'content');
+
+                $_data['type'] = $video['type'];
+                if ($is_serial) {
+                    $_data['season'] = $item['season'];
+                    $_data['episode'] = $item['episode'];
                 }
+
+                // if ($video['type'] !== 'movie') {
+                //     $_data['content']['type'] = 'serial';
+                //     $video['type'] = 'serial';
+                // }
 
                 $_data['content']['title_orig'] = $video['title_orig'] ?: null;
                 $_data['content']['title_rus'] = $video['title_rus'] ?: null;
@@ -995,7 +1034,7 @@ class ApiController extends Controller{
                         ];
                 }
 
-                if ($video['type'] == 'movie') {
+                if (!$is_serial) {
                     $translations = File::select('translations.id as id', 'translations.title as title', 'translations.tag as tag')
                     ->where('id_parent', $video['id'])
                     ->join('translations', 'files.translation_id', '=', 'translations.id')
@@ -1017,7 +1056,7 @@ class ApiController extends Controller{
                     $result['movies'][] = $_data;
                 }
 
-                if ($video['type'] == 'serial') {
+                if ($is_serial) {
                     $translations = File::select('translations.id as id', 'translations.title as title', 'translations.tag as tag')
                     ->where('id_parent', $video['id'])
                     ->join('translations', 'files.translation_id', '=', 'translations.id')

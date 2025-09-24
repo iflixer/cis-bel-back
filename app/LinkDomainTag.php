@@ -14,5 +14,7 @@ class LinkDomainTag extends Model
         'id_domain',
         'id_tag'
     ];
+
+
 }
 

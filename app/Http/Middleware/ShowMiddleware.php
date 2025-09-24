@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 
 use App\Domain;
+use App\Helpers\Debug;
 
 class ShowMiddleware{
 
@@ -66,7 +67,6 @@ class ShowMiddleware{
                 // $request->domain = parse_url($_SERVER['HTTP_REFERER'])['host'];
                 return $next($request);
             }
-            
 
         }
         header('X-back-reason: ShowMiddleware end');

@@ -18,4 +18,10 @@ class Domain extends Model
         'new_player', 
         'black_ad_on'
     ];
+
+    public static function get_main_info($domain_name, $columns=[]) {
+        if (empty($columns)) $columns = ['id', 'id_parent', 'status'];
+        return self::select($columns)->where('name', $domain_name)->first();
+    }
+
 }
