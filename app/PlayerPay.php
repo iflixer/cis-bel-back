@@ -2,6 +2,7 @@
 
 namespace App;
 use App\Helpers\Cloudflare;
+use DB;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,12 +13,12 @@ class PlayerPay extends Model
 
     protected $guarded = [];
 
-    protected static $event_names = ['get','play','pay']; // sync with ENUM in DB!!!!
+    protected static $event_names = ['load','play','pay']; // sync with ENUM in DB!!!!
 
     /**
      * Create player event record in DB
      */
-    public static function save_event($event_name, $user_id, $domain_id, $geo_group_id, $file_id)
+    public static function save_event(string $event_name, int $user_id, int $domain_id, int $domain_tag_id, int $geo_group_id, int $file_id)
     {
         if (!in_array($event_name, self::$event_names)) {
             return;
@@ -27,8 +28,9 @@ class PlayerPay extends Model
             'event' => $event_name,
             'user_id' => $user_id,
             'domain_id' => $domain_id,
+            'domain_tag_id' => $domain_tag_id,
             'geo_group_id' => $geo_group_id,
-            'visitor_ip' => Cloudflare::visitor_ip(),
+            'visitor_ip' =>  DB::raw("INET6_ATON('" . Cloudflare::visitor_ip() . "')"),
             'file_id' => $file_id,
         ]);
     }

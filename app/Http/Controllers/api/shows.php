@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\api;
 
+use App\Helpers\Cloudflare;
+use App\IsoCountry;
 use Illuminate\Http\Request;
 
 use Carbon\Carbon;
@@ -253,8 +255,10 @@ class shows extends Controller{
 
     public function show(){
         if (!$this->isBot($_SERVER['HTTP_USER_AGENT'])) {
-            $domain_name = $this->request->input('domain');
-            $dateNow = date("Y-m-d");
+            $ref = $this->request->header('referer');
+            $ref_host = $ref ? parse_url($ref, PHP_URL_HOST) : null;
+            
+            $domain_name = $ref_host ?? $this->request->input('domain');
 
             // tgc
 
@@ -266,17 +270,19 @@ class shows extends Controller{
             if ($tgc)
                 $domain_name = "@{$tgc}";
 
-            DB::enableQueryLog();
+            // DB::enableQueryLog();
             $domain = Domain::get_main_info($domain_name);
             $user_id = $domain->id_parent;
-            $geo_group_id = 0;
-            $file_id = 0;
-            // save event
-            PlayerPay::save_event('play', $user_id, $domain->id, $geo_group_id, $file_id);
-            Debug::dump_queries(0);
-die();
+            $domain_tag_id = (int)$domain->tag_id;
+            $geo_group_id = (int)IsoCountry::get_group_id_by_iso(Cloudflare::visitor_country());
+            $file_id = (int)$this->request->input('file_id');
+            PlayerPay::save_event('play', $user_id, $domain->id, $domain_tag_id, $geo_group_id, $file_id);
+            PlayerPay::save_event('pay', $user_id, $domain->id, $domain_tag_id, $geo_group_id, $file_id);
+            // Debug::dump_queries(0);
+            // die();
 
             // это пиздец. будем удалять
+            $dateNow = date("Y-m-d");
             $domainStats = Domain::select('show')->where('name', $domain_name)->first();
 
             if (!$domainStats) {

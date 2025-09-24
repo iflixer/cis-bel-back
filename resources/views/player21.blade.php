@@ -703,7 +703,7 @@
                     $.ajax({
                         type: 'get',
                         url: '/apishow/shows.showsAd',
-                        data: 'domain=' + cdn.player.getVBR() + '&id=' + ad_id + (tgc ? '&tgc=' + tgc : ''),
+                        data: 'domain=' + cdn.player.getVBR() +  ad_id + (tgc ? '&tgc=' + tgc : ''),
                         dataType: "html",
                         cache: false,
                         success: function (response) {
@@ -750,7 +750,7 @@
                 $.ajax({
                     type: 'get',
                     url: '/apishow/shows.show',
-                    data: 'domain=' + cdn.player.getVBR() + (tgc ? '&tgc=' + tgc : ''),
+                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}' + (tgc ? '&tgc=' + tgc : ''),
                     dataType: "html",
                     cache: false,
                     success: function (response) {

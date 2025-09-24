@@ -11,6 +11,9 @@ use App\Right;
 use App\User;
 use App\Domain;
 use Auth;
+use App\Helpers\Cloudflare;
+use App\IsoCountry;
+use App\PlayerPay;
 
 use App\Http\Controllers\SystemController as System;
 
@@ -54,7 +57,7 @@ class PlayerController extends Controller
         $this->dataUser['title'] = 'player page';
         $this->dataUser['nameComponent'] = 'component-player';
         $this->dataUser['component'] = json_encode($host);
-        
+
         return view('video', $this->dataUser);
 
     }

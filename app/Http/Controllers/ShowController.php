@@ -14,6 +14,10 @@ use App\Seting;
 use App\Translation;
 use App\Videodb;
 use App\Ad;
+use App\Helpers\Cloudflare;
+use App\IsoCountry;
+use App\PlayerPay;
+use App\Helpers\Debug;
 
 use App\Domain;
 use App\Cdn;
@@ -185,6 +189,22 @@ class ShowController extends Controller{
         if (!empty($_REQUEST['debuggy']) && $_REQUEST['debuggy']) {
             dd(DB::getQueryLog());
         }
+
+        $ref = $this->request->header('referer');
+        $ref_host = $ref ? parse_url($ref, PHP_URL_HOST) : null;
+        $domain_name = $ref_host ?? $this->request->input('domain');
+
+        $domain = Domain::get_main_info($domain_name);
+        $user_id = $domain->id_parent;
+        $domain_tag_id = (int)$domain->tag_id;
+        $geo_group_id = (int)IsoCountry::get_group_id_by_iso(Cloudflare::visitor_country());
+        $file_id = (int)$id;
+        // DB::enableQueryLog();
+        PlayerPay::save_event('load', $user_id, $domain->id, $domain_tag_id, $geo_group_id, $file_id);
+        // Debug::dump_queries(0);
+        // die();
+
+
         header("X-Player-Build-Duration: " . (microtime(true) - $start_time));
         return view($player_view, $data);
     }
