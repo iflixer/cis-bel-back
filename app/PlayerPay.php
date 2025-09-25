@@ -13,7 +13,7 @@ class PlayerPay extends Model
 
     protected $guarded = [];
 
-    protected static $event_names = ['load','play','pay','vast_complete']; // sync with ENUM in DB!!!!
+    protected static $event_names = ['load','play','pay','vast_complete','p25','p50','p100','getads']; // sync with ENUM in DB!!!!
 
     /**
      * Create player event record in DB
@@ -21,6 +21,9 @@ class PlayerPay extends Model
     public static function save_event(string $event_name,  $domain, int $file_id)
     {
         if (!in_array($event_name, self::$event_names)) {
+            return;
+        }
+        if (empty($domain)) {
             return;
         }
         $geo_group_id = (int)IsoCountry::get_group_id_by_iso(Cloudflare::visitor_country());
