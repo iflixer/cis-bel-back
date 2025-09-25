@@ -95,6 +95,8 @@ Route::get('/parse', ['middleware'=>[], 'uses'=>'ApiController@parse']);
 
 Route::get('/cronjob/videodb', ['middleware' => [], 'uses' => 'CronjobController@videodb']);
 
+// payout calculation
+Route::post('/payouts/daily-payout', ['middleware' => [], 'uses' => 'PayoutController@triggerDailyPayout']);
 
 // storage
 Route::get('/sss/{type}/{id}/{md5}', ['middleware' => [], 'uses' => 'TestController@sss']);

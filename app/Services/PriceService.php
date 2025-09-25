@@ -27,6 +27,21 @@ class PriceService
         });
     }
 
+    public function getVideoPriceById($geoGroupId, $domainTypeId)
+    {
+        $cacheKey = self::CACHE_KEY_PREFIX . $geoGroupId . '_id_' . $domainTypeId;
+
+        return Cache::remember($cacheKey, self::CACHE_DURATION, function () use ($geoGroupId, $domainTypeId) {
+            $priceCents = VideoWatchPrice::getPriceById($geoGroupId, $domainTypeId);
+
+            if ($priceCents !== null) {
+                return (int)$priceCents;
+            }
+
+            return (int)env('BASE_VIDEO_PRICE_CENTS', 0);
+        });
+    }
+
     public function setVideoPriceById($geoGroupId, $domainTypeId, $priceCents)
     {
         $domainType = DomainType::find($domainTypeId);
@@ -35,7 +50,8 @@ class PriceService
         }
 
         $result = VideoWatchPrice::setPriceById($geoGroupId, $domainTypeId, $priceCents);
-        $cacheKey = self::CACHE_KEY_PREFIX . $geoGroupId . '_' . $domainType->value;
+
+        $cacheKey = self::CACHE_KEY_PREFIX . $geoGroupId . '_id_' . $domainTypeId;
         Cache::forget($cacheKey);
 
         return $result;
@@ -90,11 +106,11 @@ class PriceService
     public function clearPriceCache()
     {
         $geoGroups = GeoGroup::all(['id']);
-        $domainTypes = DomainType::all(['value']);
+        $domainTypes = DomainType::all(['id', 'value']);
 
         foreach ($geoGroups as $geoGroup) {
             foreach ($domainTypes as $domainType) {
-                $cacheKey = self::CACHE_KEY_PREFIX . $geoGroup->id . '_' . $domainType->value;
+                $cacheKey = self::CACHE_KEY_PREFIX . $geoGroup->id . '_id_' . $domainType->id;
                 Cache::forget($cacheKey);
             }
         }

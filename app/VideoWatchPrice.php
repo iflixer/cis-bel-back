@@ -12,7 +12,6 @@ class VideoWatchPrice extends Model
     protected $fillable = [
         'geo_group_id',
         'domain_type_id',
-        'domain_type',
         'price_cents'
     ];
 
@@ -35,10 +34,6 @@ class VideoWatchPrice extends Model
         return $query->where('geo_group_id', $geoGroupId);
     }
 
-    public function scopeByDomainType($query, $domainType)
-    {
-        return $query->where('domain_type_id', $domainType);
-    }
 
     public function scopeByDomainTypeId($query, $domainTypeId)
     {
@@ -47,14 +42,26 @@ class VideoWatchPrice extends Model
 
     public static function getPrice($geoGroupId, $domainType)
     {
-        $price = self::byGeoGroup($geoGroupId)->byDomainType($domainType)->first();
+        $domainTypeRecord = \App\DomainType::where('value', $domainType)->first();
+        if (!$domainTypeRecord) {
+            return null;
+        }
+
+        $price = self::where('geo_group_id', $geoGroupId)
+                    ->where('domain_type_id', $domainTypeRecord->id)
+                    ->first();
         return $price ? $price->price_cents : null;
     }
 
     public static function setPrice($geoGroupId, $domainType, $priceCents)
     {
+        $domainTypeRecord = \App\DomainType::where('value', $domainType)->first();
+        if (!$domainTypeRecord) {
+            throw new \Exception("Domain type '{$domainType}' not found");
+        }
+
         return self::updateOrCreate(
-            ['geo_group_id' => $geoGroupId, 'domain_type' => $domainType],
+            ['geo_group_id' => $geoGroupId, 'domain_type_id' => $domainTypeRecord->id],
             ['price_cents' => $priceCents]
         );
     }
@@ -69,7 +76,9 @@ class VideoWatchPrice extends Model
 
     public static function getPriceById($geoGroupId, $domainTypeId)
     {
-        $price = self::byGeoGroup($geoGroupId)->byDomainTypeId($domainTypeId)->first();
+        $price = self::where('geo_group_id', $geoGroupId)
+                    ->where('domain_type_id', $domainTypeId)
+                    ->first();
 
         return $price ? $price->price_cents : null;
     }

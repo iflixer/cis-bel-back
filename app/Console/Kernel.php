@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         // Commands\Inspire::class,
         Commands\UpdateVideoFromKinoPoisk::class,
         Commands\UpdateMultipleVideosFromKinoPoisk::class,
+        Commands\CalculateDailyPayouts::class,
     ];
 
     /**
