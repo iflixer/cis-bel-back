@@ -139,10 +139,12 @@ class shows extends Controller{
         $messages = [];
         $response = [];
 
-
-
-        $domain = $this->request->input('domain');
+        $domain_name = $this->request->input('domain');
         $fullTime = $this->request->input('fullTime');
+
+        $domain = Domain::get_main_info($domain_name);
+        $file_id = (int)$this->request->input('file_id');
+        PlayerPay::save_event('play', $domain, $file_id);
 
         $userSetings = 30;
 
@@ -156,7 +158,7 @@ class shows extends Controller{
         $countAds = round($fullTime / $duration, 0, PHP_ROUND_HALF_DOWN);
 
 
-        $dataDomain = Domain::select('id', 'black_ad_on')->where('name', $domain)->first();
+        $dataDomain = Domain::select('id', 'black_ad_on')->where('name', $domain_name)->first();
 
         $qweryAds = Ad::where('on', '1');
         if($dataDomain && !($dataDomain->black_ad_on)){ $qweryAds = $qweryAds->where('black_ad', '0');  }
@@ -199,7 +201,7 @@ class shows extends Controller{
             'center' => $center,
             'end' => count($end) > 0 ? $end[0] : null,
 
-            'domain' => $domain,
+            'domain' => $domain_name,
             'fullTime' => $fullTime,
             'duration' => $duration,
             'countAds' => $countAds,
