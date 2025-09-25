@@ -14,6 +14,10 @@ use App\Seting;
 use App\Translation;
 use App\Videodb;
 use App\Ad;
+use App\Helpers\Cloudflare;
+use App\IsoCountry;
+use App\PlayerPay;
+use App\Helpers\Debug;
 
 use App\Domain;
 use App\Cdn;
@@ -185,6 +189,17 @@ class ShowController extends Controller{
         if (!empty($_REQUEST['debuggy']) && $_REQUEST['debuggy']) {
             dd(DB::getQueryLog());
         }
+
+        $ref = $this->request->header('referer');
+        $ref_host = $ref ? parse_url($ref, PHP_URL_HOST) : null;
+        $domain_name = $ref_host ?? $this->request->input('domain');
+
+        $domain = Domain::get_main_info($domain_name);
+        PlayerPay::save_event('load', $domain, $data['media']['id']);
+        // Debug::dump_queries(0);
+        // die();
+
+
         header("X-Player-Build-Duration: " . (microtime(true) - $start_time));
         return view($player_view, $data);
     }
@@ -192,7 +207,7 @@ class ShowController extends Controller{
     private function inject_media(array $data, $translate, $season, $episode): array {
         $video = $data['video'];
         $id = $video['id'];
-        if ($video['tupe'] == 'movie') {
+        if (in_array($video['tupe'], ['movie', 'anime'])) {
             
             // files
 
@@ -236,14 +251,9 @@ class ShowController extends Controller{
 
             $translateTitle = $media['t_tag'] ?: $media['t_title'];
 
-        }
-
-        // serial
-
-        if ($video['tupe'] == 'episode') {
+        } else { // serial
             
             // files
-
             $files = File::select('files.*', 'translations.title as t_title', 'translations.tag as t_tag')
                 ->where('id_parent', $id)
                 ->join('translations', 'files.translation_id', '=', 'translations.id')

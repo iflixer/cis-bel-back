@@ -65,10 +65,8 @@ class TmdbService
 
 
 
-    public function updateVideoWithTmdbData($videoId)
+    public function updateVideoWithTmdbData(&$video)
     {
-        $video = Video::find($videoId);
-
         if (!$video || !$video->imdb) {
             return false;
         }
@@ -79,38 +77,21 @@ class TmdbService
         // $tmdb->release_date;
         // $imdb_id = $tmdb->imdb_id;
         
-        Video::where('id', $videoId)->update(['update_tmdb' => 1]);
+        $video->update_tmdb = 1;
 
         if (empty($film)) {
             return false;
         }
 
-        $updateData = [];
+        if (empty($video->img) && !empty($film->poster_path)) $video->img = $film->poster_path;
+        if (empty($video->backdrop) && !empty($film->backdrop_path)) $video->backdrop = $film->backdrop_path;
+        if (!empty($film->release_date)) $video->year = substr($film->release_date, 0, 4);
+        if (!empty($film->first_air_date)) $video->year = substr($film->first_air_date, 0, 4);
+        if (!empty($film->vote_average)) $video->tmdb_vote_average = $film->vote_average;
+        if (!empty($film->vote_count)) $video->tmdb_vote_count = $film->vote_count;
+        if (!empty($film->popularity)) $video->tmdb_popularity = $film->popularity;
 
-        if (empty($video->img) && !empty($film->poster_path)) {
-            $updateData['img'] = $film->poster_path;
-        }
-        if (empty($video->backdrop) && !empty($film->backdrop_path)) {
-            $updateData['backdrop'] = $film->backdrop_path;
-        }
-        if (empty($video->year) && !empty($film->release_date)) {
-            $updateData['year'] = substr($film->release_date, 0, 4);
-        }
-        if (empty($video->tmdb_vote_average) && !empty($film->vote_average)) {
-            $updateData['tmdb_vote_average'] = $film->vote_average;
-        }
-        if (empty($video->tmdb_vote_count) && !empty($film->vote_count)) {
-            $updateData['tmdb_vote_count'] = $film->vote_count;
-        }
-        if (empty($video->tmdb_popularity) && !empty($film->popularity)) {
-            $updateData['tmdb_popularity'] = $film->popularity;
-        }
-
-        if (empty($updateData)) {
-            return false;
-        }
-        $updateData['update_tmdb'] = 2;
-        Video::where('id', $videoId)->update($updateData);
+        $video->update_tmdb = 2;
         return true;
     }
 
@@ -129,7 +110,7 @@ class TmdbService
                 continue;
             }
             $response[] = ['id' => $video->id];
-            $this->updateVideoWithTmdbData($video->id);
+            $this->updateVideoWithTmdbData($video);
         }
 
         return $response;

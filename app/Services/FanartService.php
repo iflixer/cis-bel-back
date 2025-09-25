@@ -69,10 +69,8 @@ class FanartService
 
 
 
-    public function updateVideoWithFanartData($videoId)
+    public function updateVideoWithFanartData(&$video)
     {
-        $video = Video::find($videoId);
-
         if (!$video || !$video->imdb) {
             return false;
         }
@@ -82,27 +80,16 @@ class FanartService
         $film = $this->parseFanartByImdbId($video->tupe, $ext_id);
         // $film->backdrop
 
-        Video::where('id', $videoId)->update(['update_fanart' => 1]);
+        $video->update_fanart = 1;
 
         if (empty($film)) {
             return false;
         }
 
-        $updateData = [];
+        if (!empty($film['backdrop'])) $video->backdrop = $film['backdrop'];
+        if (!empty($film['movieposter'])) $video->img = $film['movieposter'];
 
-        if (empty($video->backdrop) && !empty($film['backdrop'])) {
-            $updateData['backdrop'] = $film['backdrop'];
-        }
-        if (empty($video->img) && !empty($film['movieposter'])) {
-            $updateData['img'] = $film['movieposter'];
-        }
-        
-
-        if (empty($updateData)) {
-            return false;
-        }
-        $updateData['update_fanart'] = 2;
-        Video::where('id', $videoId)->update($updateData);
+        $video->update_fanart = 2;
         return true;
     }
 
@@ -124,7 +111,7 @@ class FanartService
                 continue;
             }
             $response[] = ['id' => $video->id];
-            $this->updateVideoWithFanartData($video->id);
+            $this->updateVideoWithFanartData($video);
         }
 
         return $response;

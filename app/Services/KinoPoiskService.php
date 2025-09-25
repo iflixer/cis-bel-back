@@ -17,7 +17,7 @@ class KinoPoiskService
     public function parseKinoPoisk($id)
     {
         $start_time = microtime(true);
-        $u = 'https://kinopoiskapiunofficial.tech/api/v2.1/films/' . $id;
+        $u = 'https://kinopoiskapiunofficial.tech/api/v2.2/films/' . $id;
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
@@ -94,38 +94,35 @@ class KinoPoiskService
         return $data;
     }
 
-    protected function parseDopElements($elements, $tableElement, $tableLink, $nameColumn, $id)
-    {
-        $tableLink::where('id_video', $id)->delete();
+    // protected function parseDopElements($elements, $tableElement, $tableLink, $nameColumn, $id)
+    // {
+    //     $tableLink::where('id_video', $id)->delete();
 
-        foreach ($elements as $element) {
-            if ($element != '') {
-                $dataTable = $tableElement::where('name', $element)->first();
-                if (!isset($dataTable->name)) {
-                    $lastIdTable = $tableElement::create([
-                        'name' => $element
-                    ])->id;
-                } else {
-                    $lastIdTable = $dataTable->id;
-                }
+    //     foreach ($elements as $element) {
+    //         if ($element != '') {
+    //             $dataTable = $tableElement::where('name', $element)->first();
+    //             if (!isset($dataTable->name)) {
+    //                 $lastIdTable = $tableElement::create([
+    //                     'name' => $element
+    //                 ])->id;
+    //             } else {
+    //                 $lastIdTable = $dataTable->id;
+    //             }
 
-                $dataLinkTable = $tableLink::where('id_video', $id)->where($nameColumn, $lastIdTable)->get();
+    //             $dataLinkTable = $tableLink::where('id_video', $id)->where($nameColumn, $lastIdTable)->get();
 
-                if ($dataLinkTable->isEmpty()) {
-                    $tableLink::create(['id_video' => $id, $nameColumn => $lastIdTable]);
-                }
-            }
-        }
-    }
+    //             if ($dataLinkTable->isEmpty()) {
+    //                 $tableLink::create(['id_video' => $id, $nameColumn => $lastIdTable]);
+    //             }
+    //         }
+    //     }
+    // }
 
     protected function parseStaff(array $staff, int $videoId)
     {
         if (!count($staff)) {
             return;
         }
-
-        Link_actor::where('id_video', $videoId)->delete();
-        Link_director::where('id_video', $videoId)->delete();
 
         foreach ($staff as $staffMember) {
             $professionKey = $staffMember->professionKey ?? 'UNKNOWN';
@@ -163,10 +160,10 @@ class KinoPoiskService
             $values
         );
 
-        Link_actor::firstOrCreate(
+        Link_actor::updateOrCreate(
             [
-                'id_video' => $videoId,
                 'id_actor' => $actor->id,
+                'id_video' => $videoId
             ],
             [
                 'character_name' => $staffMember->description ?? null,
@@ -188,7 +185,7 @@ class KinoPoiskService
             $values
         );
 
-        Link_director::firstOrCreate(
+        Link_director::updateOrCreate(
             [
                 'id_video' => $videoId,
                 'id_director' => $director->id,
@@ -196,89 +193,103 @@ class KinoPoiskService
         );
     }
 
-    public function updateVideoWithKinoPoiskData($videoId, $updateNames = false)
+    public function updateVideoWithKinoPoiskData(&$video)
     {
-        $video = Video::find($videoId);
+        $video->update_kino=1;
 
         if (!$video || !$video->kinopoisk) {
-            echo "Error updateVideoWithKinoPoiskData - kinopoisk empty for video {$videoId}";
             return false;
         }
 
-//        if ($video->kinopoisk >= 2000000) {
-//            Video::where('id', $videoId)->update(['update_kino' => 1]);
-//            return false;
-//        }
-
-        $film = $this->parseKinoPoisk($video->kinopoisk);
-
-        if (!$film || !isset($film->data)) {
-            echo "Error updateVideoWithKinoPoiskData - parseKinoPoisk empty for video {$videoId}";
-            Video::where('id', $videoId)->update(['update_kino' => 1]);
+        $kinoPoisk = $this->parseKinoPoisk($video->kinopoisk);
+        if (empty($kinoPoisk) || empty($kinoPoisk->kinopoiskId)) {
+            echo "kinoPoisk not found for vid {$video->id} kpid: {$video->kinopoisk}";
             return false;
         }
 
-        $kinoPoisk = $film->data;
-        $imdb_id = $film->externalId->imdbId ?? '';
+        if (!empty($kinoPoisk->genres)) {
+            $genres_names = array_values($kinoPoisk->genres);
+            foreach($kinoPoisk->genres as $kp_genre) {
+                $genre_name = $kp_genre->genre ?? '';
+                if (!empty($genre_name)) {
+                    $genre = Genre::updateOrCreate(
+                        ['name' => $genre_name]
+                    );
+                    Link_genre::updateOrCreate(
+                        ['id_genre' => $genre->id, 'id_video' => $video->id]
+                    );
+                }
+            }
+        }
 
-        $this->parseDopElements(
-            array_map(function ($item) {
-                return $item->genre;
-            }, $kinoPoisk->genres),
-            new Genre,
-            new Link_genre,
-            'id_genre',
-            $videoId
-        );
+        if (!empty($kinoPoisk->countries)) {
+            foreach($kinoPoisk->countries as $kp_country) {
+                $country_name = $kp_country->country ?? '';
+                if (!empty($country_name)) {
+                    $country = Country::updateOrCreate(
+                        ['name' => (string)$country_name]
+                    );
+                    Link_country::updateOrCreate(
+                        ['id_country' => $country->id, 'id_video' => $video->id]
+                    );
+                }
+            }
+        }
 
-        $this->parseDopElements(
-            array_map(function ($item) {
-                return $item->country;
-            }, $kinoPoisk->countries),
-            new Country,
-            new Link_country,
-            'id_country',
-            $videoId
-        );
+        // $this->parseDopElements(
+        //     array_map(function ($item) {
+        //         return $item->genre;
+        //     }, $kinoPoisk->genres),
+        //     new Genre,
+        //     new Link_genre,
+        //     'id_genre',
+        //     $video->id
+        // );
+
+        // $this->parseDopElements(
+        //     array_map(function ($item) {
+        //         return $item->country;
+        //     }, $kinoPoisk->countries),
+        //     new Country,
+        //     new Link_country,
+        //     'id_country',
+        //     $video->id
+        // );
 
         $staff = $this->parseKinoPoiskStaff($video->kinopoisk);
-        $this->parseStaff($staff, $videoId);
+        $this->parseStaff($staff, $video->id);
 
+        if (!empty($film->externalId->imdbId)) $video->imdb = $kinoPoisk->imdbId; 
+        if (!empty($kinoPoisk->year)) $video->year = $kinoPoisk->year;
+        if (!empty($kinoPoisk->description)) $video->description = $kinoPoisk->description;
+        if (!empty($kinoPoisk->posterUrl)) $video->img = $kinoPoisk->posterUrl;
+        if (!empty($kinoPoisk->filmLength)) $video->film_length = $this->convertMinsToMovieLength($kinoPoisk->filmLength);
+        if (!empty($kinoPoisk->ratingKinopoisk)) $video->rating_kp = $kinoPoisk->ratingKinopoisk;
+        if (!empty($kinoPoisk->ratingKinopoiskVoteCount)) $video->rating_kp_votes = $kinoPoisk->ratingKinopoiskVoteCount;
+        if (!empty($kinoPoisk->ratingMpaa)) $video->rating_mpaa = $kinoPoisk->ratingMpaa;
+        if (!empty($kinoPoisk->ratingAgeLimits)) $video->rating_age_limits = str_replace('age', '', $kinoPoisk->ratingAgeLimits);
+        if (!empty($kinoPoisk->premiereRu)) $video->premiere_ru = $kinoPoisk->premiereRu;
+        if (!empty($kinoPoisk->distributors)) $video->distributors = $kinoPoisk->distributors;
+        if (!empty($kinoPoisk->premiereWorld)) $video->premiere_world = $kinoPoisk->premiereWorld;
+        if (!empty($kinoPoisk->premiereDigital)) $video->premiere_digital = $kinoPoisk->premiereDigital;
+        if (!empty($kinoPoisk->premiereWorldCountry)) $video->premiere_world_country = $kinoPoisk->premiereWorldCountry;
+        if (!empty($kinoPoisk->premiereDvd)) $video->premiere_dvd = $kinoPoisk->premiereDvd;
+        if (!empty($kinoPoisk->premiereBluRay)) $video->premiere_blu_ray = $kinoPoisk->premiereBluRay;
+        if (!empty($kinoPoisk->distributorRelease)) $video->distributor_release = $kinoPoisk->distributorRelease;
+        if (!empty($kinoPoisk->facts)) $video->facts = json_encode($kinoPoisk->facts);
+        if (!empty($kinoPoisk->seasons)) $video->seasons = json_encode($kinoPoisk->seasons);
+        if (!empty($kinoPoisk->nameRu)) $video->ru_name = $kinoPoisk->nameRu;
+        if (!empty($kinoPoisk->nameEn)) $video->name = $kinoPoisk->nameEn;
+        if (!empty($kinoPoisk->nameOriginal)) $video->name = $kinoPoisk->nameOriginal;
 
-        $updateData = [
-            'year' => $kinoPoisk->year,
-            'description' => $kinoPoisk->description,
-            'img' => $kinoPoisk->posterUrl ?? '',
-            'update_kino' => 1,
-            'film_length' => $kinoPoisk->filmLength,
-            'slogan' => $kinoPoisk->slogan,
-            'rating_mpaa' => $kinoPoisk->ratingMpaa,
-            'rating_age_limits' => $kinoPoisk->ratingAgeLimits,
-            'premiere_ru' => $kinoPoisk->premiereRu,
-            'distributors' => $kinoPoisk->distributors,
-            'premiere_world' => $kinoPoisk->premiereWorld,
-            'premiere_digital' => $kinoPoisk->premiereDigital,
-            'premiere_world_country' => $kinoPoisk->premiereWorldCountry,
-            'premiere_dvd' => $kinoPoisk->premiereDvd,
-            'premiere_blu_ray' => $kinoPoisk->premiereBluRay,
-            'distributor_release' => $kinoPoisk->distributorRelease,
-            'facts' => json_encode($kinoPoisk->facts),
-            'seasons' => json_encode($kinoPoisk->seasons),
-        ];
-
-        if (!empty($imdb_id)) {
-            $updateData['imdb'] = $imdb_id;
-        }
-
-
-        if ($updateNames) {
-            $updateData['ru_name'] = $kinoPoisk->nameRu;
-            $updateData['name'] = $kinoPoisk->nameEn;
-        }
-
-        Video::where('id', $videoId)->update($updateData);
-
+        $video->update_kino=2;
         return true;
+    }
+
+    protected function convertMinsToMovieLength($minutes): string {
+        $hours = intdiv($minutes, 60);      // целые часы
+        $mins  = $minutes % 60;             // остаток минут
+        return sprintf("%02d:%02d", $hours, $mins);
     }
 
     public function updateVideoWithKinoPoiskDataImdbOnly($videoId, $kpId)
@@ -302,7 +313,7 @@ class KinoPoiskService
     public function updateMultipleVideos($limit)
     {
         $response = [];
-        $videos = Video::where('update_kino', null)
+        $videos = Video::where('update_kino', '=', 0)
             ->whereNotNull('kinopoisk')
             ->limit($limit)
             ->get();
@@ -315,8 +326,6 @@ class KinoPoiskService
             $response[] = ['id' => $video->id];
             $this->updateVideoWithKinoPoiskData($video->id);
         }
-
-
 
         return $response;
     }

@@ -6,6 +6,7 @@ use App\Services\TmdbService;
 use App\Services\FanartService;
 use Illuminate\Http\Request;
 use App\Http\Requests;
+use Throwable;
 
 use App\LinkRight;
 use App\Right;
@@ -20,9 +21,11 @@ use App\Videodb;
 
 use App\Country;
 use App\Genre;
+use App\Screenshot;
 use App\Link_country;
 use App\Link_genre;
 
+use App\Services\R2Service;
 use App\Services\KinoPoiskService;
 use App\Services\ThetvdbService;
 
@@ -39,6 +42,7 @@ class CronjobController extends Controller
 {
 
 	public $request;
+	protected $keyWin; 
 	protected $loginVDB; // = 'kolobock'
 	protected $passVDB; // = '5HxL2P2Yw1yq'
 	protected $kinoPoiskService;
@@ -52,6 +56,10 @@ class CronjobController extends Controller
 
 	protected $usesApi = "App\Http\Controllers\api\\";
 
+	protected $cdnhub_api_domain;
+
+	protected $r2Service;
+
 	public function __construct(Request $request, KinoPoiskService $kinoPoiskService)
 	{
 		$this->request = $request;
@@ -64,49 +72,46 @@ class CronjobController extends Controller
 		// $this->passVDB = config('videodb.password');
 		$this->loginVDB = Seting::where('name', 'loginVDB')->first()->toArray()['value'];
         $this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
+        $this->keyWin = Seting::where('name', 'keyWin')->first()->toArray()['value'];
+        $this->cdnhub_api_domain = Seting::where('name', 'cdnhub_api_domain')->first()->toArray()['value'];
+		$this->r2Service = new R2Service();
 	}
 
 	public function videodb()
 	{
 		$start_time = microtime(true);
-		DB::enableQueryLog();
 		set_time_limit(0);
+		$limit = 100;
+		$offset = 0;
+		$debug_mysql = 0;
+		$mode = 'fresh';
+		if ($this->request->input('mode'))
+        	$mode = $this->request->input('mode');
+		if ($this->request->input('offset'))
+        	$offset = (int) $this->request->input('offset');
+		if ($this->request->input('limit'))
+        	$limit = (int) $this->request->input('limit');
+		if ($this->request->input('debug_mysql'))
+        	$debug_mysql = $this->request->input('debug_mysql');
 
-		$start_date = null;
-		$end_date = null;
-		$vdb_date_lte = "";
-		$is_update_last = false;
-		// optional ?start_date=2024-03-04&end_date=2024-03-05
-		if ($this->request->input('start_date'))
-            $start_date = $this->request->input('start_date');
-		if ($this->request->input('end_date'))
-            $end_date = $this->request->input('end_date');
+		if ($debug_mysql) {
+			DB::enableQueryLog();
+		}
 
-		echo "start date: $start_date\n";
-		echo "end date: $end_date\n";
+		$order = "created";
 
-		if ($start_date && $end_date) {
-			$last_created_at = strtotime($start_date);
-			$vdb_date_lte = "&created__lte=" . date('Y-m-d', strtotime($end_date));
-		} else {
+		echo "import start {$mode} {$order} {$offset} {$limit}\n";
+
+		if ($mode == 'fresh') {
+			$order = "-created";
 			$videodb = Videodb::select('last_accepted_at')->where('method', 'sync')->first()->toArray();
 			$last_created_at = strtotime($videodb['last_accepted_at']);
 			echo "Last created at: $last_created_at\n";
-			$is_update_last = true;
 		}
-
-		//
-
-		$limit = 100;
-		$offset = 0;
-
 		$stop_update = false;
-
 		$medias = [];
-
-
 		while (!$stop_update) {
-			$u = "https://videodb.win/api/v1/medias?ordering=-created&limit={$limit}&offset={$offset}{$vdb_date_lte}";
+			$u = "https://videodb.win/api/v1/medias?ordering={$order}&limit={$limit}&offset={$offset}";
 			echo "URL: $u\n";
 			$curl = curl_init();
 			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
@@ -118,10 +123,10 @@ class CronjobController extends Controller
 			curl_setopt($curl, CURLOPT_URL, $u);
 			$rezult = json_decode(curl_exec($curl));
 			curl_close($curl);
-			echo "rezult count: " . count($rezult->results) . "\n";
+			//echo "rezult count: " . count($rezult->results) . "\n";
 
 			foreach ($rezult->results as $key => $value) {
-				if (strtotime($value->created) < $last_created_at) {
+				if (($mode=='fresh') && ( strtotime($value->created) < $last_created_at ) ) {
 					$stop_update = true;
 					echo "Stop update\n";
 					break;
@@ -129,99 +134,92 @@ class CronjobController extends Controller
 					$medias[] = $value;
 				}
 			}
-
-			$offset += $limit;
+			if ($mode=='fresh') {
+				$offset += $limit;
+			} else {
+				$stop_update = true;
+			}
 		}
 		echo "medias count: " . count($medias) . "\n";
 
 		krsort($medias);
 
-		// var_dump($medias);
-		// die();
+		// video ids of already updated videos to prevent multiple updates of serials
+		$updated_serials_id_vdb = [];
 
-		$created_files_total = [];
-		$created_videos_total = [];
-		$created_translations_total = [];
+		// debug
+		//array_splice($medias, 4);
+		// var_dump($medias);
 
 		if ($medias) {
 			foreach ($medias as $key => $value) {
 				$i = 0;
 				$resolution = '';
 				foreach ($value->qualities as $resol) {
-					if($i == 0){
-						$resolution = $resol->resolution;
-					} else {
-						$resolution = $resolution.','.$resol->resolution;
-					}
+					$resolution = ($i == 0) ? $resol->resolution : "{$resolution},{$resol->resolution}";
 					$i++;
 				}
 
-				$translation = Translation::where('id_VDB', $value->translation->id)
-					->first();
+				$translation = Translation::updateOrCreate(
+					['id_VDB' => $value->translation->id],
+					['title'=>$value->translation->title]
+				);
 
-				if (!$translation) {
-					Translation::create([
-						'id_VDB' => $value->translation->id,
-						'title' => $value->translation->title
-					]);
-					$created_translations_total[] = $value->translation->title;
-
-					$translation = Translation::where('id_VDB', $value->translation->id)
-						->first();
-				}
+				$video = null;
+				$content_type = $value->content_object->content_type;
 
 				// movie
+				if (in_array($content_type, ['movie','anime','show'])) {
+					$video = Video::where('id_VDB', $value->content_object->id)->where('tupe', $content_type)->first();
 
-				if ($value->content_object->content_type == 'movie') {
-					$video = Video::where('id_VDB', $value->content_object->id)->where('tupe', 'movie')->first();
-
-					if (!isset($video)) {
-						$lastId = Video::create([
+					if (empty($video)) {
+						$video = new Video([
 							'id_VDB' => $value->content_object->id, 
-							'tupe' => $value->content_object->content_type,
+							'tupe' => $content_type,
 							'name' => $value->content_object->orig_title, 
-							'ru_name' => $value->content_object->ru_title, 
+							'ru_name' => $value->content_object->ru_title,
 							'kinopoisk' => $value->content_object->kinopoisk_id,
 							'imdb' => $value->content_object->imdb_id,
-							'quality' => $value->source_quality.' '.$value->max_quality,
-							'year' => '',
-							'country' => '', 
-							'description' => '',
-							'img' => ''
-						])->id;
-						$created_videos_total[] = $value->content_object->orig_title;
-						if ($value->content_object->kinopoisk_id) {
-							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
-							$this->tmdbService->updateVideoWithTmdbData($lastId);
-							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($lastId, $value->content_object->imdb_id);
-							$this->fanartService->updateVideoWithFanartData($lastId);
+							'quality' => "{$value->source_quality} {$value->max_quality}",
+						]);
+						$video->save();// to get id
+						if ($video->kinopoisk) {
+							$this->kinoPoiskService->updateVideoWithKinoPoiskData($video);
 						}
+						if (!empty($video->imdb)) {
+							$this->tmdbService->updateVideoWithTmdbData($video);
+							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($video);
+							$this->fanartService->updateVideoWithFanartData($video);
+						}	
 					} else {
-						$lastId = $video->id;
-						Video::where('id', $video->id)->
-							update([
+						$video->fill([
 								'id_VDB' => $value->content_object->id, 
-								'tupe' => $value->content_object->content_type,
+								'tupe' => $content_type,
 								'name' => $value->content_object->orig_title, 
 								'ru_name' => $value->content_object->ru_title, 
 								'kinopoisk' => $value->content_object->kinopoisk_id,
 								'imdb' => $value->content_object->imdb_id,
-								'quality' => $value->source_quality.' '.$value->max_quality
+								'quality' => "{$value->source_quality} {$value->max_quality}"
 							]);
-
-						if ($value->content_object->kinopoisk_id && !$video->update_kino) {
-							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
-							$this->tmdbService->updateVideoWithTmdbData($lastId);
-							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($lastId, $value->content_object->imdb_id);
-							$this->fanartService->updateVideoWithFanartData($lastId);
-						}
+						//if (!$video->update_kino) {
+							if (!empty($video->kinopoisk)) {
+								$this->kinoPoiskService->updateVideoWithKinoPoiskData($video);
+							}
+							if (!empty($video->imdb)) {
+								$this->tmdbService->updateVideoWithTmdbData($video);
+								$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($video);
+								$this->fanartService->updateVideoWithFanartData($video);
+							}	
+						//}
 					}
 
+					$video->save();
+
 					$file = File::where('id_VDB', $value->id)->where('sids', 'VDB')->first();
-					if (!isset($file)) {
-						File::create([
+					if (empty($file)) {
+						$file = File::create([
 							'id_VDB' => $value->id,
-							'id_parent' => $lastId,
+							'id_parent' => $video->id,
 							'path' => $value->path,
 							'name' => $value->content_object->orig_title,
 							'ru_name' => $value->content_object->ru_title,
@@ -231,64 +229,65 @@ class CronjobController extends Controller
 							'translation_id' => $translation->id,
 							'translation' => $value->translation->title,
 							'sids' => 'VDB'
-						])->id;
-						$created_files_total[] = $value->content_object->orig_title;
+						]);
 					}
 				}
 
 				// episode
-
-				if ($value->content_object->content_type == 'episode') {
-					$video = Video::where('id_VDB', $value->content_object->tv_series->id)->where('tupe', 'episode')->first();
-
-					if (!isset($video)) {
-						$lastId = Video::create([
-							'id_VDB' => $value->content_object->tv_series->id, 
-							'tupe' => $value->content_object->content_type,
-							'name' => $value->content_object->tv_series->orig_title, 
-							'ru_name' => $value->content_object->tv_series->ru_title,
-							'kinopoisk' => $value->content_object->kinopoisk_id,
-							'imdb' => $value->content_object->imdb_id,
-							'quality' => $value->source_quality.' '.$value->max_quality,
-							'year' => '',
-							'country' => '', 
-							'description' => '', 
-							'img' => ''
-						])->id;
-						$created_videos_total[] = $value->content_object->tv_series->orig_title;
-						
-						if ($value->content_object->kinopoisk_id) {
-							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
-							$this->tmdbService->updateVideoWithTmdbData($lastId);
-							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($lastId, $value->content_object->imdb_id);
-							$this->fanartService->updateVideoWithFanartData($lastId);
-						}
-					} else {
-						$lastId = $video->id;
-						Video::where('id', $video->id)->
-							update([
+				if (in_array($content_type, ['episode','animeepisode','showepisode'])) {
+					if (!in_array($value->content_object->tv_series->id, $updated_serials_id_vdb)) {
+						$video = Video::where('id_VDB', $value->content_object->tv_series->id)->where('tupe', $content_type)->first();
+						$updated_serials_id_vdb[] = $value->content_object->tv_series->id;
+						if (empty($video)) {
+							$video = new Video([
 								'id_VDB' => $value->content_object->tv_series->id, 
-								'tupe' => $value->content_object->content_type,
+								'tupe' => $content_type,
 								'name' => $value->content_object->tv_series->orig_title, 
 								'ru_name' => $value->content_object->tv_series->ru_title,
 								'kinopoisk' => $value->content_object->kinopoisk_id,
-								'imdb' => $value->content_object->imdb_id,
-								'quality' => $value->source_quality.' '.$value->max_quality
+								'quality' => "{$value->source_quality} {$value->max_quality}",
 							]);
-							
-						if ($value->content_object->kinopoisk_id && !$video->update_kino) {
-							$this->kinoPoiskService->updateVideoWithKinoPoiskData($lastId, true);
-							$this->tmdbService->updateVideoWithTmdbData($lastId);
-							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($lastId, $value->content_object->imdb_id);
-							$this->fanartService->updateVideoWithFanartData($lastId);
+							$video->save(); // to get id
+							if (!empty($video->kinopoisk)) {
+								$this->kinoPoiskService->updateVideoWithKinoPoiskData($video);
+							}
+							if (!empty($video->imdb)) {
+								$this->tmdbService->updateVideoWithTmdbData($video);
+								$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($video);
+								$this->fanartService->updateVideoWithFanartData($video);
+							}	
+						} else {
+							$video->fill([
+									'id_VDB' => $value->content_object->tv_series->id, 
+									'tupe' => $content_type,
+									'name' => $value->content_object->tv_series->orig_title, 
+									'ru_name' => $value->content_object->tv_series->ru_title,
+									'kinopoisk' => $value->content_object->kinopoisk_id,
+									'quality' => "{$value->source_quality} {$value->max_quality}"
+								]);
+								
+							//if (!$video->update_kino) {
+								if (!empty($video->kinopoisk)) {
+									$this->kinoPoiskService->updateVideoWithKinoPoiskData($video);
+								}
+								if (!empty($video->imdb)) {
+									$this->tmdbService->updateVideoWithTmdbData($video);
+									$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($video);
+									$this->fanartService->updateVideoWithFanartData($video);
+								}
+							//}
 						}
+
+						$video->save();
+					} else {
+						$video = Video::where('id_VDB', $value->content_object->tv_series->id)->where('tupe', $content_type)->first();
 					}
 
 					$file = File::where('id_VDB', $value->id)->where('sids', 'VDB')->first();
-					if (!isset($file)) {
-						File::create([
+					if (empty($file)) {
+						$file = File::create([
 							'id_VDB' => $value->id,
-							'id_parent' => $lastId,
+							'id_parent' => $video->id,
 							'path' => $value->path,
 							'name' => $value->content_object->orig_title,
 							'ru_name' => $value->content_object->ru_title,
@@ -298,25 +297,100 @@ class CronjobController extends Controller
 							'translation_id' => $translation->id,
 							'translation' => $value->translation->title,
 							'sids' => 'VDB'
-						])->id;
-						$created_files_total[] = $value->content_object->orig_title;
+						]);
 					}
 				}
 
-				if ($is_update_last) {
+				if (!empty($video)) {
+					// import screenshots
+					$first_screenshot = '';
+					if (!empty($file)) {
+						if (!empty($value->screens)) {
+							for($i=0; $i<count($value->screens); $i++) {
+								$ss = Screenshot::updateOrCreate(
+									[
+										'id_file' => $file->id,
+										'num' => $i
+									],
+									[
+										'url' => $this->makeZeroCdnProtectedLink($value->screens[$i])
+										]
+								);
+								if ($i==1) $first_screenshot = $ss->url;
+							}
+						}
+					}
+
+					// if we dont have any backdrop - use first screenshot as backdrop
+					if (empty($video->backdrop) && !empty($first_screenshot)) {
+						$video->backdrop = $first_screenshot;
+					}
+
+					// insane! if we dont have a poster - make it from backdrop!
+					if (empty($video->img) && !empty($video->backdrop)) {
+						$data = file_get_contents($video->backdrop, false);
+						if (!empty($data)) {
+							$img = new \Imagick();
+							$img->readImageBlob($data);
+							$origW = $img->getImageWidth();
+							$origH = $img->getImageHeight();
+							$ratio = 0.749;
+							$cropH = $origH;
+							$cropW = (int) round($cropH * $ratio);
+							if ($cropW > $origW) {
+								$cropW = $origW;
+								$cropH = (int) round($cropW / $ratio);
+							}
+							$offsetX = (int)(($origW - $cropW) / 2);
+							$offsetY = (int)(($origH - $cropH) / 2);
+							$img->cropImage($cropW, $cropH, $offsetX, $offsetY);
+							$img->setImagePage(0, 0, 0, 0); // сброс смещений
+							$img->setImageFormat('webp');
+							$data = $img->getImageBlob();
+							$ok = true;
+							$fname = md5(time());
+							try {
+								$storage_file_name_orig = "cdnhub/sss/videos/{$video->id}/{$fname}";
+								$this->r2Service->uploadFileToStorage($storage_file_name_orig, 'image/webp', $data);
+							} catch (Throwable $e) {
+								echo 'ERROR saving to R2: '.$e->getMessage();
+								$ok = false;
+							}
+							if ($ok) {
+								$video->img = "https://sss.{$this->cdnhub_api_domain}/videos/{$video->id}/{$fname}";
+							}
+						}
+					}
+					$video->save();
+				} else {
+					echo "video is empty for content-type {$content_type}\n";
+				}
+
+				if ($mode=='fresh') {
 					Videodb::where('method', 'sync')->update([
 						'last_accepted_at' => $value->created
 					]);
 				}
 			}
-			echo "TOTAL videos created: " . count($created_videos_total) . "\n";
-			echo "TOTAL files created: " . count($created_files_total) . "\n";
-			echo "TOTAL translations created: " . count($created_translations_total) . "\n";
 		} // if medias
 
-		Debug::dump_queries($start_time);
+		if ($debug_mysql) {
+			Debug::dump_queries($start_time);
+		}
+		echo "import END {$mode} {$order} {$offset} {$limit}\n";
+
 
 	} // function
+
+	private function makeZeroCdnProtectedLink($url): string {
+		$host = parse_url($url, PHP_URL_HOST);
+		$path = parse_url($url, PHP_URL_PATH);
+		$date = '2055010101';
+		$hash = md5("{$path}--{$date}-{$this->keyWin}");
+		$signed = "https://{$host}/{$hash}:{$date}$path";
+		return $signed;
+
+	}
 
 	public function kinopoisk()
 	{

@@ -12,6 +12,9 @@ use App\Right;
 use App\LinkRight;
 
 use App\Domain;
+use App\DomainTag;
+use App\LinkDomainTag;
+use App\DomainType;
 
 class domains extends Controller
 {
@@ -219,5 +222,102 @@ class domains extends Controller
         return ['data' => $response,'messages' => [['tupe'=>'success', 'message'=>'Домен одобрен']]];
     }
 
+    public function importFromCsv(){
+        $response = [];
+        $messages = [];
+        
+        $domains = $this->request->input('domains');
+        $domainTypeId = $this->request->input('domain_type_id');
+        
+        if (!is_array($domains) || empty($domains)) {
+            return ['data' => ['success_count' => 0, 'errors' => ['Не предоставлен список доменов']], 'messages' => [['tupe'=>'error', 'message'=>'Не предоставлен список доменов']]];
+        }
+        
+        if (!$domainTypeId) {
+            return ['data' => ['success_count' => 0, 'errors' => ['Не выбран тип домена']], 'messages' => [['tupe'=>'error', 'message'=>'Не выбран тип домена']]];
+        }
+        
+        $domainType = DomainType::where('id', $domainTypeId)->first();
+        if (!$domainType) {
+            return ['data' => ['success_count' => 0, 'errors' => ['Некорректный тип домена']], 'messages' => [['tupe'=>'error', 'message'=>'Некорректный тип домена']]];
+        }
+        
+        $successCount = 0;
+        $errors = [];
+        
+        foreach ($domains as $domain) {
+            $domain = trim($domain);
+            if (empty($domain)) {
+                continue;
+            }
+            
+            try {
+                $tg = false;
+                if (!preg_match('#^@[a-z0-9_]+$#i', $domain)) {
+                    if(strpos($domain, '.') === false){
+                        $errors[] = "Некорректный формат домена: {$domain}";
+                        continue;
+                    }
+                    
+                    $domain = preg_replace("#(http(s)?:)?//#i", '', $domain);
+                    
+                    if($domain == ''){
+                        $errors[] = "Некорректный формат домена: {$domain}";
+                        continue;
+                    }
+                    
+                    $path = explode('/', $domain);
+                    $domain = isset($path[0]) ? $path[0] : '';
+                    
+                    if($domain == ''){
+                        $errors[] = "Некорректный формат домена: {$domain}";
+                        continue;
+                    }
+                } else {
+                    $tg = true;
+                }
+                
+                $existingDomain = Domain::where('name', $domain)->first();
+                if ($existingDomain) {
+                    $errors[] = "Домен уже существует: {$domain}";
+                    continue;
+                }
+                
+                $status = 0;
+                if($this->user['name'] != 'client'){
+                    $status = 1;
+                }
+                
+                $newDomain = Domain::create([
+                    'id_parent' => $this->user['id'],
+                    'domain_type_id' => $domainTypeId,
+                    'name' => $domain,
+                    'status' => $status,
+                    'player' => file_get_contents($_SERVER['DOCUMENT_ROOT'].'/player.json'),
+                    'new_player' => file_get_contents($_SERVER['DOCUMENT_ROOT'].'/player.json')
+                ]);
+
+                $successCount++;
+            } catch (\Exception $e) {
+                $errors[] = "Ошибка при импорте домена {$domain}: " . $e->getMessage();
+            }
+        }
+        
+        $response = [
+            'success_count' => $successCount,
+            'total_count' => count($domains),
+            'errors' => $errors
+        ];
+        
+        $message = "Импортировано доменов: {$successCount}/" . count($domains);
+        if (count($errors) > 0) {
+            $message .= ". Ошибок: " . count($errors);
+        }
+        
+        $messageType = count($errors) > 0 ? 'warning' : 'success';
+        $messages[] = ['tupe' => $messageType, 'message' => $message];
+        
+        return ['data' => $response, 'messages' => $messages];
+    }
 
 }

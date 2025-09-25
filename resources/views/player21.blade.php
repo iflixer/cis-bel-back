@@ -126,13 +126,13 @@
 <script>
 
     <?php if (strpos($_SERVER['REQUEST_URI'], '/show2/') === false) { ?>
-    // var referrer = document.referrer;
-    if (document.referrer) {
-        const parentOrigin = new URL(document.referrer).origin;
-        if (parentOrigin && window.self !== window.top) {
-            window.parent.postMessage('khL', parentOrigin);
+        // var referrer = document.referrer;
+        if (document.referrer) {
+            const parentOrigin = new URL(document.referrer).origin;
+            if (parentOrigin && window.self !== window.top) {
+                window.parent.postMessage('khL', parentOrigin);
+            }
         }
-    }
     <?php } ?>
 
     var tgc = '{{ $tgc }}';
@@ -703,7 +703,7 @@
                     $.ajax({
                         type: 'get',
                         url: '/apishow/shows.showsAd',
-                        data: 'domain=' + cdn.player.getVBR() + '&id=' + ad_id + (tgc ? '&tgc=' + tgc : ''),
+                        data: 'domain=' + cdn.player.getVBR() + ad_id + '&file_id={{ $id }}' +  (tgc ? '&tgc=' + tgc : ''),
                         dataType: "html",
                         cache: false,
                         success: function (response) {
@@ -750,7 +750,7 @@
                 $.ajax({
                     type: 'get',
                     url: '/apishow/shows.show',
-                    data: 'domain=' + cdn.player.getVBR() + (tgc ? '&tgc=' + tgc : ''),
+                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}' + (tgc ? '&tgc=' + tgc : ''),
                     dataType: "html",
                     cache: false,
                     success: function (response) {
@@ -817,7 +817,17 @@
             }
 
             if (event == "quartile") {
-                // console.log('PlayerjsEvents', event, info);
+                //console.log('PlayerjsEvents', event, info);
+                const p = ({'50%':'p50','75%':'p75','100%':'p100'}[info]) || 'p25';
+                $.ajax({
+                    type: 'get',
+                    url: '/apishow/shows.percent',
+                    data: 'percent='+p+'&domain=' + cdn.player.getVBR() + '&file_id={{ $id }}' + (tgc ? '&tgc=' + tgc : ''),
+                    dataType: "html",
+                    cache: false,
+                    success: function (response) {
+                    }
+                });
                 if (typeof gtag !== 'undefined') {
                     gtag('event', info + ' of timeline completed', {'event_category': 'Videos'});
                 }
@@ -877,15 +887,6 @@
 
             if (event == "finish") {
                 // console.log('PlayerjsEvents', event, info);
-                $.ajax({
-                    type: 'get',
-                    url: '/apishow/shows.fullshow',
-                    data: 'domain=' + cdn.player.getVBR() + (tgc ? '&tgc=' + tgc : ''),
-                    dataType: "html",
-                    cache: false,
-                    success: function (response) {
-                    }
-                });
                 if (typeof gtag !== 'undefined') {
                     gtag('event', 'Video ENDED', {'event_category': 'Videos'});
                 }
