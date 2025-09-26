@@ -467,6 +467,12 @@
         if(!CDNquality) {
             CDNquality = 360;
         }
+        @php
+            if (isset($_GET['monq'])) {
+               $monq =  $_GET['monq'];
+               echo 'CDNquality = '.$monq.';';
+        }
+        @endphp
 
         var CDNplayerConfig = {
             'id': 'player',

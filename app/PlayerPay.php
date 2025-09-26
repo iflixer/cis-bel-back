@@ -31,10 +31,10 @@ class PlayerPay extends Model
             'event' => $event_name,
             'user_id' => $domain->id_parent,
             'domain_id' => $domain->id,
-            'domain_type_id' => $domain->domain_type_id,
-            'geo_group_id' => $geo_group_id,
+            'domain_type_id' => $domain->domain_type_id ?? 0,
+            'geo_group_id' => $geo_group_id ?? 0,
             'visitor_ip' =>  DB::raw("INET6_ATON('" . Cloudflare::visitor_ip() . "')"),
-            'file_id' => $file_id,
+            'file_id' => $file_id ?? 0,
         ]);
     }
 
