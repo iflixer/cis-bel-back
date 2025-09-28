@@ -61,7 +61,8 @@
       "stats.get": true,
       "domaintags.getAll": true,
       "domaintypes.getAll": true,
-      "domains.importFromCsv": true
+      "domains.importFromCsv": true,
+      "clientpaystats.get": true
     }
   },
   "redactor": {
