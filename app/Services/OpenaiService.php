@@ -103,7 +103,7 @@ class OpenaiService
         return $response;
     }
 
-    function buildPrompt(array $row): string {
+    private function buildPrompt(array $row): string {
         // Поля: id, ru_name, kinopoisk, imdb, year
         $parts = [];
 
@@ -134,9 +134,9 @@ class OpenaiService
         $context = implode("; ", $parts);
 
         // Сам запрос
-        $ask = "Дай описание содержания фильма без спойлеров, простым текстом, в трёх абзацах, без HTML-разметки.";
+        $ask = "Дай описание содержания фильма без спойлеров, простым текстом, в одном абзаце, без HTML-разметки.";
         // Важное уточнение про язык и формат
-        $constraints = "Пиши по-русски. Без списков, без заголовков, без кавычек вокруг текста. 3 абзаца.";
+        $constraints = "Пиши по-русски. Без списков, без заголовков, без кавычек вокруг текста. 1 абзац. Максимум 300 слов";
 
         $prompt = "{$ask}\n\nВот данные о фильме для однозначной идентификации:\n{$context}\n\n{$constraints}";
         return $prompt;
