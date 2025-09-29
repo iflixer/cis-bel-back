@@ -898,4 +898,14 @@ class TestController extends Controller
 			->header('ETag', $result->getETag() ?? '');
     }
 
+	public function importEmptyDescriptions(){
+		$start_time = microtime(true);
+        $limit = 10;
+        $GLOBALS['debug_tmdb_import'] = 1;
+        DB::enableQueryLog();
+        $thetvdbService = new ThetvdbService();
+        $response = $thetvdbService->updateMultipleVideosIds($limit);
+        Debug::dump_queries($start_time);
+    }
+
 }
