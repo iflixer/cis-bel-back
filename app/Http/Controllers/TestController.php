@@ -944,7 +944,7 @@ class TestController extends Controller
 			'name'=> $video->name,
 			'ru_name'=> $video->ru_name,
 		];
-		return response(json_encode($res));
+		return response()->json($res);
     }
 
 }
