@@ -101,6 +101,8 @@ Route::post('/payouts/daily-payout', ['middleware' => [], 'uses' => 'PayoutContr
 // storage
 Route::get('/sss/{type}/{id}/{md5}', ['middleware' => [], 'uses' => 'TestController@sss']);
 
+// get random video for Andy's tests
+Route::get('/test/random_movie', ['middleware' => [], 'uses' => 'TestController@randomMovie']);
 
 // test
 // Route::get('/test/episode/{id}', ['middleware' => [], 'uses' => 'TestController@episode'])->where('id', '[0-9]+');

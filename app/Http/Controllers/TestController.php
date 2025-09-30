@@ -46,13 +46,19 @@ use function Sabre\Uri\split;
 class TestController extends Controller
 {
 
+	protected $request;
 	protected $loginVDB; 
 	protected $passVDB; 
+	protected $cdnhub_api_domain;
+    protected $cdnhub_player_domain;
 
-	public function __construct()
+	public function __construct(Request $request)
 	{
+		$this->request = $request;
 		$this->loginVDB = Seting::where('name', 'loginVDB')->first()->toArray()['value'];
 		$this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
+		$this->cdnhub_api_domain = Seting::where('name', 'cdnhub_api_domain')->first()->toArray()['value'];
+		$this->cdnhub_player_domain = Seting::where('name', 'cdnhub_player_domain')->first()->toArray()['value'];
 	}
 
 	public function api($url)
@@ -906,6 +912,39 @@ class TestController extends Controller
         $thetvdbService = new ThetvdbService();
         $response = $thetvdbService->updateMultipleVideosIds($limit);
         Debug::dump_queries($start_time);
+    }
+
+	// random movie URL for tests Andy
+	public function randomMovie(){
+		$maxId = Video::max('id');
+		$randomId = rand(1, $maxId);
+
+		$video = Video::where('id', '>=', $randomId)
+				->orderBy('id')
+				->first();
+
+		// if ($this->request->input('kinopoisk')) {
+		// 	$video = $video->whereNotNull('kinopoisk')->where('kinopoisk', '!=', '');
+		// }
+		// if ($this->request->input('imdb')) {
+		// 	$video = $video->whereNotNull('imdb')->where('imdb', '!=', '');
+		// }
+
+		// $video = $video->first();
+
+		if (empty($video)) {
+			return response('Video not found', 404);
+		}	
+
+		$res = [
+			'direct'=> "https://cdn0.{$this->cdnhub_player_domain}/show/{$video->id}",
+			'kinopoisk'=> !empty($video->kinopoisk) ? "https://cdn0.{$this->cdnhub_player_domain}/kinopoisk/{$video->kinopoisk}" : null,
+			'imdb'=> !empty($video->imdb) ? "https://cdn0.{$this->cdnhub_player_domain}/imdb/{$video->imdb}" : null,
+			'id'=> $video->id,
+			'name'=> $video->name,
+			'ru_name'=> $video->ru_name,
+		];
+		return response(json_encode($res));
     }
 
 }
