@@ -45,13 +45,6 @@ class clientpaystats extends Controller
         $response = [];
         $messages = [];
 
-        if ($this->user['name'] != 'client') {
-            return [
-                'data' => [],
-                'messages' => ['Доступ запрещен. Эта страница доступна только клиентам.']
-            ];
-        }
-
         $period = $this->request->input('period', 'yesterday');
         $customRange = $this->request->input('custom_range');
 
@@ -82,7 +75,7 @@ class clientpaystats extends Controller
                 'd.name as domain_name',
                 'pps.domain_id',
                 DB::raw('SUM(pps.counter) as total_views'),
-                DB::raw('SUM(pps.counter * pps.watch_price) as total_revenue'),
+                DB::raw('SUM(pps.counter * pps.watch_price) / 1000 as total_revenue'),
                 DB::raw('AVG(pps.watch_price) as watch_price')
             )
             ->whereIn('pps.domain_id', $userDomains)
@@ -105,7 +98,7 @@ class clientpaystats extends Controller
                     'pps.geo_group_id',
                     'pps.watch_price',
                     DB::raw('SUM(pps.counter) as views'),
-                    DB::raw('SUM(pps.counter * pps.watch_price) as revenue')
+                    DB::raw('SUM(pps.counter * pps.watch_price) / 1000 as revenue')
                 )
                 ->where('pps.domain_id', $domain['domain_id'])
                 ->whereBetween('pps.date', [$startDate, $endDate])

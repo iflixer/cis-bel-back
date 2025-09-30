@@ -320,7 +320,9 @@
 
       "prices.getMatrix": true,
       "prices.update": true,
-      "prices.clearCache": true
+      "prices.clearCache": true,
+
+      "clientpaystats.get": true
     }
   }
 }
