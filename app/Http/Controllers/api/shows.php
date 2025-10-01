@@ -220,6 +220,15 @@ class shows extends Controller{
         $file_id = (int)$this->request->input('file_id');
         PlayerPay::save_event($percent, $domain, $file_id);
     }
+    public function impression(){
+        $domain_name = $this->request->input('domain') ?? null;
+        $tgc = $this->request->input('tgc') ?? null;
+        if ($tgc) $domain_name = "@{$tgc}";
+
+        $domain = Domain::get_main_info($domain_name);
+        $file_id = (int)$this->request->input('file_id');
+        PlayerPay::save_event('impression', $domain, $file_id);
+    }
 
     public function gaproxy() {
         $MEASUREMENT_ID = 'G-ECHML7LBXL';//getenv('GA4_MEASUREMENT_ID'); // напр. G-XXXXXXX
