@@ -322,7 +322,8 @@
       "prices.update": true,
       "prices.clearCache": true,
 
-      "clientpaystats.get": true
+      "clientpaystats.get": true,
+      "adminpaystats.get": true
     }
   }
 }
