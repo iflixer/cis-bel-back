@@ -28,6 +28,7 @@ use App\Link_genre;
 use App\Services\R2Service;
 use App\Services\KinoPoiskService;
 use App\Services\ThetvdbService;
+use App\Services\OpenaiService;
 
 use Mail;
 use DB;
@@ -49,6 +50,7 @@ class CronjobController extends Controller
 	protected $tmdbService;
 	protected $thetvdbService;
 	protected $fanartService;
+	protected $openaiService;
 
 	// protected $adress = 'https://api.kholobok.biz/show/';
 	// protected $adress = 'https://cdnhub.help/show/';
@@ -67,6 +69,7 @@ class CronjobController extends Controller
 		$this->tmdbService = new TmdbService();
 		$this->thetvdbService = new ThetvdbService();
 		$this->fanartService = new FanartService();
+		$this->openaiService = new OpenaiService();
 
 		// $this->loginVDB = config('videodb.login');
 		// $this->passVDB = config('videodb.password');
@@ -172,47 +175,32 @@ class CronjobController extends Controller
 				if (in_array($content_type, ['movie','anime','show'])) {
 					$video = Video::where('id_VDB', $value->content_object->id)->where('tupe', $content_type)->first();
 
+					$attr = [
+						'id_VDB' => $value->content_object->id, 
+						'tupe' => $content_type,
+						'name' => $value->content_object->orig_title, 
+						'ru_name' => $value->content_object->ru_title,
+						'kinopoisk' => $value->content_object->kinopoisk_id,
+						'quality' => "{$value->source_quality} {$value->max_quality}",
+					];
 					if (empty($video)) {
-						$video = new Video([
-							'id_VDB' => $value->content_object->id, 
-							'tupe' => $content_type,
-							'name' => $value->content_object->orig_title, 
-							'ru_name' => $value->content_object->ru_title,
-							'kinopoisk' => $value->content_object->kinopoisk_id,
-							'imdb' => $value->content_object->imdb_id,
-							'quality' => "{$value->source_quality} {$value->max_quality}",
-						]);
+						$video = new Video($attr);
 						$video->save();// to get id
-						if ($video->kinopoisk) {
-							$this->kinoPoiskService->updateVideoWithKinoPoiskData($video);
-						}
-						if (!empty($video->imdb)) {
-							$this->tmdbService->updateVideoWithTmdbData($video);
-							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($video);
-							$this->fanartService->updateVideoWithFanartData($video);
-						}	
 					} else {
-						$video->fill([
-								'id_VDB' => $value->content_object->id, 
-								'tupe' => $content_type,
-								'name' => $value->content_object->orig_title, 
-								'ru_name' => $value->content_object->ru_title, 
-								'kinopoisk' => $value->content_object->kinopoisk_id,
-								'imdb' => $value->content_object->imdb_id,
-								'quality' => "{$value->source_quality} {$value->max_quality}"
-							]);
-						//if (!$video->update_kino) {
-							if (!empty($video->kinopoisk)) {
-								$this->kinoPoiskService->updateVideoWithKinoPoiskData($video);
-							}
-							if (!empty($video->imdb)) {
-								$this->tmdbService->updateVideoWithTmdbData($video);
-								$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($video);
-								$this->fanartService->updateVideoWithFanartData($video);
-							}	
-						//}
+						$video->fill($attr);
 					}
-
+					if (!empty($video->kinopoisk)) {
+						$this->kinoPoiskService->updateVideoWithKinoPoiskData($video);
+					}
+					if (!empty($video->imdb)) {
+						$this->tmdbService->updateVideoWithTmdbData($video);
+						$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($video);
+						$this->fanartService->updateVideoWithFanartData($video);
+					}
+					
+					if (empty($video->description)) {
+						$this->openaiService->updateVideoWithOpenaiData($video);
+					}
 					$video->save();
 
 					$file = File::where('id_VDB', $value->id)->where('sids', 'VDB')->first();
@@ -238,46 +226,31 @@ class CronjobController extends Controller
 					if (!in_array($value->content_object->tv_series->id, $updated_serials_id_vdb)) {
 						$video = Video::where('id_VDB', $value->content_object->tv_series->id)->where('tupe', $content_type)->first();
 						$updated_serials_id_vdb[] = $value->content_object->tv_series->id;
+						$attr = [
+							'id_VDB' => $value->content_object->tv_series->id, 
+							'tupe' => $content_type,
+							'name' => $value->content_object->tv_series->orig_title, 
+							'ru_name' => $value->content_object->tv_series->ru_title,
+							'kinopoisk' => $value->content_object->kinopoisk_id,
+							'quality' => "{$value->source_quality} {$value->max_quality}",
+						];
 						if (empty($video)) {
-							$video = new Video([
-								'id_VDB' => $value->content_object->tv_series->id, 
-								'tupe' => $content_type,
-								'name' => $value->content_object->tv_series->orig_title, 
-								'ru_name' => $value->content_object->tv_series->ru_title,
-								'kinopoisk' => $value->content_object->kinopoisk_id,
-								'quality' => "{$value->source_quality} {$value->max_quality}",
-							]);
-							$video->save(); // to get id
-							if (!empty($video->kinopoisk)) {
-								$this->kinoPoiskService->updateVideoWithKinoPoiskData($video);
-							}
-							if (!empty($video->imdb)) {
-								$this->tmdbService->updateVideoWithTmdbData($video);
-								$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($video);
-								$this->fanartService->updateVideoWithFanartData($video);
-							}	
+							$video = new Video($attr);
+							$video->save();// to get id
 						} else {
-							$video->fill([
-									'id_VDB' => $value->content_object->tv_series->id, 
-									'tupe' => $content_type,
-									'name' => $value->content_object->tv_series->orig_title, 
-									'ru_name' => $value->content_object->tv_series->ru_title,
-									'kinopoisk' => $value->content_object->kinopoisk_id,
-									'quality' => "{$value->source_quality} {$value->max_quality}"
-								]);
-								
-							//if (!$video->update_kino) {
-								if (!empty($video->kinopoisk)) {
-									$this->kinoPoiskService->updateVideoWithKinoPoiskData($video);
-								}
-								if (!empty($video->imdb)) {
-									$this->tmdbService->updateVideoWithTmdbData($video);
-									$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($video);
-									$this->fanartService->updateVideoWithFanartData($video);
-								}
-							//}
+							$video->fill($attr);
 						}
-
+						if (!empty($video->kinopoisk)) {
+							$this->kinoPoiskService->updateVideoWithKinoPoiskData($video);
+						}
+						if (!empty($video->imdb)) {
+							$this->tmdbService->updateVideoWithTmdbData($video);
+							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($video);
+							$this->fanartService->updateVideoWithFanartData($video);
+						}
+						if (empty($video->description)) {
+							$this->openaiService->updateVideoWithOpenaiData($video);
+						}
 						$video->save();
 					} else {
 						$video = Video::where('id_VDB', $value->content_object->tv_series->id)->where('tupe', $content_type)->first();

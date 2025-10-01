@@ -938,8 +938,8 @@ class TestController extends Controller
 
 		$res = [
 			'direct'=> "https://cdn0.{$this->cdnhub_player_domain}/show/{$video->id}",
-			'kinopoisk'=> !empty($video->kinopoisk) ? "https://cdn0.{$this->cdnhub_player_domain}/kinopoisk/{$video->kinopoisk}" : null,
-			'imdb'=> !empty($video->imdb) ? "https://cdn0.{$this->cdnhub_player_domain}/imdb/{$video->imdb}" : null,
+			'kinopoisk'=> !empty($video->kinopoisk) ? "https://cdn0.{$this->cdnhub_player_domain}/show/kinopoisk/{$video->kinopoisk}" : null,
+			'imdb'=> !empty($video->imdb) ? "https://cdn0.{$this->cdnhub_player_domain}/show/imdb/{$video->imdb}" : null,
 			'id'=> $video->id,
 			'name'=> $video->name,
 			'ru_name'=> $video->ru_name,

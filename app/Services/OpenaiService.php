@@ -59,10 +59,9 @@ class OpenaiService
 
 
 
-    public function updateVideoWithOpenaiData($videoId)
+    public function updateVideoWithOpenaiData(&$video)
     {
-        $video = Video::find($videoId);
-
+        // $video = Video::find($videoId);
         if (!$video) {
             return false;
         }
@@ -80,10 +79,9 @@ class OpenaiService
         if (empty($description)) {
             return false;
         }
-        Video::where('id', $videoId)->update([
-            'update_openai' => 1,
-            'description'=> $description
-        ]);
+
+        $video->description = $description;
+        $video->update_openai = 1;
         return true;
     }
 
@@ -97,7 +95,8 @@ class OpenaiService
 
         foreach ($videos as $video) {
             $response[] = ['id' => $video->id];
-            $this->updateVideoWithOpenaiData($video->id);
+            $this->updateVideoWithOpenaiData($video);
+            $video->save();
         }
 
         return $response;
