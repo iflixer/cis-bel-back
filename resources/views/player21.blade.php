@@ -139,6 +139,7 @@
 
     var cdn = cdn || {};
 
+    var onpercdone = false;
     window.abc = false;
 
     iframeReferer = '<?php
@@ -780,6 +781,20 @@
                     currentTime = info;
                     durationTime = CDNplayer.api('duration');
                     setSave(currentTime, durationTime);
+                    // 1% done event
+                    let oneperc = durationTime/100;
+                    if(!onpercdone && currentTime > oneperc){
+                        onpercdone = true;
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', '1% of timeline completed', {'event_category': 'Videos'});
+                        }
+                        if (window.self !== window.top) {
+                            window.parent.postMessage({
+                                type: "CDN_PLAYER_EVENT",
+                                action: '1% of timeline completed',
+                            }, "*");
+                        }
+                    }
                 }
             }
 
