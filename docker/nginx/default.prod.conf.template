@@ -51,10 +51,9 @@ server {
         fastcgi_param PATH_INFO $fastcgi_path_info;
 
         # перехватываем ошибки от бекенда
-        fastcgi_intercept_errors on;
-        # все 404 отправляем в именованный location
-        error_page 404 = @notfound;
-        error_page 502 = @error502;
+        # fastcgi_intercept_errors on;
+        # error_page 404 = @notfound;
+        # error_page 502 = @error502;
 
         fastcgi_read_timeout 3600;
         fastcgi_send_timeout 30;
