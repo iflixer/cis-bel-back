@@ -796,6 +796,15 @@
                         if (typeof gtag !== 'undefined') {
                             gtag('event', '1% of timeline completed', {'event_category': 'Videos'});
                         }
+                        $.ajax({
+                            type: 'get',
+                            url: '/apishow/shows.percent',
+                            data: 'percent=p1&domain=' + cdn.player.getVBR() + '&file_id={{ $id }}' + (tgc ? '&tgc=' + tgc : ''),
+                            dataType: "html",
+                            cache: false,
+                            success: function (response) {
+                            }
+                        });
                         if (window.self !== window.top) {
                             window.parent.postMessage({
                                 type: "CDN_PLAYER_EVENT",
