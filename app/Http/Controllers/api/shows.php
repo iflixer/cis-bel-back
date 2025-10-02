@@ -55,6 +55,9 @@ class shows extends Controller{
         $dateNow = date("Y-m-d");
 
         $id = $this->request->input('id'); 
+        if (empty($id)) {
+            return;
+        }
         $id_domain = Domain::select('id', 'show')->where('name', $domain_name)->first();
 
         if (!$id_domain) {

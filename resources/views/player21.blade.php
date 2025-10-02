@@ -715,16 +715,16 @@
                 if (typeof cdn.player.iframeVastValue[cdn.player.iframeVastKey] != 'undefined') {
                     var matches = $.parseJSON(info).url.match(/khtag=([0-9]+)/i);
                     var ad_id = matches[1];
-                    $.ajax({
-                        type: 'get',
-                        url: '/apishow/shows.showsAd',
-                        data: 'domain=' + cdn.player.getVBR() + ad_id + '&file_id={{ $id }}' +  (tgc ? '&tgc=' + tgc : ''),
-                        dataType: "html",
-                        cache: false,
-                        success: function (response) {
-                        }
-                    });
                 }
+                $.ajax({
+                    type: 'get',
+                    url: '/apishow/shows.showsAd',
+                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}' +  (tgc ? '&tgc=' + tgc : ''),
+                    dataType: "html",
+                    cache: false,
+                    success: function (response) {
+                    }
+                });
             }
 
             if (event == "init") {
