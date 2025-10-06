@@ -258,6 +258,7 @@
       "domains.complit": true,
       "domains.notComplit": true,
       "domains.setBlack": true,
+      "domains.getAll": true,
       "users.get": true,
       "users.putStatus": true,
       "users.add": true,

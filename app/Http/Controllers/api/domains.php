@@ -320,4 +320,58 @@ class domains extends Controller
         return ['data' => $response, 'messages' => $messages];
     }
 
+    public function getAll(){
+        $response = [];
+        $messages = [];
+
+        $query = Domain::select(
+            'domains.*',
+            'users.login as user_login',
+            'domain_types.name as domain_type_name'
+        )
+        ->leftJoin('users', 'domains.id_parent', '=', 'users.id')
+        ->leftJoin('domain_types', 'domains.domain_type_id', '=', 'domain_types.id');
+
+        $searchUser = $this->request->input('search_user');
+        if ($searchUser) {
+            $query->where('users.login', 'like', "%{$searchUser}%");
+        }
+
+        $searchDomain = $this->request->input('search_domain');
+        if ($searchDomain) {
+            $query->where('domains.name', 'like', "%{$searchDomain}%");
+        }
+
+        $count = $query->count();
+        $orderBy = $this->request->input('order_by', 'id');
+        $orderDirection = $this->request->input('order_direction', 'DESC');
+        $columnMap = [
+            'id' => 'domains.id',
+            'name' => 'domains.name',
+            'user_login' => 'users.login',
+            'domain_type_name' => 'domain_types.name',
+            'status' => 'domains.status'
+        ];
+
+        $sortColumn = isset($columnMap[$orderBy]) ? $columnMap[$orderBy] : 'domains.id';
+        $query->orderBy($sortColumn, $orderDirection);
+
+        $limit = $this->request->input('limit', 20);
+        $offset = $this->request->input('offset', 0);
+
+        if ($limit > 200) {
+            $limit = 200;
+        }
+
+        $query->offset($offset)->limit($limit);
+        $items = $query->get()->toArray();
+
+        $response = [
+            'count' => $count,
+            'items' => $items
+        ];
+
+        return ['data' => $response, 'messages' => $messages];
+    }
+
 }

@@ -196,6 +196,7 @@
             "domains.add": true,
             "domains.delete": true,
             "domains.get": true,
+            "domains.getAll": true,
             "domains.updatePlayer": true,
             "domains.complit": true,
             "domains.notComplit":true,
