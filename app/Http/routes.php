@@ -97,6 +97,7 @@ Route::get('/cronjob/videodb', ['middleware' => [], 'uses' => 'CronjobController
 
 // payout calculation
 Route::post('/payouts/daily-payout', ['middleware' => [], 'uses' => 'PayoutController@triggerDailyPayout']);
+Route::post('/payouts/daily-event-stats', ['middleware' => [], 'uses' => 'PayoutController@triggerDailyEventStats']);
 
 // storage
 Route::get('/sss/{type}/{id}/{md5}', ['middleware' => [], 'uses' => 'TestController@sss']);

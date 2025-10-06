@@ -3,16 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Services\PayoutCalculationService;
+use App\Services\PlayerEventStatsService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class PayoutController extends Controller
 {
-    protected $payoutService;
+    private PayoutCalculationService $payoutService;
+    private PlayerEventStatsService $eventStatsService;
 
-    public function __construct(PayoutCalculationService $payoutService)
+    public function __construct(PayoutCalculationService $payoutService, PlayerEventStatsService $eventStatsService)
     {
         $this->payoutService = $payoutService;
+        $this->eventStatsService = $eventStatsService;
     }
 
     public function triggerDailyPayout(Request $request)
@@ -32,6 +35,29 @@ class PayoutController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Payout calculation failed',
+                'date' => $date,
+                'error' => $result['error']
+            ], 500);
+        }
+    }
+
+    public function triggerDailyEventStats(Request $request)
+    {
+        $date = Carbon::yesterday()->format('Y-m-d');
+
+        $result = $this->eventStatsService->calculateDailyStats($date);
+
+        if ($result['success']) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Player event stats calculation completed successfully',
+                'date' => $date,
+                'processed_count' => $result['processed_count'] ?? 0
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Player event stats calculation failed',
                 'date' => $date,
                 'error' => $result['error']
             ], 500);
