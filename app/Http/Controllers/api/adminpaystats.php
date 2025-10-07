@@ -175,10 +175,110 @@ class adminpaystats extends Controller
             'end' => $endDate
         ];
 
+        $response['event_stats'] = $this->getEventStats($startDate, $endDate, $userId, $domainId, $geoGroupId);
+
         return [
             'data' => $response,
             'messages' => $messages
         ];
+    }
+
+    private function getEventStats($startDate, $endDate, $userId = null, $domainId = null, $geoGroupId = null)
+    {
+        $eventTypes = ['load', 'play', 'p1', 'p25', 'p50', 'p75', 'p100'];
+
+        $query = DB::table('player_event_stats as pes')
+            ->leftJoin('domains as d', 'pes.domain_id', '=', 'd.id')
+            ->select(
+                'pes.event_type',
+                'pes.date',
+                DB::raw('SUM(pes.counter) as total_count')
+            )
+            ->whereBetween('pes.date', [$startDate, $endDate])
+            ->whereIn('pes.event_type', $eventTypes);
+
+        if ($userId && $userId != 'all') {
+            $query->where('d.id_parent', $userId);
+        }
+
+        if ($domainId && $domainId != 'all') {
+            $query->where('pes.domain_id', $domainId);
+        }
+
+        if ($geoGroupId && $geoGroupId != 'all') {
+            $query->where('pes.geo_group_id', $geoGroupId);
+        }
+
+        $timeSeriesData = (clone $query)
+            ->groupBy('pes.date', 'pes.event_type')
+            ->orderBy('pes.date', 'asc')
+            ->get();
+
+        $summaryData = (clone $query)
+            ->select('pes.event_type', DB::raw('SUM(pes.counter) as total_count'))
+            ->groupBy('pes.event_type')
+            ->get();
+
+        $timeSeries = [];
+        foreach ($eventTypes as $eventType) {
+            $timeSeries[$eventType] = $this->formatEventTimeSeries($timeSeriesData, $eventType, $startDate, $endDate);
+        }
+
+        $summary = [];
+        foreach ($eventTypes as $eventType) {
+            $summary[$eventType] = 0;
+        }
+        foreach ($summaryData as $item) {
+            $itemArray = is_object($item) ? (array)$item : $item;
+            $summary[$itemArray['event_type']] = (int)($itemArray['total_count'] ?? 0);
+        }
+
+        $conversions = [
+            'load_to_play' => $summary['load'] > 0 ? round(($summary['play'] / $summary['load']) * 100, 2) : 0,
+            'play_to_p25' => $summary['play'] > 0 ? round(($summary['p25'] / $summary['play']) * 100, 2) : 0,
+            'play_to_p50' => $summary['play'] > 0 ? round(($summary['p50'] / $summary['play']) * 100, 2) : 0,
+            'play_to_p75' => $summary['play'] > 0 ? round(($summary['p75'] / $summary['play']) * 100, 2) : 0,
+            'play_to_p100' => $summary['play'] > 0 ? round(($summary['p100'] / $summary['play']) * 100, 2) : 0,
+        ];
+
+        return [
+            'time_series' => $timeSeries,
+            'summary' => $summary,
+            'conversions' => $conversions
+        ];
+    }
+
+    private function formatEventTimeSeries($data, $eventType, $startDate, $endDate)
+    {
+        $series = [];
+        $dataByDate = [];
+
+        foreach ($data as $item) {
+            $itemArray = is_object($item) ? (array)$item : $item;
+            if ($itemArray['event_type'] == $eventType) {
+                $dateKey = $itemArray['date'];
+                $dataByDate[$dateKey] = (int)($itemArray['total_count'] ?? 0);
+            }
+        }
+
+        $period = new DatePeriod(
+            new DateTime($startDate),
+            new DateInterval('P1D'),
+            (new DateTime($endDate))->modify('+1 day')
+        );
+
+        foreach ($period as $date) {
+            $dateStr = $date->format('Y-m-d');
+            $timestamp = (int)($date->format('U') . '000');
+
+            if (isset($dataByDate[$dateStr])) {
+                $series[] = [$timestamp, $dataByDate[$dateStr]];
+            } else {
+                $series[] = [$timestamp, 0];
+            }
+        }
+
+        return $series;
     }
 
     private function formatTimeSeries($data, $startDate, $endDate)
