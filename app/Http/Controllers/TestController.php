@@ -1035,6 +1035,33 @@ class TestController extends Controller
 			$lines[] = "videos_last_created_at_timestamp {$ts}";
 
 
+			// --- UU last 1h (по geo и, при желании, по event) ---
+			$uuRows = DB::select("
+				SELECT geo_group_id, event, COUNT(DISTINCT user_id) AS uu
+				FROM player_pay_log
+				WHERE created_at >= NOW() - INTERVAL 1 HOUR
+				GROUP BY geo_group_id, event
+			");
+
+			$lines[] = "# HELP player_pay_log_unique_users_last_1h Unique users in the last 1h";
+			$lines[] = "# TYPE player_pay_log_unique_users_last_1h gauge";
+
+			foreach ($uuRows as $r) {
+				$geoId = (int)($r->geo_group_id ?? 0);
+				$geoName = $geoGroups[$geoId] ?? "Other";
+				$event = $r->event ?? "unknown";
+				$uu = (int)($r->uu ?? 0);
+
+				// экранирование кавычек
+				$geoEsc = str_replace(['\\','"'], ['\\\\','\\"'], $geoName);
+				$evtEsc = str_replace(['\\','"'], ['\\\\','\\"'], $event);
+
+				$lines[] = sprintf(
+					'player_pay_log_unique_users_last_1h{geo_group="%s",event="%s"} %d',
+					$geoEsc, $evtEsc, $uu
+				);
+			}
+
 
 			$lines[] = "# HELP player_pay_log_total Cumulative player events (Prometheus counter)";
 			$lines[] = "# TYPE player_pay_log_total counter";
