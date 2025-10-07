@@ -1027,7 +1027,7 @@ class TestController extends Controller
 			$lines[] = "# TYPE videos_with_kinopoisk_total gauge";
 			$lines[] = "videos_with_kinopoisk_total {$kinopoiskOk}";
 
-			$ts = (int) ($lastTs->ts ?? 0);
+			$ts = (int) ($lastTs->ts ?? 0)*1000;
 			$lines[] = "# HELP videos_last_created_at_timestamp Unix time of the last created video";
 			$lines[] = "# TYPE videos_last_created_at_timestamp gauge";
 			$lines[] = "videos_last_created_at_timestamp {$ts}";
@@ -1076,7 +1076,7 @@ class TestController extends Controller
 
 			// Последний таймстамп (последняя запись)
 			$last = DB::selectOne("SELECT UNIX_TIMESTAMP(MAX(created_at)) AS ts FROM player_pay_log");
-			$ts = (int) ($last->ts ?? 0);
+			$ts = (int) ($last->ts ?? 0)*1000;
 			$lines[] = "# HELP player_pay_log_last_timestamp Последнее зафиксированное событие";
 			$lines[] = "# TYPE player_pay_log_last_timestamp gauge";
 			$lines[] = "player_pay_log_last_timestamp {$ts}";
