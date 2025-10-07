@@ -1037,29 +1037,20 @@ class TestController extends Controller
 
 			// --- UU last 1h (по geo и, при желании, по event) ---
 			$uuRows = DB::select("
-				SELECT geo_group_id, event, COUNT(DISTINCT user_id) AS uu
+				SELECT geo_group_id, COUNT(DISTINCT user_id) AS uu
 				FROM player_pay_log
-				WHERE created_at >= NOW() - INTERVAL 1 HOUR
-				GROUP BY geo_group_id, event
+				WHERE event='pay' AND created_at >= NOW() - INTERVAL 1 HOUR
+				GROUP BY geo_group_id
 			");
-
-			$lines[] = "# HELP player_pay_log_unique_users_last_1h Unique users in the last 1h";
-			$lines[] = "# TYPE player_pay_log_unique_users_last_1h gauge";
-
+			$lines[] = "# HELP player_pay_log_unique_users_pay_last_1h Unique users (UU pay event) in the last 1 hour by geo group";
+			$lines[] = "# TYPE player_pay_log_unique_users_pay_last_1h gauge";
 			foreach ($uuRows as $r) {
-				$geoId = (int)($r->geo_group_id ?? 0);
+				$geoId   = (int)($r->geo_group_id ?? 0);
 				$geoName = $geoGroups[$geoId] ?? "Other";
-				$event = $r->event ?? "unknown";
-				$uu = (int)($r->uu ?? 0);
+				$uu      = (int)($r->uu ?? 0);
+				$geoEsc  = str_replace(['\\', '"'], ['\\\\', '\\"'], $geoName);
 
-				// экранирование кавычек
-				$geoEsc = str_replace(['\\','"'], ['\\\\','\\"'], $geoName);
-				$evtEsc = str_replace(['\\','"'], ['\\\\','\\"'], $event);
-
-				$lines[] = sprintf(
-					'player_pay_log_unique_users_last_1h{geo_group="%s",event="%s"} %d',
-					$geoEsc, $evtEsc, $uu
-				);
+				$lines[] = sprintf('player_pay_log_unique_users_pay_last_1h{geo_group="%s"} %d', $geoEsc, $uu);
 			}
 
 
