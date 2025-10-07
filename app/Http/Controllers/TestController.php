@@ -1037,7 +1037,7 @@ class TestController extends Controller
 
 			// --- UU last 1h (по geo и, при желании, по event) ---
 			$uuRows = DB::select("
-				SELECT geo_group_id, COUNT(DISTINCT user_id) AS uu
+				SELECT geo_group_id, COUNT(DISTINCT visitor_ip) AS uu
 				FROM player_pay_log
 				WHERE event='pay' AND created_at >= NOW() - INTERVAL 1 HOUR
 				GROUP BY geo_group_id
