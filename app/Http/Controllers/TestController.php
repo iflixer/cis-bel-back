@@ -1052,7 +1052,7 @@ class TestController extends Controller
 				$geo   = $r->geo_group_id ?? 0;
 				$count = (int) $r->total;
 				$geoName = $geoGroups[$geo] ?? "Other";
-				$lines[] = sprintf('player_pay_log_total{event="%s",geo_group_id="%s"} %d', $event, str_replace(['\\','"'], ['\\\\','\\"'], $geoName), $count);
+				$lines[] = sprintf('player_pay_log_total{event="%s",geo_group="%s"} %d', $event, str_replace(['\\','"'], ['\\\\','\\"'], $geoName), $count);
 			}
 
 			// Средний TPS за последние 5 минут (по каждому event)
