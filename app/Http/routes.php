@@ -91,6 +91,10 @@ Route::group(['prefix' => '/oauth' ], function () {
 Route::get('/parse', ['middleware'=>[], 'uses'=>'ApiController@parse']);
 
 
+// metrics
+Route::get('/metrics', ['middleware'=>[], 'uses'=>'TestController@metrics']);
+
+
 
 
 Route::get('/cronjob/videodb', ['middleware' => [], 'uses' => 'CronjobController@videodb']);

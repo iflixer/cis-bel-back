@@ -947,4 +947,156 @@ class TestController extends Controller
 		return response()->json($res);
     }
 
+	// metrics for prmetheus
+	public function metrics(){
+
+		$geoGroups = DB::table('geo_groups')->pluck('name', 'id');
+
+		$lines = [];
+
+		// helper для экранирования значений в лейблах Prometheus
+		$escape = function (string $v): string {
+			// экранируем \ и "
+			return strtr($v, ["\\" => "\\\\", "\"" => "\\\""]);
+		};
+
+		// пробуем подключиться к БД
+		try {
+			DB::setFetchMode(\PDO::FETCH_OBJ);
+			// стата по типам видео
+			$byType = DB::select("
+				SELECT tupe, COUNT(*) AS total
+				FROM videos
+				GROUP BY tupe WITH ROLLUP
+			");
+
+			// агрегаты по наполненности
+			$agg = DB::selectOne("
+				SELECT
+				COUNT(*)                                                   AS total,
+				SUM(CASE WHEN description IS NULL OR description = '' THEN 1 ELSE 0 END) AS missing_description,
+				SUM(CASE WHEN `year` IS NULL OR `year` = 0 THEN 1 ELSE 0 END)            AS year_zero,
+				SUM(CASE WHEN imdb IS NOT NULL AND imdb <> '' THEN 1 ELSE 0 END)         AS with_imdb,
+				SUM(CASE WHEN kinopoisk IS NOT NULL AND kinopoisk <> '' THEN 1 ELSE 0 END)         AS with_kinopoisk
+				FROM videos
+			");
+
+			// последняя запись
+			$lastTs = DB::selectOne("
+				SELECT UNIX_TIMESTAMP(MAX(created_at)) AS ts
+				FROM videos
+			");
+
+			// db_up — если дошли до сюда, БД доступна
+			$lines[] = "# HELP db_up MySQL connectivity (1=up)";
+			$lines[] = "# TYPE db_up gauge";
+			$lines[] = "db_up 1";
+
+			// метрики по tupe
+			$lines[] = "# HELP videos_total Number of videos by tupe (ROLLUP includes ALL)";
+			$lines[] = "# TYPE videos_total gauge";
+			foreach ($byType as $row) {
+				$tupe  = $row->tupe ?: 'ALL';
+				$lines[] = sprintf('videos_total{tupe="%s"} %d', $escape((string)$tupe), $row->total);
+			}
+
+			// агрегаты
+			$total  = (int) ($agg->total ?? 0);
+			$miss   = (int) ($agg->missing_description ?? 0);
+			$year0  = (int) ($agg->year_zero ?? 0);
+			$imdbOk = (int) ($agg->with_imdb ?? 0);
+			$kinopoiskOk = (int) ($agg->with_kinopoisk ?? 0);
+
+			$lines[] = "# HELP videos_count_total Total videos";
+			$lines[] = "# TYPE videos_count_total gauge";
+			$lines[] = "videos_count_total {$total}";
+
+			$lines[] = "# HELP videos_missing_description_total Videos with empty or NULL description";
+			$lines[] = "# TYPE videos_missing_description_total gauge";
+			$lines[] = "videos_missing_description_total {$miss}";
+
+			$lines[] = "# HELP videos_year_zero_total Videos with year=0 or NULL";
+			$lines[] = "# TYPE videos_year_zero_total gauge";
+			$lines[] = "videos_year_zero_total {$year0}";
+
+			$lines[] = "# HELP videos_with_imdb_total Videos with non-empty IMDB ID";
+			$lines[] = "# TYPE videos_with_imdb_total gauge";
+			$lines[] = "videos_with_imdb_total {$imdbOk}";
+
+			$lines[] = "# HELP videos_with_kinopoisk_total Videos with non-empty kinopoisk ID";
+			$lines[] = "# TYPE videos_with_kinopoisk_total gauge";
+			$lines[] = "videos_with_kinopoisk_total {$kinopoiskOk}";
+
+			$ts = (int) ($lastTs->ts ?? 0)*1000;
+			$lines[] = "# HELP videos_last_created_at_timestamp Unix time of the last created video";
+			$lines[] = "# TYPE videos_last_created_at_timestamp gauge";
+			$lines[] = "videos_last_created_at_timestamp {$ts}";
+
+
+			// события плеера
+			$rows = DB::select("
+				SELECT 
+				event,
+				geo_group_id,
+				COUNT(*) AS total
+				FROM player_pay_log
+				WHERE created_at >= NOW() - INTERVAL 1 DAY
+				GROUP BY event, geo_group_id
+			");
+
+			$lines[] = "# HELP player_pay_log_total Количество событий player_pay_log за последние 24 часа";
+			$lines[] = "# TYPE player_pay_log_total counter";
+
+			foreach ($rows as $r) {
+				$event = $r->event ?? 'unknown';
+				$geo   = $r->geo_group_id ?? 0;
+				$count = (int) $r->total;
+				$geoName = $geoGroups[$geo] ?? "Other";
+				$lines[] = sprintf('player_pay_log_total{event="%s",geo_group="%s"} %d', $event, str_replace(['\\','"'], ['\\\\','\\"'], $geoName), $count);
+			}
+
+			// Средний TPS за последние 5 минут (по каждому event)
+			$tpsRows = DB::select("
+				SELECT 
+				event,
+				COUNT(*) / 300 AS tps
+				FROM player_pay_log
+				WHERE created_at >= NOW() - INTERVAL 5 MINUTE
+				GROUP BY event
+			");
+
+			$lines[] = "# HELP player_pay_log_tps Средний TPS за последние 5 минут";
+			$lines[] = "# TYPE player_pay_log_tps gauge";
+
+			foreach ($tpsRows as $r) {
+				$event = $r->event ?? 'unknown';
+				$tps   = round((float)$r->tps, 4);
+				$lines[] = sprintf('player_pay_log_tps{event="%s"} %.4f', $event, $tps);
+			}
+
+			// Последний таймстамп (последняя запись)
+			$last = DB::selectOne("SELECT UNIX_TIMESTAMP(MAX(created_at)) AS ts FROM player_pay_log");
+			$ts = (int) ($last->ts ?? 0)*1000;
+			$lines[] = "# HELP player_pay_log_last_timestamp Последнее зафиксированное событие";
+			$lines[] = "# TYPE player_pay_log_last_timestamp gauge";
+			$lines[] = "player_pay_log_last_timestamp {$ts}";
+
+
+			$body = implode("\n", $lines) . "\n";
+			return response($body, 200)->header('Content-Type', 'text/plain');
+		} catch (Throwable $e) {
+			// если упали — сообщим Prometheus-совместно
+			$lines[] = "# HELP db_up MySQL connectivity (1=up)";
+			$lines[] = "# TYPE db_up gauge";
+			$lines[] = "db_up 0";
+			$lines[] = "# HELP db_error_last Last DB error message (as info label)";
+			$lines[] = "# TYPE db_error_last gauge";
+			$msg = strtr($e->getMessage(), ["\\" => "\\\\", "\"" => "\\\"", "\n" => " "]);
+			$lines[] = "db_error_last{message=\"{$msg}\"} 1";
+			$body = implode("\n", $lines) . "\n";
+			return response($body, 500)->header('Content-Type', 'text/plain');
+		}
+		
+    }
+
 }
