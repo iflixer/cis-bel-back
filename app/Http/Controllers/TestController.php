@@ -950,6 +950,8 @@ class TestController extends Controller
 	// metrics for prmetheus
 	public function metrics(){
 
+		$this->aggregatePlayerPayLogDeltas();
+
 		$geoGroups = DB::table('geo_groups')->pluck('name', 'id');
 
 		$lines = [];
@@ -1033,45 +1035,21 @@ class TestController extends Controller
 			$lines[] = "videos_last_created_at_timestamp {$ts}";
 
 
-			// события плеера
-			$rows = DB::select("
-				SELECT 
-				event,
-				geo_group_id,
-				COUNT(*) AS total
-				FROM player_pay_log
-				WHERE created_at >= NOW() - INTERVAL 1 DAY
-				GROUP BY event, geo_group_id
-			");
 
-			$lines[] = "# HELP player_pay_log_total Количество событий player_pay_log за последние 24 часа";
+			$lines[] = "# HELP player_pay_log_total Cumulative player events (Prometheus counter)";
 			$lines[] = "# TYPE player_pay_log_total counter";
 
-			foreach ($rows as $r) {
-				$event = $r->event ?? 'unknown';
-				$geo   = $r->geo_group_id ?? 0;
-				$count = (int) $r->total;
-				$geoName = $geoGroups[$geo] ?? "Other";
-				$lines[] = sprintf('player_pay_log_total{event="%s",geo_group="%s"} %d', $event, str_replace(['\\','"'], ['\\\\','\\"'], $geoName), $count);
-			}
-
-			// Средний TPS за последние 5 минут (по каждому event)
-			$tpsRows = DB::select("
-				SELECT 
-				event,
-				COUNT(*) / 300 AS tps
-				FROM player_pay_log
-				WHERE created_at >= NOW() - INTERVAL 5 MINUTE
-				GROUP BY event
-			");
-
-			$lines[] = "# HELP player_pay_log_tps Средний TPS за последние 5 минут";
-			$lines[] = "# TYPE player_pay_log_tps gauge";
-
-			foreach ($tpsRows as $r) {
-				$event = $r->event ?? 'unknown';
-				$tps   = round((float)$r->tps, 4);
-				$lines[] = sprintf('player_pay_log_tps{event="%s"} %.4f', $event, $tps);
+			$counters = DB::select("SELECT event, geo_group_id, total FROM metrics_counters");
+			foreach ($counters as $c) {
+				$event = $c->event ?? 'unknown';
+				$geoId = (int)$c->geo_group_id;
+				$geoName = $geoGroups[$geoId] ?? "Other";
+				$lines[] = sprintf(
+					'player_pay_log_total{event="%s",geo_group="%s"} %d',
+					$event,
+					str_replace(['\\','"'], ['\\\\','\\"'], $geoName),
+					(int)$c->total
+				);
 			}
 
 			// Последний таймстамп (последняя запись)
@@ -1098,5 +1076,53 @@ class TestController extends Controller
 		}
 		
     }
+
+	private function aggregatePlayerPayLogDeltas(): void
+	{
+		DB::setFetchMode(\PDO::FETCH_OBJ);
+		DB::transaction(function () {
+			// 1) заблокировать «курсор» (одна строка)
+			$cursor = DB::table('metrics_cursor')->where('id', 1)->lockForUpdate()->first();
+			$lastId = (int)($cursor->last_seen_id ?? 0);
+
+			// 2) выбрать только новые строки
+			$rows = DB::select("
+				SELECT event, geo_group_id, COUNT(*) AS cnt, MAX(id) AS max_id
+				FROM player_pay_log
+				WHERE id > ?
+				GROUP BY event, geo_group_id
+			", [$lastId]);
+
+			if (!$rows) {
+				return; // нечего добавлять
+			}
+
+			// 3) инкрементально обновить счётчики
+			// upsert с инкрементом total = total + VALUES(total)
+			$values = [];
+			foreach ($rows as $r) {
+				$values[] = sprintf(
+					"('%s', %d, %d)",
+					addslashes($r->event ?? 'unknown'),
+					(int)$r->geo_group_id,
+					(int)$r->cnt
+				);
+			}
+			$sql = "
+				INSERT INTO metrics_counters (event, geo_group_id, total)
+				VALUES ".implode(',', $values)."
+				ON DUPLICATE KEY UPDATE total = total + VALUES(total),
+										updated_at = CURRENT_TIMESTAMP
+			";
+			DB::statement($sql);
+
+			// 4) продвинуть курсор на максимальный id из пачки
+			$maxId = max(array_map(fn($r) => (int)$r->max_id, $rows));
+			DB::table('metrics_cursor')->where('id', 1)->update([
+				'last_seen_id' => $maxId,
+				'updated_at'   => DB::raw('CURRENT_TIMESTAMP'),
+			]);
+		}, 5); // повторить до 5 раз при конфликте
+	}
 
 }
