@@ -701,7 +701,7 @@
                 $.ajax({
                     type: 'get',
                     url: '/apishow/shows.impression',
-                    data: 'domain=' + cdn.player.getVBR() + ad_id + '&file_id={{ $id }}' +  (tgc ? '&tgc=' + tgc : ''),
+                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}' +  (tgc ? '&tgc=' + tgc : ''),
                     dataType: "html",
                     cache: false,
                     success: function (response) {
