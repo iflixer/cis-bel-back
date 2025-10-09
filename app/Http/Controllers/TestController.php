@@ -1070,6 +1070,29 @@ class TestController extends Controller
 				);
 			}
 
+			// событий в день по типу и гео
+			$lines[] = "# HELP player_pay_log_today Number of player events today by geo_group and event type";
+			$lines[] = "# TYPE player_pay_log_today gauge";
+			$counters = DB::select("SELECT 
+					event, 
+					geo_group_id, 
+					COUNT(*) AS total
+				FROM player_pay_log
+				WHERE created_at >= CURDATE()
+				GROUP BY event, geo_group_id");
+
+			foreach ($counters as $c) {
+				$event = $c->event ?? 'unknown';
+				$geoId = (int)$c->geo_group_id;
+				$geoName = $geoGroups[$geoId] ?? "Other";
+				$lines[] = sprintf(
+					'player_pay_log_today{event="%s",geo_group="%s"} %d',
+					$event,
+					str_replace(['\\','"'], ['\\\\','\\"'], $geoName),
+					(int)$c->total
+				);
+			}
+
 			// Последний таймстамп (последняя запись)
 			$last = DB::selectOne("SELECT UNIX_TIMESTAMP(MAX(created_at)) AS ts FROM player_pay_log");
 			$ts = (int) ($last->ts ?? 0)*1000;
