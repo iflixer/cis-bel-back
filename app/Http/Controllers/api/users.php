@@ -46,7 +46,7 @@ class users extends Controller{
     $messages = [];
     $ids = [];
 
-    $queryTikets = User::select('id','login','status','api_key','email','name','surname','score')->where('id', '!=', $this->user['id']);
+    $queryTikets = User::select('id','login','status','api_key','email','name','surname')->where('id', '!=', $this->user['id']);
 
     if( $this->request->input('page') == 'users' ){
 
@@ -74,7 +74,10 @@ class users extends Controller{
     $response = $queryTikets->get()->toArray();
 
     foreach ($response as $key => $value) {
-      $response[$key]['score'] .= ' ₽';
+      $user = User::find($value['id']);
+      $balanceInCents = $user->getBalance();
+      $response[$key]['score'] = number_format($balanceInCents / 100, 2, '.', '');
+      
       $idRight = LinkRight::where('id_user', $value['id'] )->first();
       $right = Right::where('id', $idRight->id_rights )->first()->toArray();
       $response[$key]['tupe'] = $right['name'];
@@ -86,7 +89,11 @@ class users extends Controller{
   public function info(){
     $response = [];
     $messages = [];
-    $response = User::select('id', 'login', 'status', 'api_key', 'score', 'cent', 'domain_id')->where('id', $this->user['id'])->first()->toArray();
+    $user = User::select('id', 'login', 'status', 'api_key', 'cent', 'domain_id')->where('id', $this->user['id'])->first();
+    $response = $user->toArray();
+
+    $balanceInCents = $user->getBalance();
+    $response['score'] = number_format($balanceInCents / 100, 2, '.', '');
 
     $response['operation'] = Operation::where('id_user', $this->user['id'])->get()->toArray();
     if($response['domain_id'] != 0){

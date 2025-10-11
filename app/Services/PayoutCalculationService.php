@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\PlayerPayStat;
+use App\UserTransaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -66,6 +67,7 @@ class PayoutCalculationService
             ->select('domain_id', 'domain_type_id', 'geo_group_id')
             ->selectRaw('COUNT(*) as count')
             ->whereBetween('created_at', [$startDate, $endDate])
+            ->where('event', 'pay')
             ->groupBy('domain_type_id', 'geo_group_id')
             ->get();
     }
@@ -83,10 +85,33 @@ class PayoutCalculationService
             $entry['count']
         );
 
+        $this->createUserAccruals($date, $entry, $watchPrice);
+
         return [
             'success' => true,
             'count' => $entry['count'],
             'price' => $watchPrice
         ];
+    }
+
+    protected function createUserAccruals($date, $entry, $watchPrice)
+    {
+        $domain = DB::table('domains')
+            ->where('id', $entry['domain_id'])
+            ->first();
+
+        if (!$domain || !$domain['id_parent']) {
+            Log::warning("No user found for domain_id: {$entry['domain_id']}");
+            return;
+        }
+
+        $userId = $domain['id_parent'];
+        $totalAccrual = $watchPrice * $entry['count'];
+
+        if ($totalAccrual > 0) {
+            UserTransaction::createAccrual($userId, $totalAccrual, $date);
+            
+            Log::info("Created accrual transaction for user {$userId}: {$totalAccrual} cents for date {$date}");
+        }
     }
 }

@@ -35,4 +35,19 @@ class User extends Authenticatable
     protected $hidden = [
         'remember_token'
     ];
+
+    public function transactions()
+    {
+        return $this->hasMany('App\UserTransaction', 'user_id');
+    }
+
+    public function getBalance()
+    {
+        return $this->transactions()->sum('amount');
+    }
+
+    public function getBalanceAttribute()
+    {
+        return $this->getBalance();
+    }
 }

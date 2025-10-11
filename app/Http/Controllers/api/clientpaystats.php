@@ -65,7 +65,6 @@ class clientpaystats extends Controller
                     'domain_breakdown' => [],
                     'available_periods' => $this->getAvailablePeriods()
                 ],
-                'messages' => ['У вас нет доменов для отображения статистики.']
             ];
         }
 

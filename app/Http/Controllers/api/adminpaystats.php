@@ -161,12 +161,50 @@ class adminpaystats extends Controller
             $totalEntries++;
         }
 
-        $avgPricePerView = $totalEntries > 0 ? ($totalWatchPriceSum / $totalEntries) : 0;
+        $priceGroups = DB::table('player_pay_stats as pps')
+            ->leftJoin('domains as d', 'pps.domain_id', '=', 'd.id')
+            ->select(
+                'pps.watch_price',
+                DB::raw('SUM(pps.counter * pps.watch_price) / 1000 as total_revenue'),
+                DB::raw('SUM(pps.counter) as total_views')
+            )
+            ->whereBetween('pps.date', [$startDate, $endDate]);
+
+        if ($userId && $userId != 'all') {
+            $priceGroups->where('d.id_parent', $userId);
+        }
+
+        if ($domainId && $domainId != 'all') {
+            $priceGroups->where('pps.domain_id', $domainId);
+        }
+
+        if ($geoGroupId && $geoGroupId != 'all') {
+            $priceGroups->where('pps.geo_group_id', $geoGroupId);
+        }
+
+        $priceGroupsData = $priceGroups
+            ->groupBy('pps.watch_price')
+            ->orderBy('pps.watch_price', 'asc')
+            ->get();
+
+        $priceGroupsArray = [];
+        foreach ($priceGroupsData as $priceGroup) {
+            $priceGroupArray = is_object($priceGroup) ? (array)$priceGroup : $priceGroup;
+            $watchPrice = (int)($priceGroupArray['watch_price'] ?? 0);
+            
+            if ($watchPrice > 0) {
+                $priceGroupsArray[] = [
+                    'watch_price' => $watchPrice,
+                    'total_revenue' => (int)($priceGroupArray['total_revenue'] ?? 0),
+                    'total_views' => (int)($priceGroupArray['total_views'] ?? 0)
+                ];
+            }
+        }
 
         $response['summary'] = [
             'total_views' => $totalViews,
             'total_revenue' => $totalRevenue,
-            'avg_price_per_view' => (int)$avgPricePerView
+            'price_groups' => $priceGroupsArray
         ];
 
         $response['available_periods'] = $this->getAvailablePeriods();
@@ -176,11 +214,71 @@ class adminpaystats extends Controller
         ];
 
         $response['event_stats'] = $this->getEventStats($startDate, $endDate, $userId, $domainId, $geoGroupId);
+        $response['geo_group_load_stats'] = $this->getGeoGroupLoadStats($startDate, $endDate, $userId, $domainId);
 
         return [
             'data' => $response,
             'messages' => $messages
         ];
+    }
+
+    private function getGeoGroupLoadStats($startDate, $endDate, $userId = null, $domainId = null)
+    {
+        $query = DB::table('player_event_stats as pes')
+            ->leftJoin('geo_groups as gg', 'pes.geo_group_id', '=', 'gg.id')
+            ->leftJoin('domains as d', 'pes.domain_id', '=', 'd.id')
+            ->select(
+                'pes.date',
+                'gg.name as geo_group_name',
+                DB::raw('SUM(pes.counter) as total_loads')
+            )
+            ->where('pes.event_type', 'load')
+            ->whereBetween('pes.date', [$startDate, $endDate])
+            ->groupBy('pes.date', 'gg.name')
+            ->orderBy('pes.date', 'asc');
+
+        if ($userId && $userId != 'all') {
+            $query->where('d.id_parent', $userId);
+        }
+
+        if ($domainId && $domainId != 'all') {
+            $query->where('pes.domain_id', $domainId);
+        }
+
+        $stats = $query->get();
+
+        $seriesData = [];
+        foreach ($stats as $stat) {
+            $statArray = is_object($stat) ? (array)$stat : $stat;
+            $groupName = $statArray['geo_group_name'] ?? 'Unknown';
+            if (!isset($seriesData[$groupName])) {
+                $seriesData[$groupName] = [];
+            }
+            $seriesData[$groupName][$statArray['date']] = (int)$statArray['total_loads'];
+        }
+
+        $result = [];
+        $period = new DatePeriod(
+            new DateTime($startDate),
+            new DateInterval('P1D'),
+            (new DateTime($endDate))->modify('+1 day')
+        );
+        $dateArray = iterator_to_array($period);
+
+        foreach ($seriesData as $groupName => $data) {
+            $series = [
+                'name' => $groupName,
+                'data' => []
+            ];
+            foreach ($dateArray as $date) {
+                $dateStr = $date->format('Y-m-d');
+                $timestamp = (int)($date->format('U') . '000');
+                $series['data'][] = [$timestamp, $data[$dateStr] ?? 0];
+            }
+            $result[] = $series;
+        }
+
+        return $result;
     }
 
     private function getEventStats($startDate, $endDate, $userId = null, $domainId = null, $geoGroupId = null)
