@@ -77,6 +77,7 @@ class adminpaystats extends Controller
                 DB::raw('SUM(pps.counter * pps.watch_price) / 1000 as total_revenue'),
                 DB::raw('AVG(pps.watch_price) as avg_watch_price')
             )
+            ->where('pps.watch_price', '>', 0)
             ->whereBetween('pps.date', [$startDate, $endDate]);
 
         if ($userId && $userId != 'all') {
@@ -106,8 +107,6 @@ class adminpaystats extends Controller
         $response['domain_breakdown'] = [];
         $totalViews = 0;
         $totalRevenue = 0;
-        $totalWatchPriceSum = 0;
-        $totalEntries = 0;
 
         foreach ($domainBreakdown as $domain) {
             $domainArray = is_object($domain) ? (array)$domain : $domain;
@@ -126,6 +125,7 @@ class adminpaystats extends Controller
                 )
                 ->where('pps.domain_id', $domainArray['domain_id'])
                 ->whereBetween('pps.date', [$startDate, $endDate])
+                ->where('pps.watch_price', '>', 0)
                 ->groupBy('pps.geo_group_id', 'gg.name', 'pps.watch_price')
                 ->orderBy('views', 'desc')
                 ->get();
@@ -157,8 +157,6 @@ class adminpaystats extends Controller
 
             $totalViews += (int)($domainArray['total_views'] ?? 0);
             $totalRevenue += (int)($domainArray['total_revenue'] ?? 0);
-            $totalWatchPriceSum += (int)($domainArray['avg_watch_price'] ?? 0);
-            $totalEntries++;
         }
 
         $priceGroups = DB::table('player_pay_stats as pps')
