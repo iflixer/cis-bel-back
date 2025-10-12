@@ -102,6 +102,7 @@ class clientpaystats extends Controller
                 )
                 ->where('pps.domain_id', $domain['domain_id'])
                 ->whereBetween('pps.date', [$startDate, $endDate])
+                ->where('pps.watch_price', '>', 0)
                 ->groupBy('pps.geo_group_id', 'gg.name', 'pps.watch_price')
                 ->orderBy('views', 'desc')
                 ->get();
