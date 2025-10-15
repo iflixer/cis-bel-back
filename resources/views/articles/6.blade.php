@@ -133,6 +133,12 @@
             <td>Число</td>
             <td><code>1</code></td>
         </tr>
+        <tr>
+            <td>no_sharing</td>
+            <td>Скрыть иконку\блок шейринга в соц-сетях</td>
+            <td>Число</td>
+            <td><code>1</code></td>
+        </tr>
     </tbody>
 </table>
 
