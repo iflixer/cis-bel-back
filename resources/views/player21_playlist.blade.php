@@ -579,7 +579,7 @@ endif;
             'default_quality':CDNquality,
             'debug': 0,
             'ready': PlayerReady(),
-            'autoplay': 1,//CDNautoplay,
+            'autoplay': CDNautoplay,
             'start': CDNstart,
             'preload': 'metadata',
             'hlsconfig': {
@@ -725,6 +725,8 @@ endif;
                 _translate = $('#translator-name').find(':selected').attr('value');
 
             var _url_params = [];
+
+            _url_params.push('autoplay=1');
 
             _url_params.push('domain=' + iframeReferer);
 
