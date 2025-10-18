@@ -5,7 +5,7 @@
     <meta name="robots" content="noindex">
     <meta name="referrer" content="always">
     <meta name="viewport" content="user-scalable=0, initial-scale=1.0, maximum-scale=1.0, width=device-width">
-    <title>player</title>
+    <title>player playlist</title>
     <link rel="stylesheet" href="/player/css/player.css">
     <script src="/player/js/jquery.min.js"></script>
     <script src="/player/js/jquery.nice-select.min.js"></script>
@@ -63,7 +63,6 @@
         // });
 
     </script>
-
     {{-- <script src="/player/js/gaproxy.js?v={{ hash_file('md5', public_path('player/js/gaproxy.js')) }}"></script> --}}
     {{-- <script>
         gtag('event', 'page_view', {
@@ -180,7 +179,10 @@ endif;
 {{-- END Sharing block --}}
 
 <div id="selectors" class="video_selectors" style="display: flex;">
-   @if ($type === 'serial')
+
+
+    @if ($type === 'serial')
+
         <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_seasons']) || isset($_GET['no_control_episodes'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
 				<select name="season" id="season-number" data-select="1">
 					@foreach ($seasons as $_season)
@@ -201,7 +203,6 @@ endif;
 
     @endif
 
-
     @if ($translations)
         <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_translations'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
 			<select name="translator" id="translator-name" data-select="1">
@@ -215,43 +216,6 @@ endif;
     @endif
 
 </div>
-@if ($type === 'serial')
-    <script>
-        var forceauto = false;
-        document.addEventListener("DOMContentLoaded", function () {
-            const eselect = document.getElementById("episode-number");
-            function isLastSelected() {
-                return eselect.selectedIndex === eselect.options.length - 1;
-            }
-            if (eselect && eselect.options.length > 0 && !isLastSelected()) {
-                const nextdiv = document.createElement("div");
-                nextdiv.id = "nextepisode";
-                nextdiv.innerHTML = `next <svg width="20" height="20"><g fill-rule="nonzero" fill="#999999" transform="translate(5, 5)"><path d="M0.46948,1e-05 L0.46948,1e-05 L0.46948,0 L7.46947,5.21875 L0.46948,10.4375 L0.46948,1e-05 Z M7.53052,0 L9.53052,0 L9.53052,10.62482 L7.53052,10.62482 L7.53052,0 Z"></path></g></svg>`;
-                        document.body.appendChild(nextdiv);
-
-                nextdiv.addEventListener("click", function () {
-                    forceauto = true;
-                    const ecurrentIndex = eselect.selectedIndex;
-                    const etotalOptions = eselect.options.length;
-
-                    if (ecurrentIndex < etotalOptions - 1) {
-                        eselect.selectedIndex = ecurrentIndex + 1;
-                        const eevent = new Event('change');
-                        eselect.dispatchEvent(eevent);
-                    }
-                });
-
-                }
-
-            });
-    </script>
-    <style>
-        #nextepisode{color:#999;position:absolute;width:auto;padding:0 6px;height:24px;border-radius:4px;border: 1px solid #999;right:10px;bottom:60px;z-index: 99;cursor:pointer;display: flex;align-items: center;justify-content: center}
-        #nextepisode svg{margin-left:6px;}
-        #nextepisode:hover{color:#fff;border: 1px solid #fff;}
-        #nextepisode:hover svg path{fill:#fff !important;}
-    </style>
-@endif
 
 <div id="player" class="player"></div>
 
@@ -610,7 +574,7 @@ endif;
         var CDNplayerConfig = {
             'id': 'player',
             'cuid': getCDNplayerCUID(),
-          //  'poster': null,
+            'poster': '{{ $video->backdrop }}',
             'file': '{{ $file }}',
             'default_quality':CDNquality,
             'debug': 0,
@@ -676,6 +640,7 @@ endif;
 
         $('#continue-play').on('click', function (e) {
             e.preventDefault();
+
             window.location.href = $(this).data('url');
         });
 
@@ -761,6 +726,8 @@ endif;
 
             var _url_params = [];
 
+            _url_params.push('autoplay=1');
+
             _url_params.push('domain=' + iframeReferer);
 
                 <?php if (isset($_GET['no_controls'])): ?>
@@ -778,10 +745,6 @@ endif;
 
             if (tgc) {
                 _url_params.push('tgc=' + tgc);
-            }
-
-            if(forceauto){
-                _url_params.push('autoplay=1');
             }
 
             if (m_s == 'auto') {
@@ -820,13 +783,7 @@ endif;
 
             if(event=="vast_Impression"){
                 // console.log('PlayerjsEvents', event, info);
-                @if ($type === 'serial')
-                $('#selectors,#nextepisode,#shareBlock').fadeOut('fast');
-                @else
-                $('#selectors,#shareBlock').fadeOut('fast');
-                @endif
                 let infoobj = JSON.parse(info);
-
                 let iswas = infoobj["is"];
 
                 if (typeof gtag !== 'undefined') {
@@ -916,8 +873,18 @@ endif;
             }
 
             if (event == "pause" || event == "end") {
-                // console.log('PlayerjsEvents', event, info);
                 cdn.player.controlSelectors('show');
+            }
+
+            if (event == "end") {
+                //console.log('PlayerjsEvents', event, info);
+                @if ($type === 'serial')
+                    //console.log('episode end!');
+                    const select = document.getElementById("episode-number");
+                    const nextIndex = (select.selectedIndex + 1) % select.options.length;
+                    select.selectedIndex = nextIndex;
+                    select.dispatchEvent(new Event("change"));
+                @endif
             }
 
             if (event == "new") {
@@ -1084,29 +1051,28 @@ endif;
     let hideTimeout;
     function showSelectors() {
         if (!$('#selectors').is(':visible')) {
-            $('#selectors,#nextepisode,#shareBlock').fadeIn('fast');
+            $('#selectors').fadeIn('fast');
+            $('#shareBlock').fadeIn('fast');
         }
         clearTimeout(hideTimeout); // prevent hiding if quickly moving between elements
     }
     function hideSelectors() {
         hideTimeout = setTimeout(function () {
-            @if ($type === 'serial')
-            if (!$('#player').is(':hover') && !$('#selectors').is(':hover') && !$('#nextepisode').is(':hover')) {
-            @else
             if (!$('#player').is(':hover') && !$('#selectors').is(':hover')) {
-            @endif
-                $('#selectors,#nextepisode,#shareBlock').fadeOut('fast');
+                $('#selectors').fadeOut('fast');
+                $('#shareBlock').fadeOut('fast');
             }
         }, 200); // 200ms delay to allow moving between elements
     }
-
-    $('#player').on('mousemove', showSelectors);
-    $('#player').on('mouseleave', hideSelectors);
+    // Bind events to both #player and #selectors
+    $('#player, #selectors, #shareBlock').on('mousemove', showSelectors);
+    $('#player, #selectors, #shareBlock').on('mouseleave', hideSelectors);
 
 // CURSOR INACTIVITY HIDE CONTROLS
     let inactivityTimer;
     function onInactivity() {
-        $('#selectors,#shareBlock,#nextepisode').fadeOut('fast');
+        $('#selectors').fadeOut('fast');
+        $('#shareBlock').fadeOut('fast');
     }
     function resetInactivityTimer() {
         clearTimeout(inactivityTimer);
