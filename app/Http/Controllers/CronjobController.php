@@ -106,10 +106,10 @@ class CronjobController extends Controller
 		echo "import start {$mode} {$order} {$offset} {$limit}\n";
 
 		if ($mode == 'fresh') {
-			$order = "-created";
+			$order = "-accepted";
 			$videodb = Videodb::select('last_accepted_at')->where('method', 'sync')->first()->toArray();
-			$last_created_at = strtotime($videodb['last_accepted_at']);
-			echo "Last created at: $last_created_at\n";
+			$last_accepted_at = strtotime($videodb['last_accepted_at']);
+			echo "Last accepted at: $last_accepted_at\n";
 		}
 		$stop_update = false;
 		$medias = [];
@@ -129,7 +129,7 @@ class CronjobController extends Controller
 			//echo "rezult count: " . count($rezult->results) . "\n";
 
 			foreach ($rezult->results as $key => $value) {
-				if (($mode=='fresh') && ( strtotime($value->created) < $last_created_at ) ) {
+				if (($mode=='fresh') && ( strtotime($value->accepted) < $last_accepted_at ) ) {
 					$stop_update = true;
 					echo "Stop update\n";
 					break;
@@ -341,7 +341,7 @@ class CronjobController extends Controller
 
 				if ($mode=='fresh') {
 					Videodb::where('method', 'sync')->update([
-						'last_accepted_at' => $value->created
+						'last_accepted_at' => $value->accepted
 					]);
 				}
 			}
@@ -354,6 +354,8 @@ class CronjobController extends Controller
 
 
 	} // function
+
+
 
 	private function makeZeroCdnProtectedLink($url): string {
 		$host = parse_url($url, PHP_URL_HOST);
