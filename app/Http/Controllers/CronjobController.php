@@ -87,6 +87,7 @@ class CronjobController extends Controller
 		$limit = 100;
 		$offset = 0;
 		$debug_mysql = 0;
+		$force_import_extra = false;
 		$mode = 'fresh';
 		if ($this->request->input('mode'))
         	$mode = $this->request->input('mode');
@@ -96,6 +97,8 @@ class CronjobController extends Controller
         	$limit = (int) $this->request->input('limit');
 		if ($this->request->input('debug_mysql'))
         	$debug_mysql = $this->request->input('debug_mysql');
+		if ($this->request->input('force_import_extra'))
+        	$force_import_extra = true;
 
 		if ($debug_mysql) {
 			DB::enableQueryLog();
@@ -114,6 +117,7 @@ class CronjobController extends Controller
 		$stop_update = false;
 		$medias = [];
 		while (!$stop_update) {
+			$request_start_time = microtime(true);
 			$u = "https://videodb.win/api/v1/medias?ordering={$order}&limit={$limit}&offset={$offset}";
 			echo "URL: $u\n";
 			$curl = curl_init();
@@ -143,7 +147,7 @@ class CronjobController extends Controller
 				$stop_update = true;
 			}
 		}
-		echo "medias count: " . count($medias) . "\n";
+		echo "medias count: " . count($medias) . " time: " . (microtime(true) - $request_start_time). "\n";
 
 		krsort($medias);
 
@@ -189,16 +193,16 @@ class CronjobController extends Controller
 					} else {
 						$video->fill($attr);
 					}
-					if (!empty($video->kinopoisk)) {
+					if (($force_import_extra || empty($video->update_kino)) && !empty($video->kinopoisk)) {
 						$this->kinoPoiskService->updateVideoWithKinoPoiskData($video);
 					}
-					if (!empty($video->imdb)) {
+					if (($force_import_extra || empty($video->update_tmdb)) && !empty($video->imdb)) {
 						$this->tmdbService->updateVideoWithTmdbData($video);
 						$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($video);
 						$this->fanartService->updateVideoWithFanartData($video);
 					}
 					
-					if (empty($video->description)) {
+					if (($force_import_extra || empty($video->update_openai)) && empty($video->description)) {
 						$this->openaiService->updateVideoWithOpenaiData($video);
 					}
 					$video->save();
@@ -240,15 +244,15 @@ class CronjobController extends Controller
 						} else {
 							$video->fill($attr);
 						}
-						if (!empty($video->kinopoisk)) {
+						if (($force_import_extra || empty($video->update_kino)) && !empty($video->kinopoisk)) {
 							$this->kinoPoiskService->updateVideoWithKinoPoiskData($video);
 						}
-						if (!empty($video->imdb)) {
+						if (($force_import_extra || empty($video->update_tmdb)) && !empty($video->imdb)) {
 							$this->tmdbService->updateVideoWithTmdbData($video);
 							$this->thetvdbService->updateVideoWithThetvdbIdByImdbId($video);
 							$this->fanartService->updateVideoWithFanartData($video);
 						}
-						if (empty($video->description)) {
+						if (($force_import_extra || empty($video->update_openai)) && empty($video->description)) {
 							$this->openaiService->updateVideoWithOpenaiData($video);
 						}
 						$video->save();
@@ -274,69 +278,72 @@ class CronjobController extends Controller
 					}
 				}
 
-				if (!empty($video)) {
-					// import screenshots
-					$first_screenshot = '';
-					if (!empty($file)) {
-						if (!empty($value->screens)) {
-							for($i=0; $i<count($value->screens); $i++) {
-								$ss = Screenshot::updateOrCreate(
-									[
-										'id_file' => $file->id,
-										'num' => $i
-									],
-									[
-										'url' => $this->makeZeroCdnProtectedLink($value->screens[$i])
-										]
-								);
-								if ($i==1) $first_screenshot = $ss->url;
+				$ss_count = Screenshot::where('id_file', $file->id)->count();
+				if ($force_import_extra || empty($ss_count)) {
+					if (!empty($video)) {
+						// import screenshots
+						$first_screenshot = '';
+						if (!empty($file)) {
+							if (!empty($value->screens)) {
+								for($i=0; $i<count($value->screens); $i++) {
+									$ss = Screenshot::updateOrCreate(
+										[
+											'id_file' => $file->id,
+											'num' => $i
+										],
+										[
+											'url' => $this->makeZeroCdnProtectedLink($value->screens[$i])
+											]
+									);
+									if ($i==1) $first_screenshot = $ss->url;
+								}
 							}
 						}
-					}
 
-					// if we dont have any backdrop - use first screenshot as backdrop
-					if (empty($video->backdrop) && !empty($first_screenshot)) {
-						$video->backdrop = $first_screenshot;
-					}
+						// if we dont have any backdrop - use first screenshot as backdrop
+						if (empty($video->backdrop) && !empty($first_screenshot)) {
+							$video->backdrop = $first_screenshot;
+						}
 
-					// insane! if we dont have a poster - make it from backdrop!
-					if (empty($video->img) && !empty($video->backdrop)) {
-						$data = file_get_contents($video->backdrop, false);
-						if (!empty($data)) {
-							$img = new \Imagick();
-							$img->readImageBlob($data);
-							$origW = $img->getImageWidth();
-							$origH = $img->getImageHeight();
-							$ratio = 0.749;
-							$cropH = $origH;
-							$cropW = (int) round($cropH * $ratio);
-							if ($cropW > $origW) {
-								$cropW = $origW;
-								$cropH = (int) round($cropW / $ratio);
-							}
-							$offsetX = (int)(($origW - $cropW) / 2);
-							$offsetY = (int)(($origH - $cropH) / 2);
-							$img->cropImage($cropW, $cropH, $offsetX, $offsetY);
-							$img->setImagePage(0, 0, 0, 0); // сброс смещений
-							$img->setImageFormat('webp');
-							$data = $img->getImageBlob();
-							$ok = true;
-							$fname = md5(time());
-							try {
-								$storage_file_name_orig = "cdnhub/sss/videos/{$video->id}/{$fname}";
-								$this->r2Service->uploadFileToStorage($storage_file_name_orig, 'image/webp', $data);
-							} catch (Throwable $e) {
-								echo 'ERROR saving to R2: '.$e->getMessage();
-								$ok = false;
-							}
-							if ($ok) {
-								$video->img = "https://sss.{$this->cdnhub_api_domain}/videos/{$video->id}/{$fname}";
+						// insane! if we dont have a poster - make it from backdrop!
+						if (empty($video->img) && !empty($video->backdrop)) {
+							$data = file_get_contents($video->backdrop, false);
+							if (!empty($data)) {
+								$img = new \Imagick();
+								$img->readImageBlob($data);
+								$origW = $img->getImageWidth();
+								$origH = $img->getImageHeight();
+								$ratio = 0.749;
+								$cropH = $origH;
+								$cropW = (int) round($cropH * $ratio);
+								if ($cropW > $origW) {
+									$cropW = $origW;
+									$cropH = (int) round($cropW / $ratio);
+								}
+								$offsetX = (int)(($origW - $cropW) / 2);
+								$offsetY = (int)(($origH - $cropH) / 2);
+								$img->cropImage($cropW, $cropH, $offsetX, $offsetY);
+								$img->setImagePage(0, 0, 0, 0); // сброс смещений
+								$img->setImageFormat('webp');
+								$data = $img->getImageBlob();
+								$ok = true;
+								$fname = md5(time());
+								try {
+									$storage_file_name_orig = "cdnhub/sss/videos/{$video->id}/{$fname}";
+									$this->r2Service->uploadFileToStorage($storage_file_name_orig, 'image/webp', $data);
+								} catch (Throwable $e) {
+									echo 'ERROR saving to R2: '.$e->getMessage();
+									$ok = false;
+								}
+								if ($ok) {
+									$video->img = "https://sss.{$this->cdnhub_api_domain}/videos/{$video->id}/{$fname}";
+								}
 							}
 						}
+						$video->save();
+					} else {
+						echo "video is empty for content-type {$content_type}\n";
 					}
-					$video->save();
-				} else {
-					echo "video is empty for content-type {$content_type}\n";
 				}
 
 				if ($mode=='fresh') {
