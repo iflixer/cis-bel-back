@@ -210,6 +210,16 @@ class shows extends Controller{
         Domain::where('name', $domain_name)->update(['show' => $stats ]);
     }
 
+    public function loaderror(){
+        $domain_name = $this->request->input('domain') ?? null;
+        $tgc = $this->request->input('tgc') ?? null;
+        if ($tgc) $domain_name = "@{$tgc}";
+
+        $domain = Domain::get_main_info($domain_name);
+        $file_id = (int)$this->request->input('file_id');
+        PlayerPay::save_event('loaderror', $domain, $file_id);
+    }
+
     public function percent(){
         $percent = $this->request->input('percent') ?? null;
         if (empty($percent)) {

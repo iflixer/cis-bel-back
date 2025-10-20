@@ -13,7 +13,7 @@ class PlayerPay extends Model
 
     protected $guarded = [];
 
-    protected static $event_names = ['load','play','pay','vast_complete','p25','p50','p75','p100','getads','impression','p1']; // sync with ENUM in DB!!!!
+    protected static $event_names = ['load','play','pay','vast_complete','p25','p50','p75','p100','getads','impression','p1','loaderror']; // sync with ENUM in DB!!!!
 
     /**
      * Create player event record in DB

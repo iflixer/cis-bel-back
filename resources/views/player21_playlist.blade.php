@@ -5,7 +5,7 @@
     <meta name="robots" content="noindex">
     <meta name="referrer" content="always">
     <meta name="viewport" content="user-scalable=0, initial-scale=1.0, maximum-scale=1.0, width=device-width">
-    <title>player playlist</title>
+    <title>player</title>
     <link rel="stylesheet" href="/player/css/player.css">
     <script src="/player/js/jquery.min.js"></script>
     <script src="/player/js/jquery.nice-select.min.js"></script>
@@ -63,6 +63,7 @@
         // });
 
     </script>
+
     {{-- <script src="/player/js/gaproxy.js?v={{ hash_file('md5', public_path('player/js/gaproxy.js')) }}"></script> --}}
     {{-- <script>
         gtag('event', 'page_view', {
@@ -179,10 +180,7 @@ endif;
 {{-- END Sharing block --}}
 
 <div id="selectors" class="video_selectors" style="display: flex;">
-
-
-    @if ($type === 'serial')
-
+   @if ($type === 'serial')
         <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_seasons']) || isset($_GET['no_control_episodes'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
 				<select name="season" id="season-number" data-select="1">
 					@foreach ($seasons as $_season)
@@ -203,6 +201,7 @@ endif;
 
     @endif
 
+
     @if ($translations)
         <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_translations'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
 			<select name="translator" id="translator-name" data-select="1">
@@ -216,6 +215,43 @@ endif;
     @endif
 
 </div>
+@if ($type === 'serial')
+    <script>
+        var forceauto = false;
+        document.addEventListener("DOMContentLoaded", function () {
+            const eselect = document.getElementById("episode-number");
+            function isLastSelected() {
+                return eselect.selectedIndex === eselect.options.length - 1;
+            }
+            if (eselect && eselect.options.length > 0 && !isLastSelected()) {
+                const nextdiv = document.createElement("div");
+                nextdiv.id = "nextepisode";
+                nextdiv.innerHTML = `next <svg width="20" height="20"><g fill-rule="nonzero" fill="#999999" transform="translate(5, 5)"><path d="M0.46948,1e-05 L0.46948,1e-05 L0.46948,0 L7.46947,5.21875 L0.46948,10.4375 L0.46948,1e-05 Z M7.53052,0 L9.53052,0 L9.53052,10.62482 L7.53052,10.62482 L7.53052,0 Z"></path></g></svg>`;
+                        document.body.appendChild(nextdiv);
+
+                nextdiv.addEventListener("click", function () {
+                    forceauto = true;
+                    const ecurrentIndex = eselect.selectedIndex;
+                    const etotalOptions = eselect.options.length;
+
+                    if (ecurrentIndex < etotalOptions - 1) {
+                        eselect.selectedIndex = ecurrentIndex + 1;
+                        const eevent = new Event('change');
+                        eselect.dispatchEvent(eevent);
+                    }
+                });
+
+                }
+
+            });
+    </script>
+    <style>
+        #nextepisode{color:#999;position:absolute;width:auto;padding:0 6px;height:24px;border-radius:4px;border: 1px solid #999;right:10px;bottom:60px;z-index: 99;cursor:pointer;display: flex;align-items: center;justify-content: center}
+        #nextepisode svg{margin-left:6px;}
+        #nextepisode:hover{color:#fff;border: 1px solid #fff;}
+        #nextepisode:hover svg path{fill:#fff !important;}
+    </style>
+@endif
 
 <div id="player" class="player"></div>
 
@@ -640,7 +676,6 @@ endif;
 
         $('#continue-play').on('click', function (e) {
             e.preventDefault();
-
             window.location.href = $(this).data('url');
         });
 
@@ -655,8 +690,7 @@ endif;
 
         $('#translator-name').change(function () {
             var t = $(this).find(':selected').attr('value');
-            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&translation=' + t + (tgc ? '&tgc=' + tgc : '');
-            // window.location.href = '/show/' + p_id + '?translation=' + t + (tgc ? '&tgc=' + tgc : '');
+            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
         });
 
         @elseif ($type === 'serial')
@@ -726,8 +760,6 @@ endif;
 
             var _url_params = [];
 
-            _url_params.push('autoplay=1');
-
             _url_params.push('domain=' + iframeReferer);
 
                 <?php if (isset($_GET['no_controls'])): ?>
@@ -746,6 +778,10 @@ endif;
             if (tgc) {
                 _url_params.push('tgc=' + tgc);
             }
+
+            //if(forceauto){
+                _url_params.push('autoplay=1');
+            //}
 
             if (m_s == 'auto') {
                 window.location.href = '?season=' + _season + '&episode=' + _episode + ((_url_params.length > 0) ? '&' + _url_params.join('&') : '');
@@ -783,7 +819,13 @@ endif;
 
             if(event=="vast_Impression"){
                 // console.log('PlayerjsEvents', event, info);
+                @if ($type === 'serial')
+                $('#selectors,#nextepisode,#shareBlock').fadeOut('fast');
+                @else
+                $('#selectors,#shareBlock').fadeOut('fast');
+                @endif
                 let infoobj = JSON.parse(info);
+
                 let iswas = infoobj["is"];
 
                 if (typeof gtag !== 'undefined') {
@@ -873,13 +915,12 @@ endif;
             }
 
             if (event == "pause" || event == "end") {
+                // console.log('PlayerjsEvents', event, info);
                 cdn.player.controlSelectors('show');
             }
 
             if (event == "end") {
-                //console.log('PlayerjsEvents', event, info);
                 @if ($type === 'serial')
-                    //console.log('episode end!');
                     const select = document.getElementById("episode-number");
                     const nextIndex = (select.selectedIndex + 1) % select.options.length;
                     select.selectedIndex = nextIndex;
@@ -950,6 +991,8 @@ endif;
             }
 
             if (event == "loaderror") {
+                if (window.loaderror_happened) return;
+                window.loaderror_happened = true;
                 // console.log('PlayerjsEvents', event, info);
                 if (typeof gtag !== 'undefined') {
                     gtag('event', 'Video load error', {'event_category': 'Videos'});
@@ -960,6 +1003,19 @@ endif;
                         action: "Load error",
                     }, "*");
                 }
+                $.ajax({
+                    type: 'get',
+                    url: '/apishow/shows.loaderror',
+                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}' + (tgc ? '&tgc=' + tgc : ''),
+                    dataType: "html",
+                    cache: false,
+                    success: function (response) {
+                    }
+                });
+                const select = document.getElementById("translator-name");
+                const nextIndex = (select.selectedIndex + 1) % select.options.length;
+                select.selectedIndex = nextIndex;
+                select.dispatchEvent(new Event("change"));
             }
 
             if (event == "quartile") {
@@ -1051,28 +1107,29 @@ endif;
     let hideTimeout;
     function showSelectors() {
         if (!$('#selectors').is(':visible')) {
-            $('#selectors').fadeIn('fast');
-            $('#shareBlock').fadeIn('fast');
+            $('#selectors,#nextepisode,#shareBlock').fadeIn('fast');
         }
         clearTimeout(hideTimeout); // prevent hiding if quickly moving between elements
     }
     function hideSelectors() {
         hideTimeout = setTimeout(function () {
+            @if ($type === 'serial')
+            if (!$('#player').is(':hover') && !$('#selectors').is(':hover') && !$('#nextepisode').is(':hover')) {
+            @else
             if (!$('#player').is(':hover') && !$('#selectors').is(':hover')) {
-                $('#selectors').fadeOut('fast');
-                $('#shareBlock').fadeOut('fast');
+            @endif
+                $('#selectors,#nextepisode,#shareBlock').fadeOut('fast');
             }
         }, 200); // 200ms delay to allow moving between elements
     }
-    // Bind events to both #player and #selectors
-    $('#player, #selectors, #shareBlock').on('mousemove', showSelectors);
-    $('#player, #selectors, #shareBlock').on('mouseleave', hideSelectors);
+
+    $('#player').on('mousemove', showSelectors);
+    $('#player').on('mouseleave', hideSelectors);
 
 // CURSOR INACTIVITY HIDE CONTROLS
     let inactivityTimer;
     function onInactivity() {
-        $('#selectors').fadeOut('fast');
-        $('#shareBlock').fadeOut('fast');
+        $('#selectors,#shareBlock,#nextepisode').fadeOut('fast');
     }
     function resetInactivityTimer() {
         clearTimeout(inactivityTimer);

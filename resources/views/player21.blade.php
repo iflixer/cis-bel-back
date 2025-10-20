@@ -610,7 +610,7 @@ endif;
         var CDNplayerConfig = {
             'id': 'player',
             'cuid': getCDNplayerCUID(),
-          //  'poster': null,
+            'poster': '{{ $video->backdrop }}',
             'file': '{{ $file }}',
             'default_quality':CDNquality,
             'debug': 0,
@@ -690,8 +690,7 @@ endif;
 
         $('#translator-name').change(function () {
             var t = $(this).find(':selected').attr('value');
-            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&translation=' + t + (tgc ? '&tgc=' + tgc : '');
-            // window.location.href = '/show/' + p_id + '?translation=' + t + (tgc ? '&tgc=' + tgc : '');
+            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
         });
 
         @elseif ($type === 'serial')
@@ -780,9 +779,9 @@ endif;
                 _url_params.push('tgc=' + tgc);
             }
 
-            if(forceauto){
+            //if(forceauto){
                 _url_params.push('autoplay=1');
-            }
+            //}
 
             if (m_s == 'auto') {
                 window.location.href = '?season=' + _season + '&episode=' + _episode + ((_url_params.length > 0) ? '&' + _url_params.join('&') : '');
@@ -920,6 +919,15 @@ endif;
                 cdn.player.controlSelectors('show');
             }
 
+            if (event == "end") {
+                @if ($type === 'serial')
+                    const select = document.getElementById("episode-number");
+                    const nextIndex = (select.selectedIndex + 1) % select.options.length;
+                    select.selectedIndex = nextIndex;
+                    select.dispatchEvent(new Event("change"));
+                @endif
+            }
+
             if (event == "new") {
                 //
             }
@@ -983,6 +991,8 @@ endif;
             }
 
             if (event == "loaderror") {
+                if (window.loaderror_happened) return;
+                window.loaderror_happened = true;
                 // console.log('PlayerjsEvents', event, info);
                 if (typeof gtag !== 'undefined') {
                     gtag('event', 'Video load error', {'event_category': 'Videos'});
@@ -993,6 +1003,19 @@ endif;
                         action: "Load error",
                     }, "*");
                 }
+                $.ajax({
+                    type: 'get',
+                    url: '/apishow/shows.loaderror',
+                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}' + (tgc ? '&tgc=' + tgc : ''),
+                    dataType: "html",
+                    cache: false,
+                    success: function (response) {
+                    }
+                });
+                const select = document.getElementById("translator-name");
+                const nextIndex = (select.selectedIndex + 1) % select.options.length;
+                select.selectedIndex = nextIndex;
+                select.dispatchEvent(new Event("change"));
             }
 
             if (event == "quartile") {
