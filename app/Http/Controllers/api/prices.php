@@ -186,24 +186,4 @@ class prices extends Controller
 
         return ['data' => $response, 'messages' => $messages];
     }
-
-    public function clearCache()
-    {
-        $response = [];
-        $messages = [];
-
-        if ($this->user['name'] != 'administrator') {
-            return ['data' => $response, 'messages' => [['tupe' => 'error', 'message' => 'Доступ запрещен']]];
-        }
-
-        try {
-            $this->priceService->clearPriceCache();
-            $response = ['status' => true];
-            $messages[] = ['tupe' => 'success', 'message' => 'Кеш цен успешно очищен'];
-        } catch (\Exception $e) {
-            $messages[] = ['tupe' => 'error', 'message' => 'Ошибка очистки кеша: ' . $e->getMessage()];
-        }
-
-        return ['data' => $response, 'messages' => $messages];
-    }
 }

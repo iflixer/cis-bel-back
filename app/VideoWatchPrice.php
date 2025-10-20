@@ -68,10 +68,20 @@ class VideoWatchPrice extends Model
 
     public static function setPriceById($geoGroupId, $domainTypeId, $priceCents)
     {
-        return self::updateOrCreate(
-            ['geo_group_id' => $geoGroupId, 'domain_type_id' => $domainTypeId],
-            ['price_cents' => $priceCents]
-        );
+        $existing = self::where('geo_group_id', $geoGroupId)->first();
+        if ($existing) {
+            $existing->domain_type_id = $domainTypeId;
+            $existing->price_cents = $priceCents;
+            $existing->save();
+
+            return $existing;
+        }
+
+        return self::create([
+            'geo_group_id' => $geoGroupId,
+            'domain_type_id' => $domainTypeId,
+            'price_cents' => $priceCents
+        ]);
     }
 
     public static function getPriceById($geoGroupId, $domainTypeId)

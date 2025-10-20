@@ -374,4 +374,44 @@ class domains extends Controller
         return ['data' => $response, 'messages' => $messages];
     }
 
+    public function updateDomainType(){
+        $response = [];
+        $messages = [];
+
+        $domainId = $this->request->input('domain_id');
+        $domainTypeId = $this->request->input('domain_type_id');
+
+        if (!$domainId) {
+            return ['data' => $response, 'messages' => [['tupe'=>'error', 'message'=>'Не указан ID домена']]];
+        }
+
+        $domain = Domain::where('id', $domainId)->first();
+        if (!$domain) {
+            return ['data' => $response, 'messages' => [['tupe'=>'error', 'message'=>'Домен не найден']]];
+        }
+
+        if ($domainTypeId !== null && $domainTypeId !== '') {
+            $domainType = DomainType::where('id', $domainTypeId)->first();
+            if (!$domainType) {
+                return ['data' => $response, 'messages' => [['tupe'=>'error', 'message'=>'Тип домена не найден']]];
+            }
+            $domainTypeName = $domainType->name;
+        } else {
+            $domainTypeId = null;
+            $domainTypeName = null;
+        }
+
+        Domain::where('id', $domainId)->update(['domain_type_id' => $domainTypeId]);
+
+        $response = [
+            'id' => $domain->id,
+            'domain_type_id' => $domainTypeId,
+            'domain_type_name' => $domainTypeName
+        ];
+
+        $messages[] = ['tupe'=>'success', 'message'=>'Тип домена успешно обновлен'];
+
+        return ['data' => $response, 'messages' => $messages];
+    }
+
 }
