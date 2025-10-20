@@ -616,7 +616,7 @@ endif;
             'debug': 0,
             'ready': PlayerReady(),
             'autoplay': CDNautoplay,
-            'start': CDNstart,
+            //'start': CDNstart,
             'preload': 'metadata',
             'hlsconfig': {
                 // Сколько видео держать впереди (VOD/Live)
