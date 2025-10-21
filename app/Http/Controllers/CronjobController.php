@@ -89,6 +89,7 @@ class CronjobController extends Controller
 		$debug_mysql = 0;
 		$force_import_extra = false;
 		$mode = 'fresh';
+		$vdb_id = 0;
 		if ($this->request->input('mode'))
         	$mode = $this->request->input('mode');
 		if ($this->request->input('offset'))
@@ -99,6 +100,11 @@ class CronjobController extends Controller
         	$debug_mysql = $this->request->input('debug_mysql');
 		if ($this->request->input('force_import_extra'))
         	$force_import_extra = true;
+		if ($this->request->input('vdb_id')) {
+        	$vdb_id = $this->request->input('vdb_id');
+			$mode = 'single';
+		}
+
 
 		if ($debug_mysql) {
 			DB::enableQueryLog();
@@ -114,11 +120,20 @@ class CronjobController extends Controller
 			$last_accepted_at = strtotime($videodb['last_accepted_at']);
 			echo "Last accepted at: $last_accepted_at\n";
 		}
+
+		$where_vdb = '';
+		if (!empty($vdb_id)) {
+			$where_vdb = "&content_object={$vdb_id}";
+		}
+
 		$stop_update = false;
 		$medias = [];
 		while (!$stop_update) {
+			if (!empty($where_vdb)) {
+				$stop_update = true;
+			}
 			$request_start_time = microtime(true);
-			$u = "https://videodb.win/api/v1/medias?ordering={$order}&limit={$limit}&offset={$offset}";
+			$u = "https://videodb.win/api/v1/medias?ordering={$order}&limit={$limit}&offset={$offset}{$where_vdb}";
 			echo "URL: $u\n";
 			$curl = curl_init();
 			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);

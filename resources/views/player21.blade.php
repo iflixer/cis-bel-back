@@ -1012,6 +1012,7 @@ endif;
                     success: function (response) {
                     }
                 });
+                
                 const select = document.getElementById("translator-name");
                 const nextIndex = (select.selectedIndex + 1) % select.options.length;
                 select.selectedIndex = nextIndex;
