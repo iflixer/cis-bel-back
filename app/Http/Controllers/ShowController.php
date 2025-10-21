@@ -119,10 +119,9 @@ class ShowController extends Controller{
         // }
 
         // video type
-        if ($video['tupe'] == 'movie')
+        $data['type'] = 'serial';
+        if ($video['tupe'] == 'movie' || $video['tupe'] == 'anime')
             $data['type'] = 'movie';
-        elseif ($video['tupe'] == 'episode')
-            $data['type'] = 'serial';
 
         // input autoplay
         $autoplay = false;
