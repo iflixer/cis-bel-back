@@ -610,7 +610,7 @@ endif;
         var CDNplayerConfig = {
             'id': 'player',
             'cuid': getCDNplayerCUID(),
-            'poster': '{{ $video->backdrop }}',
+            'poster': '{{ $cover_url }}@h500',
             'file': '{{ $file }}',
             'default_quality':CDNquality,
             'debug': 0,

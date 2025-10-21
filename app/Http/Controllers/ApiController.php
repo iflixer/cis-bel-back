@@ -30,6 +30,8 @@ use App\Link_actor;
 use App\Link_director;
 use App\Screenshot;
 
+use App\Helpers\Image;
+
 use Mail;
 use DB;
 
@@ -1418,16 +1420,8 @@ class ApiController extends Controller{
 
 
     private function makeInternalImageURL($type, $id, $url) {
-        if (empty($url) || empty($type) || empty($url)) {
-            return '';
-        }
-        return "https://sss.{$this->cdnhub_api_domain}/{$type}/".$id."/".md5($url);
+        return Image::makeInternalImageURL($this->cdnhub_api_domain, $type, $id, $url);
     }
-
-
-
-
-    
 
 
     public function show($method){

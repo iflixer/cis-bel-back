@@ -18,6 +18,7 @@ use App\Helpers\Cloudflare;
 use App\IsoCountry;
 use App\PlayerPay;
 use App\Helpers\Debug;
+use App\Helpers\Image;
 
 use App\Domain;
 use App\Cdn;
@@ -33,6 +34,7 @@ class ShowController extends Controller{
 
     protected $loginVDB;
     protected $passVDB;
+    protected $cdnhub_api_domain;
 
 
     public function __construct(Request $request){
@@ -43,6 +45,7 @@ class ShowController extends Controller{
         $this->loginVDB = Seting::where('name', 'loginVDB')->first()->toArray()['value'];
         $this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
         $this->keyWin = Seting::where('name', 'keyWin')->first()->toArray()['value'];
+        $this->cdnhub_api_domain = Seting::where('name', 'cdnhub_api_domain')->first()->toArray()['value'];
     }
 
     public function player($type = null, $id = 0)
@@ -94,6 +97,8 @@ class ShowController extends Controller{
         $video->toArray();
 
         $data['video'] = $video;
+
+        $data['cover_url'] = Image::makeInternalImageURL($this->cdnhub_api_domain, 'videos', $video->id, $video->backdrop);
 
         // tgc
         if ($this->request->input('tgc'))
