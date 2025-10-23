@@ -510,18 +510,72 @@ class ApiController extends Controller{
 
         $offset = 0;
         $limit = 50;
+        $limit_max = 200;
+        $orderby = 'id';
+        $orderby_direction = 'desc';
+        $tupe = null; // cdnhub idiotic type
+        $type = null; // normal type
         $kinopoisk_id = $this->request->input('kinopoisk_id');
         $imdb_id = $this->request->input('imdb_id');
         $title = $this->request->input('title');
 
         if ($this->request->input('offset') !== null)
-            $offset = $this->request->input('offset');
+            $offset = (int)$this->request->input('offset');
+        if ($offset<0) $offset = 0;
 
         if ($this->request->input('limit') !== null)
-            $limit = $this->request->input('limit');
+            $limit = (int)$this->request->input('limit');
+        if ($limit > $limit_max) $limit = $limit_max;
+        if ($limit<0) $limit = $limit_max;
 
-        if ($limit > 200)
-            $limit = 200;
+        if ($this->request->input('orderby') !== null) {
+            $orderby = $this->request->input('orderby');
+            $allowed_orderby = ['id', 'created_at'];
+            if (!in_array($orderby, $allowed_orderby)) {
+                $orderby = 'id';
+            }
+        }
+
+        if ($this->request->input('orderby_direction') !== null) {
+            $orderby_direction = $this->request->input('orderby_direction');
+            $allowed_orderby_direction = ['desc', 'asc'];
+            if (!in_array($orderby_direction, $allowed_orderby_direction)) {
+                $orderby_direction = 'desc';
+            }
+        }
+
+        if ($this->request->input('type') !== null) {
+            $type = $this->request->input('type');
+            $types_tupes = [
+                'movie' => 'movie',
+                'serial' => 'episode',
+                'anime' => 'anime',
+                'animeserial' => 'animeepisode',
+                'showserial' => 'showepisode',
+            ];
+            if (!empty($types_tupes[$type])) {
+                $tupe = $types_tupes[$type];
+            } else {
+                $type = '';
+            }
+        }
+
+        $request = [
+            'type' => $type,
+            'type_help' => 'one of movie,serial,anime,animeserial,showserial',
+            'offset' => $offset,
+            'limit' => $limit,
+            'limit_help' => "<=$limit_max",
+            'orderby' => $orderby,
+            'orderby_help' => 'id,created_at',
+            'orderby_direction' => $orderby_direction,
+            'orderby_direction_help' => 'desc,asc',
+            'kinopoisk_id' => $kinopoisk_id,
+            'imdb_id' => $imdb_id,
+            'title' => $title,
+        ];
+
+
 
         $videos = Video::select(
             'videos.id',
@@ -557,24 +611,21 @@ class ApiController extends Controller{
                 if ($title) {
                     $videos->where('videos.ru_name', 'like', "%{$title}%")
                     ->orWhere('videos.name', 'like', "%{$title}%")
-                    ->orderBy('videos.id', 'desc');
+                    ->orderBy('videos.'.$orderby, $orderby_direction);
                 } else
-                    $videos->orderBy('videos.id', 'desc');
+                    $videos->orderBy('videos.'.$orderby, $orderby_direction);
             }
+        }
+
+        if (!empty($tupe)) {
+            $videos->where('videos.tupe', $tupe);
         }
 
         $count = $videos->count();
 
-        // $videos->rightJoin('files', 'videos.id', '=', 'files.id_parent')->groupBy('videos.id');
         $videos->leftJoin('files', 'videos.id', '=', 'files.id_parent')->groupBy('videos.id');
 
-        // $videos = $videos->offset($offset)
-        // ->limit($limit);
-
-        $videos = $videos->offset($offset)
-        ->limit($limit)
-        ->get()
-        ->toArray();
+        $videos = $videos->offset($offset)->limit($limit)->get()->toArray();
 
         // dd(vsprintf(str_replace('?', '%s', $videos->toSql()), $videos->getBindings()));
 
@@ -583,30 +634,10 @@ class ApiController extends Controller{
                 'result' => null
             ];
 
-        // domain
-
-        /*$idDomain = User::where('id', $this->request->userId)->first()->toArray()['domain_id'];
-
-        if ($idDomain != 0)
-            $domain = Domain::where('id', $idDomain)->first()->toArray()['name'];
-        else
-            $domain = 'api.kholobok.biz';*/
-
-
         // build data
-
         foreach ($videos as $key => $video) {
-            // if ($video['type'] !== 'movie') {
-            //     $videos[$key]['type'] = 'serial';
-            //     $video['type'] = 'serial';
-            // }
-
             $is_serial = $this->setContentType($videos, $video, $key);
-
-            // $videos[$key]['created'] = $video['created_at'];
-
             $videos[$key]['quality'] = explode(' ', $video['quality'])[0];
-
             $videos[$key]['iframe_url'] = "https://cdn0.$this->cdnhub_player_domain/show/{$video['id']}";
             $videos[$key]['poster'] = $this->makeInternalImageURL('videos', $video['id'], $video['poster']);
             $videos[$key]['backdrop'] = $this->makeInternalImageURL('videos', $video['id'], $video['backdrop']);
@@ -730,24 +761,19 @@ class ApiController extends Controller{
             }
         }
 
-        // prev
-
-        if ($offset >= $limit) {
+        if ($offset > 0) {
             $prev = [
                 'offset' => $offset - $limit,
                 'limit' => $limit,
             ];
-
             if ($kinopoisk_id) {
                 $prev['field'] = 'kinopoisk_id';
                 $prev['value'] = $kinopoisk_id;
             }
-
             if ($imdb_id) {
                 $prev['field'] = 'imdb_id';
                 $prev['value'] = $imdb_id;
             }
-
             if ($title) {
                 $prev['field'] = 'title';
                 $prev['value'] = $title;
@@ -756,23 +782,19 @@ class ApiController extends Controller{
             $prev = null;
 
         // next
-
         if ($count > $offset && ($offset + $limit) < $count) {
             $next = [
                 'offset' => $offset + $limit,
                 'limit' => $limit,
             ];
-
             if ($kinopoisk_id) {
                 $next['field'] = 'kinopoisk_id';
                 $next['value'] = $kinopoisk_id;
             }
-            
             if ($imdb_id) {
                 $next['field'] = 'imdb_id';
                 $next['value'] = $imdb_id;
             }
-
             if ($title) {
                 $next['field'] = 'title';
                 $next['value'] = $title;
@@ -780,12 +802,11 @@ class ApiController extends Controller{
         } else
             $next = null;
 
-        // return
-
         return [
+            'request' => $request,
             'prev' => $prev,
-            'result' => $videos,
             'next' => $next,
+            'result' => $videos,
         ];
     }
 
