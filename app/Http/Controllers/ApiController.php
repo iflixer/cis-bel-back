@@ -630,10 +630,10 @@ class ApiController extends Controller{
 
         // dd(vsprintf(str_replace('?', '%s', $videos->toSql()), $videos->getBindings()));
 
-        if (!$videos)
-            return [
-                'result' => null
-            ];
+        // if (!$videos)
+        //     return [
+        //         'result' => null
+        //     ];
 
         // build data
         foreach ($videos as $key => $video) {
