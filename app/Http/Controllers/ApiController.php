@@ -530,7 +530,7 @@ class ApiController extends Controller{
 
         if ($this->request->input('orderby') !== null) {
             $orderby = $this->request->input('orderby');
-            $allowed_orderby = ['id', 'created_at'];
+            $allowed_orderby = ['id', 'created_at', 'updated_at'];
             if (!in_array($orderby, $allowed_orderby)) {
                 $orderby = 'id';
             }
@@ -567,7 +567,7 @@ class ApiController extends Controller{
             'limit' => $limit,
             'limit_help' => "<=$limit_max",
             'orderby' => $orderby,
-            'orderby_help' => 'id,created_at',
+            'orderby_help' => 'id,created_at,updated_at',
             'orderby_direction' => $orderby_direction,
             'orderby_direction_help' => 'desc,asc',
             'kinopoisk_id' => $kinopoisk_id,
@@ -580,6 +580,7 @@ class ApiController extends Controller{
         $videos = Video::select(
             'videos.id',
             'videos.created_at',
+            'videos.updated_at',
             'videos.tupe as type',
             'videos.name as title_orig',
             'videos.ru_name as title_rus',
