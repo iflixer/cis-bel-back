@@ -385,7 +385,7 @@ class CronjobController extends Controller
 		$videos = Video::where('img', 'like', '%no-poster%')
 			->whereNotNull('imdb')
 			->orderBy('id_VDB')
-			->limit(100)
+			->limit(1000)
 			->get();
 
 		echo "Found videos:".count($videos). "\n";
