@@ -394,12 +394,12 @@ class CronjobController extends Controller
 		echo "Found videos:".count($videos). "\n";
 
 		foreach ($videos as $video) {
-			try {
+			// try {
 				$this->tmdbService->updateVideoWithTmdbData($video);
 				$video->save();
-			} catch (Throwable $e) {
-				echo "TMDB update failed for video {$video->id_VDB}: " . $e->getMessage() . "\n";
-			}
+			// } catch (Throwable $e) {
+			// 	echo "TMDB update failed for video {$video->id_VDB}: " . $e->getMessage() . "\n";
+			// }
 		}
 			Debug::dump_queries($start_time);
 		echo "END\n";
