@@ -377,6 +377,30 @@ class CronjobController extends Controller
 
 	} // function
 
+	public function import_empty_posters_tmdb() {
+		$start_time = microtime(true);
+		set_time_limit(0);
+		DB::enableQueryLog();
+		echo "Start import posters from tmdb for 'no-poster'\n";
+		$videos = Video::where('img', 'like', '%no-poster%')
+			->whereNotNull('imdb')
+			->orderBy('id_VDB')
+			->limit(10)
+			->get();
+
+		echo "Found videos:".count($videos). "\n";
+
+		foreach ($videos as $video) {
+			try {
+				$this->tmdbService->updateVideoWithTmdbData($video);
+				$video->save();
+			} catch (Throwable $e) {
+				echo "TMDB update failed for video {$video->id_VDB}: " . $e->getMessage() . "\n";
+			}
+		}
+			Debug::dump_queries($start_time);
+		echo "END\n";
+	}
 
 
 	private function makeZeroCdnProtectedLink($url): string {
