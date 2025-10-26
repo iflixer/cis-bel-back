@@ -382,7 +382,7 @@ class CronjobController extends Controller
 		set_time_limit(0);
 		DB::enableQueryLog();
 
-		$limit = $this->request->input('mode') ?: 10;
+		$limit = $this->request->input('limit') ?: 10;
 
 		echo "Start import posters from tmdb for 'no-poster'\n";
 		$videos = Video::where('img', 'like', '%no-poster%')
