@@ -262,7 +262,7 @@ class KinoPoiskService
         if (!empty($film->externalId->imdbId)) $video->imdb = $kinoPoisk->imdbId; 
         if (!empty($kinoPoisk->year)) $video->year = $kinoPoisk->year;
         if (!empty($kinoPoisk->description)) $video->description = $kinoPoisk->description;
-        if (!empty($kinoPoisk->posterUrl)) $video->img = $kinoPoisk->posterUrl;
+        if (!empty($kinoPoisk->posterUrl) && !str_contains($kinoPoisk->posterUrl, 'no-poster')) $video->img = $kinoPoisk->posterUrl;
         if (!empty($kinoPoisk->filmLength)) $video->film_length = $this->convertMinsToMovieLength($kinoPoisk->filmLength);
         if (!empty($kinoPoisk->ratingKinopoisk)) $video->rating_kp = $kinoPoisk->ratingKinopoisk;
         if (!empty($kinoPoisk->ratingKinopoiskVoteCount)) $video->rating_kp_votes = $kinoPoisk->ratingKinopoiskVoteCount;

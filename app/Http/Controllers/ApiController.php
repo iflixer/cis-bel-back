@@ -508,26 +508,17 @@ class ApiController extends Controller{
         file_put_contents(__DIR__ . '/apiNetworkTraffic.log', $serverInfoData, LOCK_EX | FILE_APPEND);*/
         
 
-        $offset = 0;
-        $limit = 50;
         $limit_max = 200;
-        $orderby = 'id';
-        $orderby_direction = 'desc';
-        $tupe = null; // cdnhub idiotic type
-        $type = null; // normal type
-        $kinopoisk_id = $this->request->input('kinopoisk_id');
-        $imdb_id = $this->request->input('imdb_id');
-        $title = $this->request->input('title');
-
-        if ($this->request->input('offset') !== null)
-            $offset = (int)$this->request->input('offset');
+        $kinopoisk_id = $this->request->input('kinopoisk_id') ?? null;
+        $imdb_id = $this->request->input('imdb_id') ?? null;
+        $title = $this->request->input('title') ?? null;
+        $offset = $this->request->input('offset') ?? 0;
         if ($offset<0) $offset = 0;
-
-        if ($this->request->input('limit') !== null)
-            $limit = (int)$this->request->input('limit');
+        $limit = $this->request->input('limit') ?? 50;
         if ($limit > $limit_max) $limit = $limit_max;
         if ($limit<0) $limit = $limit_max;
 
+        $orderby = 'id';
         if ($this->request->input('orderby') !== null) {
             $orderby = $this->request->input('orderby');
             $allowed_orderby = ['id', 'created_at', 'updated_at'];
@@ -536,6 +527,7 @@ class ApiController extends Controller{
             }
         }
 
+        $orderby_direction = 'desc';
         if ($this->request->input('orderby_direction') !== null) {
             $orderby_direction = $this->request->input('orderby_direction');
             $allowed_orderby_direction = ['desc', 'asc'];
@@ -544,6 +536,8 @@ class ApiController extends Controller{
             }
         }
 
+        $tupe = null; // cdnhub idiotic type
+        $type = null; // normal type
         if ($this->request->input('type') !== null) {
             $type = $this->request->input('type');
             $types_tupes = [
