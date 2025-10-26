@@ -381,11 +381,14 @@ class CronjobController extends Controller
 		$start_time = microtime(true);
 		set_time_limit(0);
 		DB::enableQueryLog();
+
+		$limit = $this->request->input('mode') ?: 10;
+
 		echo "Start import posters from tmdb for 'no-poster'\n";
 		$videos = Video::where('img', 'like', '%no-poster%')
 			->whereNotNull('imdb')
 			->orderBy('id_VDB')
-			->limit(1000)
+			->limit($limit)
 			->get();
 
 		echo "Found videos:".count($videos). "\n";
