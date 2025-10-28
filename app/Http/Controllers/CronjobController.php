@@ -105,6 +105,8 @@ class CronjobController extends Controller
 			$mode = 'single';
 		}
 
+		$extra_vdb_parameters = $this->request->input('extra_vdb_parameters') ?: '';
+
 
 		if ($debug_mysql) {
 			DB::enableQueryLog();
@@ -133,7 +135,7 @@ class CronjobController extends Controller
 				$stop_update = true;
 			}
 			$request_start_time = microtime(true);
-			$u = "https://videodb.win/api/v1/medias?ordering={$order}&limit={$limit}&offset={$offset}{$where_vdb}";
+			$u = "https://videodb.win/api/v1/medias?ordering={$order}&limit={$limit}&offset={$offset}{$where_vdb}{$extra_vdb_parameters}";
 			echo "URL: $u\n";
 			$curl = curl_init();
 			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
@@ -386,7 +388,7 @@ class CronjobController extends Controller
 		$limit = $this->request->input('limit') ?: 10;
 
 		echo "Start import posters from tmdb for 'no-poster'\n";
-		$videos = Video::where('img', 'like', '%no-poster%')
+		$videos = Video::where('img', '')
 			->whereNotNull('imdb')
 			->orderBy('id_VDB')
 			->offset($offset)
