@@ -203,6 +203,7 @@ endif;
 
 
     @if ($translations)
+        @if (isset($_GET['extrans']) && $_GET['extrans'] === '1')<div style="display: none !important">@endif
         <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_translations'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
 			<select name="translator" id="translator-name" data-select="1">
 				@foreach ($translations as $translation)
@@ -212,9 +213,48 @@ endif;
                 @endforeach
 			</select>
 		</span>
+        @if (isset($_GET['extrans']) && $_GET['extrans'] === '1')</div>@endif
     @endif
 
+
 </div>
+
+{{-- External translations block --}}
+@if (isset($_GET['extrans']) && $_GET['extrans'] === '1')
+    <div id="transexternal" style="display:flex">
+        <div class="fwtitle">Озвучки:</div>
+
+        @foreach ($translations as $translation)
+            <div class="extransbtn @if($translate && $translate == $translation['id']) selected @endif"  data-value="{{ $translation['id'] }}"  >{{ $translation['title'] }}</div>
+        @endforeach
+    </div>
+    <style>
+        #transexternal{background-color: rgb(21, 21, 21);color:#fff;display:flex;align-items: flex-start;justify-content: flex-start;flex-wrap:wrap;padding:6px;}
+        .fwtitle {min-width: 100%;padding:6px;font-weight:600}
+        .extransbtn {background: #2d2d2d;cursor: default;font-size: 14px;margin-right: 3px;margin-top: 3px;overflow: hidden;
+            padding: 5px 10px;text-overflow: ellipsis;white-space: nowrap;min-width: 20%;max-width:25%;color:#fff;flex: 1;}
+        .extransbtn:hover,
+        .extransbtn.selected{background: #5d5d5d;}
+    </style>
+    <script>
+        var extrans = document.getElementById('transexternal');
+        var exheight = extrans.clientHeight;
+        var selpos = exheight + 7;
+        document.getElementById('selectors').style.top = selpos + 'px';
+        document.getElementById('shareBlock').style.top = selpos + 'px';
+
+        function sendAspectRatio() {
+            const width = document.body.scrollWidth;
+            const height = document.body.scrollHeight;
+            const ratio = width / height;
+            window.parent.postMessage({ type: "aspectRatio", ratio }, "*");
+        }
+        window.addEventListener("load", sendAspectRatio);
+        window.addEventListener("resize", sendAspectRatio);
+    </script>
+@endif
+{{-- END External translations block --}}
+
 @if ($type === 'serial')
     <script>
         var forceauto = false;
@@ -246,12 +286,14 @@ endif;
             });
     </script>
     <style>
-        #nextepisode{color:#999;position:absolute;width:auto;padding:0 6px;height:24px;border-radius:4px;border: 1px solid #999;right:10px;bottom:60px;z-index: 99;cursor:pointer;display: flex;align-items: center;justify-content: center}
+        #nextepisode{color:#999;position:absolute;width:auto;padding:0 6px;height:24px;border-radius:4px;border: 1px solid #999;right:10px;bottom:60px;z-index: 1;cursor:pointer;display: flex;align-items: center;justify-content: center}
         #nextepisode svg{margin-left:6px;}
         #nextepisode:hover{color:#fff;border: 1px solid #fff;}
         #nextepisode:hover svg path{fill:#fff !important;}
     </style>
 @endif
+
+
 
 <div id="player" class="player"></div>
 
@@ -688,9 +730,14 @@ endif;
             m_s = 'auto',
             m_s_set = 1;
 
+        $('.extransbtn ').click(function () {
+            var t = $(this).data('value');
+            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
+        });
+
         $('#translator-name').change(function () {
             var t = $(this).find(':selected').attr('value');
-            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
+            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&extrans=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
         });
 
         @elseif ($type === 'serial')
@@ -731,6 +778,17 @@ endif;
 
             _episodes_select.change();
         });
+
+        $('.extransbtn ').click(function () {
+            var t = $(this).data('value'),
+                 _seasons_select = $('select#season-number').val(),
+                _episodes_select = $('select#episode-number').val();
+            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&season='+_seasons_select+'&episode='+_episodes_select+'&extrans=1&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
+        });
+
+
+
+
 
         var translations_episodes = <?php echo json_encode($translations_episodes); ?>;
         var seasons_episodes = <?php echo json_encode($seasons_episodes); ?>;
@@ -773,6 +831,9 @@ endif;
             <?php endif; ?>
                 <?php if (isset($_GET['no_control_episodes'])): ?>
             _url_params.push('no_control_episodes=1');
+            <?php endif; ?>
+            <?php if (isset($_GET['extrans'])): ?>
+            _url_params.push('extrans=1');
             <?php endif; ?>
 
             if (tgc) {
@@ -1126,6 +1187,8 @@ endif;
 
     $('#player').on('mousemove', showSelectors);
     $('#player').on('mouseleave', hideSelectors);
+    $('pjsdiv#player_settings').on('mouseover', hideSelectors);
+
 
 // CURSOR INACTIVITY HIDE CONTROLS
     let inactivityTimer;

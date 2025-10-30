@@ -139,6 +139,12 @@
             <td>Число</td>
             <td><code>1</code></td>
         </tr>
+        <tr>
+            <td>extrans</td>
+            <td>Внешнее меню переводов*</td>
+            <td>Число</td>
+            <td><code>1</code></td>
+        </tr>
     </tbody>
 </table>
 
@@ -186,4 +192,26 @@
     <pre class="html-syntax">
 //cdnhub.help/show/1?translation=516&season=2&episode=21&no_control_episodes=1
 </pre>
+</blockquote>
+<blockquote style="background-color:#f8f9fa;padding:5px 10px">
+    Отобразить внешнее меню переводов
+    <pre class="html-syntax">
+//cdnhub.help/show/1?extrans=1
+</pre>
+    *Важно! У разных фильмов/сериалов разное кол-во озвучек, соотношение сторон iframe всегда будет разным,<br>
+    для корректного отображения iframe на сайте, вам небходимо добавить Javascript код для коррекции:<br>
+
+    <pre><code>
+
+    window.addEventListener("message", (event) => {
+    var pdata = event.data;
+        if (pdata.type === "aspectRatio") {
+            var piframe = document.getElementById("player"); // ID iframe c плеером
+            var pratio = pdata.ratio;
+            piframe.style.aspectRatio = pratio;
+            piframe.style.height = piframe.offsetWidth / pratio + "px";
+        }
+    });
+    </code></pre>
+    <img src="/images/module/020.png">
 </blockquote>
