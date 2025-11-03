@@ -6,7 +6,7 @@
     <meta name="referrer" content="always">
     <meta name="viewport" content="user-scalable=0, initial-scale=1.0, maximum-scale=1.0, width=device-width">
     <title>player</title>
-    <link rel="stylesheet" href="/player/css/player.css">
+    <link rel="stylesheet" href="/player/css/player.css?v={{ hash_file('md5', public_path('player/js/player.css')) }}">
     <script src="/player/js/jquery.min.js"></script>
     <script src="/player/js/jquery.nice-select.min.js"></script>
     <script src="/player/js/player21.js?v={{ hash_file('md5', public_path('player/js/player21.js')) }}"></script>
