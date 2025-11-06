@@ -265,6 +265,7 @@ endif;
         let initurl = new URL(window.location.href);
         initurl.searchParams.set("season", lastseanum);
         initurl.searchParams.set("episode", lastepinum);
+        initurl.searchParams.set("domain", iframeReferer);
         initurl.searchParams.delete("last");
         let lastepiUrl = initurl.toString();
         window.location.href = lastepiUrl;
