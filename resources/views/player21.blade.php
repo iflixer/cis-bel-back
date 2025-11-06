@@ -73,7 +73,7 @@
         });
     </script> --}}
 </head>
-<body>
+<body style="background-color: #000000">
 
 @php
     if (isset($_GET['debug_data']) && $_GET['debug_data'] == '1') {
@@ -257,6 +257,18 @@ endif;
 
 @if ($type === 'serial')
     <script>
+        @if (isset($_GET['last']) && $_GET['last'] === '1')
+        let ssel = document.getElementById("season-number");
+        let lastseanum = ssel.options[ssel.options.length - 1].value;
+        let esel = document.getElementById("episode-number");
+        let lastepinum = esel.options[esel.options.length - 1].value;
+        let initurl = new URL(window.location.href);
+        initurl.searchParams.set("season", lastseanum);
+        initurl.searchParams.set("episode", lastepinum);
+        initurl.searchParams.delete("last");
+        let lastepiUrl = initurl.toString();
+        window.location.href = lastepiUrl;
+        @else
         var forceauto = false;
         document.addEventListener("DOMContentLoaded", function () {
             const eselect = document.getElementById("episode-number");
@@ -284,6 +296,7 @@ endif;
                 }
 
             });
+        @endif
     </script>
     <style>
         #nextepisode{color:#999;position:absolute;width:auto;padding:0 6px;height:24px;border-radius:4px;border: 1px solid #999;right:10px;bottom:60px;z-index: 1;cursor:pointer;display: flex;align-items: center;justify-content: center}
@@ -601,6 +614,9 @@ endif;
                             <?php endif; ?>
                             <?php if (isset($_GET['no_control_episodes'])): ?>
                             _url_params.push('no_control_episodes=1');
+                            <?php endif; ?>
+                            <?php if (isset($_GET['extrans'])): ?>
+                            _url_params.push('extrans=1');
                             <?php endif; ?>
 
                             if (tgc) {

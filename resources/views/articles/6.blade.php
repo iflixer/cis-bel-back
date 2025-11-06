@@ -110,6 +110,12 @@
             <td><code>1</code> - <code>999999999</code></td>
         </tr>
         <tr>
+            <td>last</td>
+            <td>Последний из доступных эпизодов</td>
+            <td>Число</td>
+            <td><code>1</code></td>
+        </tr>
+        <tr>
             <td>no_controls</td>
             <td>Скрыть все элементы управления</td>
             <td>Число</td>
@@ -167,6 +173,12 @@
     Указание определенного перевода и сезона
     <pre class="html-syntax">
 //cdnhub.help/show/1?translation=516&season=2
+</pre>
+</blockquote>
+<blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
+    Запрос последнего доступного эпизода (в последнем доступном сезоне)
+    <pre class="html-syntax">
+//cdnhub.help/show/1?last=1
 </pre>
 </blockquote>
 <blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
