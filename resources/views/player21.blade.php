@@ -311,6 +311,10 @@
         .extransbtn.selected {
             background: #5d5d5d;
         }
+        .extransbtn.clicked {
+            background: #00a0b0 !important;
+            cursor:wait;
+        }
     </style>
     <script>
         var extrans = document.getElementById('transexternal');
@@ -847,6 +851,7 @@
             m_s_set = 1;
 
         $('.extransbtn ').click(function () {
+            $(this).addClass('clicked');
             var t = $(this).data('value');
             window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
         });
@@ -896,6 +901,7 @@
         });
 
         $('.extransbtn ').click(function () {
+            $(this).addClass('clicked');
             var t = $(this).data('value'),
                 _seasons_select = $('select#season-number').val(),
                 _episodes_select = $('select#episode-number').val();
