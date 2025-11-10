@@ -853,12 +853,12 @@
         $('.extransbtn ').click(function () {
             $(this).addClass('clicked');
             var t = $(this).data('value');
-            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
+            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&extrans=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
         });
 
         $('#translator-name').change(function () {
             var t = $(this).find(':selected').attr('value');
-            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&extrans=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
+            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
         });
 
         @elseif ($type === 'serial')
