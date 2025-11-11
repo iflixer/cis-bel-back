@@ -29,7 +29,7 @@ use Illuminate\Support\Facades\DB;
 use App\Show;
 
 use Cookie;
-
+use Illuminate\Support\Arr;
 class ShowController extends Controller{
 
     protected $loginVDB;
@@ -163,10 +163,16 @@ class ShowController extends Controller{
             $episode = intval($this->request->input('episode'));
 
 
-        $data = $this->inject_media($data,  $translate, $season, $episode);
-        $data = $this->inject_translations($data);
-        $data = $this->inject_files($data);
-        $data = $this->inject_ads($data);
+        $error = $this->inject_media($data,  $translate, $season, $episode);
+        if ($error) {
+            header("X-CDNHub-error: ".$error);
+            $query = Arr::except($this->request->query(), ['season', 'episode']);
+            $target = $this->request->url() . (empty($query) ? '' : ('?' . http_build_query($query)));
+            return redirect()->to($target, 301);
+        }
+        $this->inject_translations($data);
+        $this->inject_files($data);
+        $this->inject_ads($data);
 
         $domain = Domain::where('name', $this->request->domain)->first();
 
@@ -208,7 +214,7 @@ class ShowController extends Controller{
         return view($player_view, $data);
     }
 
-    private function inject_media(array $data, $translate, $season, $episode): array {
+    private function inject_media(array &$data, $translate, $season, $episode): string {
         $video = $data['video'];
         $id = $video['id'];
         if (in_array($video['tupe'], ['movie', 'anime'])) {
@@ -248,7 +254,7 @@ class ShowController extends Controller{
                 $media = $maxFilledFile;
 
             if (empty($media))
-                abort(404);
+                return "Media not found";
 
             if (!$translate)
                 $translate = $media['translation_id'];
@@ -337,7 +343,7 @@ class ShowController extends Controller{
             }
 
             if (empty($media))
-                abort(404);
+                return "Media not found";
 
             if (!$translate)
                 $translate = $media['translation_id'];
@@ -402,10 +408,10 @@ class ShowController extends Controller{
         $data['season'] = $season;
         $data['episode'] = $episode;
         $data['media'] = $media;
-        return $data;
+        return "";
     }
 
-    private function inject_translations(array $data): array {
+    private function inject_translations(array &$data): string {
         $translations = [];
         foreach ($data['files'] as $file) {
             $id = $file['translation_id'];
@@ -417,10 +423,10 @@ class ShowController extends Controller{
             }
         }
         $data['translations'] = $translations;
-        return $data;
+        return "";
     }
 
-    private function inject_files(array $data): array {
+    private function inject_files(array &$data): string {
         $result = [];
         $video = $data['video'];
         $media = $data['media'];
@@ -504,10 +510,10 @@ class ShowController extends Controller{
         $result = implode(',', $result);
 
         $data['file'] = $result;
-        return $data;
+        return "";
     }
 
-    private function inject_ads(array $data): array {
+    private function inject_ads(array &$data): string {
         $preroll = [];
         $midroll = [];
         $postroll = [];
@@ -556,7 +562,7 @@ class ShowController extends Controller{
         $data['preroll'] = $preroll;
         $data['midroll'] = $midroll;
         $data['postroll'] = $postroll;
-        return $data;
+        return "";
     }
 
     private function do_stat($domain) {
