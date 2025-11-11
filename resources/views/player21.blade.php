@@ -460,7 +460,7 @@
                 for (var node of mutation.addedNodes) {
                     if (node.id === 'save-holder') {
                         node.style.transform = 'translateY(-'+exepiheight +'px)';;
-                       observer.disconnect();
+                       saveobserver.disconnect();
                     }
                 }
             }
@@ -1387,18 +1387,22 @@
     function hideSelectors() {
         hideTimeout = setTimeout(function () {
             @if ($type === 'serial')
-            if (!$('#player').is(':hover') && !$('#selectors').is(':hover') && !$('#nextepisode').is(':hover')) {
+            if (
+                !$('#player').is(':hover') &&
+                !$('#selectors').is(':hover') &&
+                !$('#nextepisode').is(':hover')
+            ) {
                 @else
-                if (!$('#player').is(':hover') && !$('#selectors').is(':hover')) {
+                if (
+                    !$('#player').is(':hover') &&
+                    !$('#selectors').is(':hover')
+                ) {
                     @endif
-                    $('#selectors,#nextepisode,#shareBlock').fadeOut('fast');
+                    $('#selectors, #nextepisode, #shareBlock').fadeOut('fast');
                 }
-            }
-        ,
-            200
-        )
-            ; // 200ms delay to allow moving between elements
+            }, 200);
         }
+
 
         $('#player').on('mousemove', showSelectors);
         $('#player').on('mouseleave', hideSelectors);
