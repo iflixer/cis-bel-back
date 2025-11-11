@@ -328,7 +328,14 @@
         document.getElementById('shareBlock').style.top = selpos + 'px';
 
         window.addEventListener("load", sendAspectRatio);
-        window.addEventListener("resize", sendAspectRatio);
+        let resizeTimerT;
+        window.addEventListener("resize", () => {
+            clearTimeout(resizeTimerT);
+            resizeTimerT = setTimeout(() => {
+                sendAspectRatio();
+            }, 100);
+        });
+
     </script>
 @endif
 {{-- END External translations block --}}
@@ -432,11 +439,35 @@
             padding: 5px 10px;
             text-overflow: ellipsis;
             white-space: nowrap;
-            min-width: 9%;
-            max-width: 12.5%;
             color: #fff;
-            flex: 1;
         }
+
+        @media(min-width:1360px){
+            .exepibtn {
+                width: calc(10% - 23px);
+            }
+        }
+        @media(max-width:1359px){
+            .exepibtn {
+                width: calc(12.5% - 23px);
+            }
+        }
+        @media(max-width:800px){
+            .exepibtn {
+                width: calc(20% - 23px);
+            }
+        }
+        @media(max-width:480px){
+            .exepibtn {
+                width: calc(25% - 23px);
+            }
+        }
+        @media(max-width:359px){
+            .exepibtn {
+                width: calc(33.333% - 23px);
+            }
+        }
+
         .exepibtn:hover,
         .exepibtn.selected {
             background: #5d5d5d;
@@ -452,7 +483,13 @@
 
         @if (!isset($_GET['extrans']))
         window.addEventListener("load", sendAspectRatio);
-        window.addEventListener("resize", sendAspectRatio);
+        let resizeTimerE;
+        window.addEventListener("resize", () => {
+            clearTimeout(resizeTimerE);
+            resizeTimerE = setTimeout(() => {
+                sendAspectRatio();
+            }, 100);
+        });
         @endif
 
         let saveobserver = new MutationObserver((mutations) => {
