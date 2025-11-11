@@ -216,6 +216,12 @@
             window.open(shareLink, '_blank', 'width=600,height=400');
         });
     });
+    function sendAspectRatio() {
+        const width = document.body.scrollWidth;
+        const height = document.body.scrollHeight;
+        const ratio = width / height;
+        window.parent.postMessage({type: "aspectRatio", ratio}, "*");
+    }
 </script>
 @php
     endif;
@@ -246,8 +252,7 @@
 
 
     @if ($translations)
-        @if (isset($_GET['extrans']) && $_GET['extrans'] === '1')
-            <div style="display: none !important">@endif
+        @if (isset($_GET['extrans']) && $_GET['extrans'] === '1')<div style="display: none !important">@endif
                 <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_translations'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
 			<select name="translator" id="translator-name" data-select="1">
 				@foreach ($translations as $translation)
@@ -257,8 +262,7 @@
                 @endforeach
 			</select>
 		</span>
-                @if (isset($_GET['extrans']) && $_GET['extrans'] === '1')</div>
-        @endif
+                @if (isset($_GET['extrans']) && $_GET['extrans'] === '1')</div>@endif
     @endif
 
 
@@ -323,18 +327,13 @@
         document.getElementById('selectors').style.top = selpos + 'px';
         document.getElementById('shareBlock').style.top = selpos + 'px';
 
-        function sendAspectRatio() {
-            const width = document.body.scrollWidth;
-            const height = document.body.scrollHeight;
-            const ratio = width / height;
-            window.parent.postMessage({type: "aspectRatio", ratio}, "*");
-        }
-
         window.addEventListener("load", sendAspectRatio);
         window.addEventListener("resize", sendAspectRatio);
     </script>
 @endif
 {{-- END External translations block --}}
+
+
 
 @if ($type === 'serial')
     <script>
@@ -344,6 +343,8 @@
             function isLastSelected() {
                 return eselect.selectedIndex === eselect.options.length - 1;
             }
+
+            @if (!isset($_GET['extepi']))
             if (eselect && eselect.options.length > 0 && !isLastSelected()) {
                 const nextdiv = document.createElement("div");
                 nextdiv.id = "nextepisode";
@@ -361,6 +362,7 @@
                 });
 
             }
+            @endif
         });
     </script>
     <style>
@@ -398,6 +400,86 @@
 
 
 <div id="player" class="player"></div>
+
+{{-- External episodes block --}}
+@if ($type === 'serial' && isset($_GET['extepi']) && $_GET['extepi'] === '1')
+    <div id="epiexternal" style="display:flex">
+
+            @foreach ($episodes as $_episode)
+            <div class="exepibtn @if ($episode && $episode == $_episode) selected @endif"
+                 data-value="{{ $_episode }}">Серия {{ $_episode }}</div>
+            @endforeach
+    </div>
+    <style>
+        span:has(#episode-number){display: none !important}
+        #epiexternal {
+            background-color: rgb(21, 21, 21);
+            color: #fff;
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+            padding: 6px;
+            margin-bottom:6px;
+        }
+        .exepibtn {
+            background: #2d2d2d;
+            cursor: default;
+            font-size: 14px;
+            margin-right: 3px;
+            margin-top: 3px;
+            overflow: hidden;
+            padding: 5px 10px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 9%;
+            max-width: 12.5%;
+            color: #fff;
+            flex: 1;
+        }
+        .exepibtn:hover,
+        .exepibtn.selected {
+            background: #5d5d5d;
+        }
+        .exepibtn.clicked {
+            background: #00a0b0 !important;
+            cursor:wait;
+        }
+    </style>
+    <script>
+        var exepi = document.getElementById('epiexternal');
+        var exepiheight = exepi.clientHeight;
+
+        @if (!isset($_GET['extrans']))
+        window.addEventListener("load", sendAspectRatio);
+        window.addEventListener("resize", sendAspectRatio);
+        @endif
+
+        let saveobserver = new MutationObserver((mutations) => {
+            for (var mutation of mutations) {
+                for (var node of mutation.addedNodes) {
+                    if (node.id === 'save-holder') {
+                        node.style.transform = 'translateY(-'+exepiheight +'px)';;
+                       observer.disconnect();
+                    }
+                }
+            }
+        });
+        saveobserver.observe(document.body, { childList: true, subtree: true });
+
+        $('.exepibtn ').click(function () {
+            $(this).addClass('clicked');
+            let newepi = $(this).data('value');
+            let cseason = $('select#season-number').val();
+            let thisepiurl = new URL(window.location);
+            thisepiurl.searchParams.set('episode', newepi);
+            thisepiurl.searchParams.set('season', cseason);
+            thisepiurl.searchParams.set('autoplay', 1);
+            window.location.href = thisepiurl;
+        });
+    </script>
+@endif
+{{-- END External episodes block --}}
 
 <script>
 
@@ -502,12 +584,11 @@
                     s: {{ $season ?: 'null' }},
                     e: {{ $episode ?: 'null' }},
                     time: Math.floor(currentTime),
-                    duration: durationTime
+                    duration: durationTime,
                 };
 
             try {
                 localStorage.setItem(_key, JSON.stringify(_value));
-
                 return true;
             } catch (e) {
             }
@@ -722,6 +803,9 @@
                             <?php if (isset($_GET['extrans'])): ?>
                             _url_params.push('extrans=1');
                             <?php endif; ?>
+                            <?php if (isset($_GET['extepi'])): ?>
+                            _url_params.push('extepi=1');
+                            <?php endif; ?>
 
                             if (tgc) {
                                 _url_params.push('tgc=' + tgc);
@@ -905,7 +989,11 @@
             var t = $(this).data('value'),
                 _seasons_select = $('select#season-number').val(),
                 _episodes_select = $('select#episode-number').val();
-            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&season=' + _seasons_select + '&episode=' + _episodes_select + '&extrans=1&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
+            var extep = '';
+            @if (isset($_GET['extepi']) && $_GET['extepi'] === '1')
+                extep = '&extepi=1';
+            @endif
+            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&season=' + _seasons_select + '&episode=' + _episodes_select + '&extrans=1'+extep+'&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
         });
 
 
@@ -951,8 +1039,11 @@
                 <?php if (isset($_GET['no_control_episodes'])): ?>
             _url_params.push('no_control_episodes=1');
             <?php endif; ?>
-                <?php if (isset($_GET['extrans'])): ?>
+            <?php if (isset($_GET['extrans'])): ?>
             _url_params.push('extrans=1');
+            <?php endif; ?>
+            <?php if (isset($_GET['extepi'])): ?>
+            _url_params.push('extepi=1');
             <?php endif; ?>
 
             if (tgc) {

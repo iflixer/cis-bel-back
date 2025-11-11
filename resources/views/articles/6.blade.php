@@ -151,6 +151,12 @@
             <td>Число</td>
             <td><code>1</code></td>
         </tr>
+        <tr>
+            <td>extepi</td>
+            <td>Внешнее меню серий'*</td>
+            <td>Число</td>
+            <td><code>1</code></td>
+        </tr>
     </tbody>
 </table>
 
@@ -210,6 +216,10 @@
     <pre class="html-syntax">
 //cdnhub.help/show/1?extrans=1
 </pre>
+Отобразить внешнее меню серий
+    <pre class="html-syntax">
+//cdnhub.help/show/1?extepi=1
+</pre>
     *Важно! У разных фильмов/сериалов разное кол-во озвучек, соотношение сторон iframe всегда будет разным,<br>
     для корректного отображения iframe на сайте, вам небходимо добавить Javascript код для коррекции:<br>
 
@@ -226,4 +236,5 @@
     });
     </code></pre>
     <img src="/images/module/020.png">
+    <img src="/images/module/021.png">
 </blockquote>
