@@ -148,7 +148,7 @@ class CronjobController extends Controller
 			//echo "rezult count: " . count($rezult->results) . "\n";
 
 			foreach ($rezult->results as $key => $value) {
-				if (($mode=='fresh') && ( strtotime($value->accepted) < $last_accepted_at ) ) {
+				if (($mode == 'fresh') && ( strtotime($value->accepted) < $last_accepted_at ) ) {
 					$stop_update = true;
 					echo "Stop update\n";
 					break;
@@ -156,7 +156,7 @@ class CronjobController extends Controller
 					$medias[] = $value;
 				}
 			}
-			if ($mode=='fresh') {
+			if ($mode == 'fresh') {
 				$offset += $limit;
 			} else {
 				$stop_update = true;
@@ -192,7 +192,7 @@ class CronjobController extends Controller
 
 				// movie
 				if (in_array($content_type, ['movie','anime','show'])) {
-					$video = Video::where('id_VDB', $value->content_object->id)->where('tupe', $content_type)->first();
+					$video = Video::where('id_VDB', $value->content_object->id)->first();
 
 					$attr = [
 						'id_VDB' => $value->content_object->id, 
@@ -243,7 +243,7 @@ class CronjobController extends Controller
 				// episode
 				if (in_array($content_type, ['episode','animeepisode','showepisode'])) {
 					if (!in_array($value->content_object->tv_series->id, $updated_serials_id_vdb)) {
-						$video = Video::where('id_VDB', $value->content_object->tv_series->id)->where('tupe', $content_type)->first();
+						$video = Video::where('id_VDB', $value->content_object->tv_series->id)->first();
 						$updated_serials_id_vdb[] = $value->content_object->tv_series->id;
 						$attr = [
 							'id_VDB' => $value->content_object->tv_series->id, 

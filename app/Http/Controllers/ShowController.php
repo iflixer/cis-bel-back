@@ -125,7 +125,7 @@ class ShowController extends Controller{
 
         // video type
         $data['type'] = 'serial';
-        if ($video['tupe'] == 'movie' || $video['tupe'] == 'anime')
+        if ($video['tupe'] == 'movie' || $video['tupe'] == 'anime' || $video['tupe'] == 'cartoon')
             $data['type'] = 'movie';
 
         // input autoplay
@@ -211,7 +211,7 @@ class ShowController extends Controller{
     private function inject_media(array $data, $translate, $season, $episode): array {
         $video = $data['video'];
         $id = $video['id'];
-        if (in_array($video['tupe'], ['movie', 'anime'])) {
+        if (in_array($video['tupe'], ['movie', 'anime', 'cartoon'])) {
             
             // files
 
