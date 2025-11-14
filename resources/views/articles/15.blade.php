@@ -37,6 +37,14 @@
 </style>
 
 <blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
+    <code style="display:inline-block;margin-bottom:2px;padding-left:7px;padding-right:7px;font-size:16px !important;font-family: Montserrat-Medium !important">v3.4</code>
+    <div style="margin-bottom:5px">
+        <ul style="padding-left: 0;">
+            <li style="margin-top: 7px;">Улучшено быстродействие, устранены ошибки.</li>
+        </ul>
+    </div>
+</blockquote>
+<blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
     <code style="display:inline-block;margin-bottom:2px;padding-left:7px;padding-right:7px;font-size:16px !important;font-family: Montserrat-Medium !important">v3.3</code>
     <div style="margin-bottom:5px">
         <ul style="padding-left: 0;">

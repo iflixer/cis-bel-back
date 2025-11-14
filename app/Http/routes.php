@@ -98,6 +98,7 @@ Route::get('/metrics', ['middleware'=>[], 'uses'=>'TestController@metrics']);
 
 
 Route::get('/cronjob/videodb', ['middleware' => [], 'uses' => 'CronjobController@videodb']);
+Route::get('/cronjob/import_empty_posters_tmdb', ['middleware' => [], 'uses' => 'CronjobController@import_empty_posters_tmdb']);
 
 // payout calculation
 Route::post('/payouts/daily-payout', ['middleware' => [], 'uses' => 'PayoutController@triggerDailyPayout']);

@@ -105,6 +105,8 @@ class CronjobController extends Controller
 			$mode = 'single';
 		}
 
+		$extra_vdb_parameters = $this->request->input('extra_vdb_parameters') ?: '';
+
 
 		if ($debug_mysql) {
 			DB::enableQueryLog();
@@ -133,7 +135,7 @@ class CronjobController extends Controller
 				$stop_update = true;
 			}
 			$request_start_time = microtime(true);
-			$u = "https://videodb.win/api/v1/medias?ordering={$order}&limit={$limit}&offset={$offset}{$where_vdb}";
+			$u = "https://videodb.win/api/v1/medias?ordering={$order}&limit={$limit}&offset={$offset}{$where_vdb}{$extra_vdb_parameters}";
 			echo "URL: $u\n";
 			$curl = curl_init();
 			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
@@ -377,6 +379,35 @@ class CronjobController extends Controller
 
 	} // function
 
+	public function import_empty_posters_tmdb() {
+		$start_time = microtime(true);
+		set_time_limit(0);
+		DB::enableQueryLog();
+
+		$offset = $this->request->input('offset') ?: 0;
+		$limit = $this->request->input('limit') ?: 10;
+
+		echo "Start import posters from tmdb for 'no-poster'\n";
+		$videos = Video::where('img', '')
+			->whereNotNull('imdb')
+			->orderBy('id_VDB')
+			->offset($offset)
+			->limit($limit)
+			->get();
+
+		echo "Found videos:".count($videos). "\n";
+
+		foreach ($videos as $video) {
+			// try {
+				$this->tmdbService->updateVideoWithTmdbData($video);
+				$video->save();
+			// } catch (Throwable $e) {
+			// 	echo "TMDB update failed for video {$video->id_VDB}: " . $e->getMessage() . "\n";
+			// }
+		}
+			Debug::dump_queries($start_time);
+		echo "END\n";
+	}
 
 
 	private function makeZeroCdnProtectedLink($url): string {

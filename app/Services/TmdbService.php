@@ -83,7 +83,7 @@ class TmdbService
             return false;
         }
 
-        if (empty($video->img) && !empty($film->poster_path)) $video->img = $film->poster_path;
+        if ( (empty($video->img) || str_contains($video->img, 'no-poster')) && !empty($film->poster_path)) $video->img = $film->poster_path;
         if (empty($video->backdrop) && !empty($film->backdrop_path)) $video->backdrop = $film->backdrop_path;
         if (!empty($film->release_date)) $video->year = substr($film->release_date, 0, 4);
         if (!empty($film->first_air_date)) $video->year = substr($film->first_air_date, 0, 4);
