@@ -226,7 +226,7 @@ class KinoPoiskService
                 }
             }
 
-            if ($is_cartoon) {
+            if ($is_cartoon && $video->tupe === 'movie') {
                 $video->tupe = 'cartoon';
             }
         }
