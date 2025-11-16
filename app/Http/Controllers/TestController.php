@@ -710,7 +710,7 @@ class TestController extends Controller
 
     public function importKinoPoisk(){
 		$start_time = microtime(true);
-        $limit = 2;
+        $limit = 200;
         $GLOBALS['debug_kinopoisk_import'] = 1;
         DB::enableQueryLog();
         $kinoPoiskService = new KinoPoiskService();

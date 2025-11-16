@@ -193,7 +193,7 @@ class KinoPoiskService
         );
     }
 
-    public function updateVideoWithKinoPoiskData(&$video)
+    public function updateVideoWithKinoPoiskData(Video $video)
     {
         $video->update_kino=1;
 
@@ -333,7 +333,8 @@ class KinoPoiskService
             }
 
             $response[] = ['id' => $video->id];
-            $this->updateVideoWithKinoPoiskData($video->id);
+            $this->updateVideoWithKinoPoiskData($video);
+            $video->save();
         }
 
         return $response;
