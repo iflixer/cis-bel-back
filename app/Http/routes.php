@@ -43,7 +43,8 @@ Route::auth();
 // api общего доступа
 Route::match(['get','post'],'/api/{method}', ['middleware'=>['throttleCustom'], 'uses'=>'ApiController@start']);
 
-
+Route::match(['get','post'],'/api/public/actors', ['middleware'=>[], 'uses'=>'PublicApiController@actors']);
+Route::match(['get','post'],'/api/public/directors', ['middleware'=>[], 'uses'=>'PublicApiController@directors']);
 
 
 

@@ -4,7 +4,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\LocationTracker;
 use Illuminate\Http\Request;
 
 
@@ -40,7 +39,8 @@ use DB;
 
 use JonnyW\PhantomJs\Client;
 
-class ApiController extends Controller{
+class ApiController extends Controller
+{
 
     public $request;
     protected $loginVDB; //  = 'kolobock'
