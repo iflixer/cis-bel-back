@@ -193,7 +193,7 @@ class KinoPoiskService
         );
     }
 
-    public function updateVideoWithKinoPoiskData(&$video)
+    public function updateVideoWithKinoPoiskData(Video $video)
     {
         $video->update_kino=1;
 
@@ -209,6 +209,7 @@ class KinoPoiskService
 
         if (!empty($kinoPoisk->genres)) {
             $genres_names = array_values($kinoPoisk->genres);
+            $is_cartoon = false;
             foreach($kinoPoisk->genres as $kp_genre) {
                 $genre_name = $kp_genre->genre ?? '';
                 if (!empty($genre_name)) {
@@ -218,7 +219,15 @@ class KinoPoiskService
                     Link_genre::updateOrCreate(
                         ['id_genre' => $genre->id, 'id_video' => $video->id]
                     );
+
+                    if ($genre_name === 'мультфильм') {
+                        $is_cartoon = true;
+                    }
                 }
+            }
+
+            if ($is_cartoon && $video->tupe === 'movie') {
+                $video->tupe = 'cartoon';
             }
         }
 
@@ -324,7 +333,8 @@ class KinoPoiskService
             }
 
             $response[] = ['id' => $video->id];
-            $this->updateVideoWithKinoPoiskData($video->id);
+            $this->updateVideoWithKinoPoiskData($video);
+            $video->save();
         }
 
         return $response;
