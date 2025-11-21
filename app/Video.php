@@ -41,4 +41,29 @@ class Video extends Model{
     //     'created_at',
     //     'updated_at'
     // ]; // разрешенные поля для редактирования
+    public function files()
+    {
+        return $this->hasMany(File::class, 'id_parent');
+    }
+
+    public function genres()
+    {
+        return $this->belongsToMany(Genre::class, 'link_genres', 'id_video', 'id_genre');
+    }
+
+    public function countries()
+    {
+        return $this->belongsToMany(Country::class, 'link_countries', 'id_video', 'id_country');
+    }
+
+    public function actors()
+    {
+        return $this->belongsToMany(Actor::class, 'link_actors', 'id_video', 'id_actor')
+            ->withPivot('character_name');
+    }
+
+    public function directors()
+    {
+        return $this->belongsToMany(Director::class, 'link_directors', 'id_video', 'id_director');
+    }
 }

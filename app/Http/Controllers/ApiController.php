@@ -761,7 +761,25 @@ class ApiController extends Controller
             }
         }
 
-        
+        $translationsData = [];
+        $translationsRaw = File::select(
+                'files.id_parent',
+                'translations.id as id',
+                'translations.title as title',
+                'translations.tag as tag'
+            )
+            ->whereIn('files.id_parent', $idsVideo)
+            ->join('translations', 'files.translation_id', '=', 'translations.id')
+            ->groupBy('files.id_parent', 'files.translation_id')
+            ->get();
+
+        foreach ($translationsRaw as $item) {
+            $translationsData[$item->id_parent][] = [
+                'id' => $item->id,
+                'title' => $item->title,
+                'tag' => $item->tag
+            ];
+        }
 
         // Дополнения
         foreach ($video as $value){
@@ -772,16 +790,9 @@ class ApiController extends Controller
             // $file = File::select('translation')->where('id_parent', $value->id)->first();
             // if( isset($file) ){ $element['translation'] = $file->translation; }
 
-            $files = File::select('translations.id as id', 'translations.title as title', 'translations.tag as tag')
-                ->where('id_parent', $value->id)
-                ->join('translations', 'files.translation_id', '=', 'translations.id')
-//                ->orderBy('priority', 'desc')
-                ->groupBy('files.translation_id')
-                ->get()
-                ->toArray();
-
-            if ($files)
-                $element['translations'] = $files;
+            // Use pre-loaded translations (batch loaded above to avoid N+1 query)
+            if (isset($translationsData[$value->id]))
+                $element['translations'] = $translationsData[$value->id];
 
             $element['adress'] = "https://cdn0.{$this->cdnhub_player_domain}/show/{$element['id']}"; // Ссылка
 
