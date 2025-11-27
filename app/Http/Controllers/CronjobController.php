@@ -53,8 +53,8 @@ class CronjobController extends Controller
 	protected $openaiService;
 
 	// protected $adress = 'https://api.kholobok.biz/show/';
-	// protected $adress = 'https://cdnhub.help/show/';
-	protected $adress = 'https://cdnhub.help/show/';
+	// protected $adress = 'https://player0.flixcdn.space/show/';
+	protected $adress = 'https://player0.flixcdn.space/show/';
 
 	protected $usesApi = "App\Http\Controllers\api\\";
 

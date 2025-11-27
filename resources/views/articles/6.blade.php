@@ -31,7 +31,7 @@
 
 <h3>Код вывода плеера</h3>
 <pre class="html-syntax">
-<?php echo htmlspecialchars('<iframe src="//cdnhub.help/show/') . '<span style="color:#0d6efd">{resource}</span>/<span style="color:#198754">{id}</span>' . htmlspecialchars('" width="640" height="480" frameborder="0" allowfullscreen></iframe>'); ?>
+<?php echo htmlspecialchars('<iframe src="//player0.flixcdn.space/show/') . '<span style="color:#0d6efd">{resource}</span>/<span style="color:#198754">{id}</span>' . htmlspecialchars('" width="640" height="480" frameborder="0" allowfullscreen></iframe>'); ?>
 </pre>
 
 <br>
@@ -68,13 +68,13 @@
 <blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
     Вывод плеера по Кинопоиск ID
     <pre class="html-syntax">
-<?php echo htmlspecialchars('<iframe src="//cdnhub.help/show/kinopoisk/739642" width="640" height="480" frameborder="0" allowfullscreen></iframe>'); ?>
+<?php echo htmlspecialchars('<iframe src="//player0.flixcdn.space/show/kinopoisk/739642" width="640" height="480" frameborder="0" allowfullscreen></iframe>'); ?>
     </pre>
 </blockquote>
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
     Вывод плеера по Imdb ID
     <pre class="html-syntax">
-<?php echo htmlspecialchars('<iframe src="//cdnhub.help/show/imdb/tt2719848" width="640" height="480" frameborder="0" allowfullscreen></iframe>'); ?>
+<?php echo htmlspecialchars('<iframe src="//player0.flixcdn.space/show/imdb/tt2719848" width="640" height="480" frameborder="0" allowfullscreen></iframe>'); ?>
     </pre>
 </blockquote>
 
@@ -166,59 +166,59 @@
 <blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
     Указание определенного перевода
     <pre class="html-syntax">
-//cdnhub.help/show/1?translation=516
+//player0.flixcdn.space/show/1?translation=516
 </pre>
 </blockquote>
 <blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
     Указание определенного перевода со скрытием селектора выбора
     <pre class="html-syntax">
-//cdnhub.help/show/1?translation=516&no_control_translations=1
+//player0.flixcdn.space/show/1?translation=516&no_control_translations=1
 </pre>
 </blockquote>
 <blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
     Указание определенного перевода и сезона
     <pre class="html-syntax">
-//cdnhub.help/show/1?translation=516&season=2
+//player0.flixcdn.space/show/1?translation=516&season=2
 </pre>
 </blockquote>
 <blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
     Запрос последнего доступного эпизода (в последнем доступном сезоне)
     <pre class="html-syntax">
-//cdnhub.help/show/1?last=1
+//player0.flixcdn.space/show/1?last=1
 </pre>
 </blockquote>
 <blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
     Указание определенного перевода и сезона со скрытием селекторов выбора
     <pre class="html-syntax">
-//cdnhub.help/show/1?translation=516&season=2&no_control_translations=1&no_control_seasons=1
+//player0.flixcdn.space/show/1?translation=516&season=2&no_control_translations=1&no_control_seasons=1
 </pre>
 </blockquote>
 <blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
     Указание определенного перевода, сезона и серии
     <pre class="html-syntax">
-//cdnhub.help/show/1?translation=516&season=2&episode=21
+//player0.flixcdn.space/show/1?translation=516&season=2&episode=21
 </pre>
 </blockquote>
 <blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
     Указание определенного перевода, сезона и серии со скрытием всех селекторов выбора
     <pre class="html-syntax">
-//cdnhub.help/show/1?translation=516&season=2&episode=21&no_controls=1
+//player0.flixcdn.space/show/1?translation=516&season=2&episode=21&no_controls=1
 </pre>
 </blockquote>
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
     Указание определенного перевода, сезона и серии со скрытием селекторов выбора только сезона и серии
     <pre class="html-syntax">
-//cdnhub.help/show/1?translation=516&season=2&episode=21&no_control_episodes=1
+//player0.flixcdn.space/show/1?translation=516&season=2&episode=21&no_control_episodes=1
 </pre>
 </blockquote>
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
     Отобразить внешнее меню переводов
     <pre class="html-syntax">
-//cdnhub.help/show/1?extrans=1
+//player0.flixcdn.space/show/1?extrans=1
 </pre>
 Отобразить внешнее меню серий
     <pre class="html-syntax">
-//cdnhub.help/show/1?extepi=1
+//player0.flixcdn.space/show/1?extepi=1
 </pre>
     *Важно! У разных фильмов/сериалов разное кол-во озвучек, соотношение сторон iframe всегда будет разным,<br>
     для корректного отображения iframe на сайте, вам небходимо добавить Javascript код для коррекции:<br>

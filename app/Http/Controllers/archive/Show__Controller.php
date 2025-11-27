@@ -813,7 +813,7 @@ class ShowControllerOrig extends Controller{
             $this->request->domain == 'apiget.ru'
             || ($this->request->domain == 'kholobok.biz' && $_SERVER['HTTP_USER_AGENT'] == 'okhttp/4.9.0')
         ) {
-            $data['file'] = '[360]https://cdnhub.help/ShyThief.mp4,[480]https://cdnhub.help/ShyThief.mp4,[720]https://cdnhub.help/ShyThief.mp4,[1080]https://cdnhub.help/ShyThief.mp4';
+            $data['file'] = '[360]https://player0.flixcdn.space/ShyThief.mp4,[480]https://player0.flixcdn.space/ShyThief.mp4,[720]https://player0.flixcdn.space/ShyThief.mp4,[1080]https://player0.flixcdn.space/ShyThief.mp4';
         }*/
 
         // filter file end

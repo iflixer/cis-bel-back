@@ -41,7 +41,7 @@
 
 <br>
 
-<p><code><a href="https://cdnhub.help/actualize.js" target="_blank" class="code-link">actualize.js</a></code></p>
+<p><code><a href="https://player0.flixcdn.space/actualize.js" target="_blank" class="code-link">actualize.js</a></code></p>
 
 <br>
 
@@ -63,7 +63,7 @@
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
 пример, как должно получиться ниже
 <pre class="html-syntax">
-<?php echo htmlspecialchars('<iframe src="https://cdnhub.help/show/1" id="cdnhub" frameborder="0" allowfullscreen></iframe>'); ?>
+<?php echo htmlspecialchars('<iframe src="https://player0.flixcdn.space/show/1" id="cdnhub" frameborder="0" allowfullscreen></iframe>'); ?>
 </pre>
 </blockquote>
 

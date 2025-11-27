@@ -146,7 +146,7 @@
                     "kinopoisk_id": "251733",
                     "imdb_id": "tt0499549",
                     "quality": "bd",
-                    "iframe_url": "https://cdnhub.help/show/1033",
+                    "iframe_url": "https://player0.flixcdn.space/show/1033",
                     "genres": [
                         "боевик",
                         "драма",
@@ -194,7 +194,7 @@
                     "kinopoisk_id": "1282706",
                     "imdb_id": "tt10579916",
                     "quality": "webdl",
-                    "iframe_url": "https://cdnhub.help/show/64058",
+                    "iframe_url": "https://player0.flixcdn.space/show/64058",
                     "genres": [
                         "детектив",
                         "драма",
