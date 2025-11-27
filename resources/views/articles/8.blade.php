@@ -172,7 +172,7 @@
 
 <h3>Примеры использования</h3>
 <blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
-    <code style="display:inline-block;"><a href="https://futmax.info/api/search?token={!! $token !!}" target="_blank">https://futmax.info/api/search?token={!! $token !!}</a></code>
+    <code style="display:inline-block;"><a href="https://api0.flixcdn.biz/api/search?token={!! $token !!}" target="_blank">https://api0.flixcdn.biz/api/search?token={!! $token !!}</a></code>
     <pre class="html-syntax">
 {
     "prev": null,
@@ -254,7 +254,7 @@
 </pre>
 </blockquote>
 <blockquote style="margin-bottom:10px;background-color:#f8f9fa;padding:5px 10px">
-    <code style="display:inline-block;"><a href="https://futmax.info/api/search?token={!! $token !!}&title=терминатор" target="_blank">https://futmax.info/api/search?token={!! $token !!}&title=терминатор</a></code>
+    <code style="display:inline-block;"><a href="https://api0.flixcdn.biz/api/search?token={!! $token !!}&title=терминатор" target="_blank">https://api0.flixcdn.biz/api/search?token={!! $token !!}&title=терминатор</a></code>
     <pre class="html-syntax">
 {
     "prev": null,
@@ -359,7 +359,7 @@
 </pre>
 </blockquote>
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
-    <code style="display:inline-block;"><a href="https://futmax.info/api/search?token={!! $token !!}&kinopoisk_id=319" target="_blank">https://futmax.info/api/search?token={!! $token !!}&kinopoisk_id=319</a></code>
+    <code style="display:inline-block;"><a href="https://api0.flixcdn.biz/api/search?token={!! $token !!}&kinopoisk_id=319" target="_blank">https://api0.flixcdn.biz/api/search?token={!! $token !!}&kinopoisk_id=319</a></code>
     <pre class="html-syntax">
 {
     "prev": null,

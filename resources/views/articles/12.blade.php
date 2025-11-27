@@ -36,11 +36,11 @@
 
 </style>
 
-<p>1. Залить все файлы из папки <code>upload</code> в корень сайта (кроме файла <code>cdnhub_installation.php</code>)</p>
+<p>1. Залить все файлы из папки <code>upload</code> в корень сайта (кроме файла <code>flixcdn_installation.php</code>)</p>
 
 <br>
 
-<p>2. Загрузить плагин <code>cdnhub.xml</code> в админпанели сайта</p>
+<p>2. Загрузить плагин <code>flixcdn.xml</code> в админпанели сайта</p>
 
 <br>
 

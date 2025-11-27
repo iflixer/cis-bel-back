@@ -56,17 +56,17 @@
         <tr>
             <td><code><a href="/articles/8" class="code-link" title="Документация метода &laquo;search&raquo;">search</a></code></td>
             <td>Поиск по нашей базе</td>
-            <td><a href="https://futmax.info/api/search?token={!! $token !!}" target="_blank">https://futmax.info/api/search?token={!! $token !!}</a></td>
+            <td><a href="https://api0.flixcdn.biz/api/search?token={!! $token !!}" target="_blank">https://api0.flixcdn.biz/api/search?token={!! $token !!}</a></td>
         </tr>
         <tr>
             <td><code><a href="/articles/9" class="code-link" title="Документация метода &laquo;translations&raquo;">translations</a></code></td>
             <td>Список всех доступных переводов</td>
-            <td><a href="https://futmax.info/api/translations?token={!! $token !!}" target="_blank">https://futmax.info/api/translations?token={!! $token !!}</a></td>
+            <td><a href="https://api0.flixcdn.biz/api/translations?token={!! $token !!}" target="_blank">https://api0.flixcdn.biz/api/translations?token={!! $token !!}</a></td>
         </tr>
         <tr>
             <td><code><a href="/articles/10" class="code-link" title="Документация метода &laquo;updates&raquo;">updates</a></code></td>
             <td>Список обновлений фильмов и сериалов</td>
-            <td><a href="https://futmax.info/api/updates?token={!! $token !!}" target="_blank">https://futmax.info/api/updates?token={!! $token !!}</a></td>
+            <td><a href="https://api0.flixcdn.biz/api/updates?token={!! $token !!}" target="_blank">https://api0.flixcdn.biz/api/updates?token={!! $token !!}</a></td>
         </tr>
     </tbody>
 </table>

@@ -40,7 +40,7 @@
 
 <br>
 
-<p>2. Перейти по ссылке <code>http://ваш-сайт.ру/cdnhub_installation.php</code> (после удалить этот файл)</p>
+<p>2. Перейти по ссылке <code>http://ваш-сайт.com/flixcdn_installation.php</code> (после удалить этот файл)</p>
 
 <br>
 
@@ -54,11 +54,11 @@ require_once (DLEPlugins::Check(ENGINE_DIR . '/modules/functions.php'));
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
     после него вставить этот код:
     <pre class="html-syntax">
-// CDNHub init -> Begin
+// flixcdn init -> Begin
 
-require_once ROOT_DIR . '/cdnhub/init.php';
+require_once ROOT_DIR . '/flixcdn/init.php';
 
-// CDNHub Init -> End
+// flixcdn Init -> End
 </pre>
 </blockquote>
 
@@ -74,11 +74,11 @@ else $tpl->load_template( 'fullstory.tpl' );
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
     после него вставить этот код:
     <pre class="html-syntax">
-// CDNHub View -> Begin
+// flixcdn View -> Begin
 
-$cdnhub->view(array('player'));
+$flixcdn->view(array('player'));
 
-// CDNHub View -> End
+// flixcdn View -> End
 </pre>
 </blockquote>
 
@@ -94,11 +94,11 @@ $cdnhub->view(array('player'));
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
     после него вставить этот код:
     <pre class="html-syntax">
-// CDNHub Search -> Begin
+// flixcdn Search -> Begin
 
-require_once ROOT_DIR . '/cdnhub/admin/widgets/search.php';
+require_once ROOT_DIR . '/flixcdn/admin/widgets/search.php';
 
-// CDNHub Search -> End
+// flixcdn Search -> End
 </pre>
 </blockquote>
 
@@ -114,11 +114,11 @@ require_once ROOT_DIR . '/cdnhub/admin/widgets/search.php';
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
     после него вставить этот код:
     <pre class="html-syntax">
-// CDNHub Search -> Begin
+// flixcdn Search -> Begin
 
-require_once ROOT_DIR . '/cdnhub/admin/widgets/search.php';
+require_once ROOT_DIR . '/flixcdn/admin/widgets/search.php';
 
-// CDNHub Search -> End
+// flixcdn Search -> End
 </pre>
 </blockquote>
 
@@ -134,11 +134,11 @@ $tpl->compile ( 'main' );
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
     перед ним вставляем этот код:
     <pre class="html-syntax">
-// CDNHub Script -> Begin
+// flixcdn Script -> Begin
 
-$cdnhub->view(array('script'));
+$flixcdn->view(array('script'));
 
-// CDNHub Script -> End
+// flixcdn Script -> End
 </pre>
 </blockquote>
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
@@ -150,12 +150,12 @@ GzipOut();
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
     перед ним вставить этот код:
     <pre class="html-syntax">
-// CDNHub Update -> Begin
+// flixcdn Update -> Begin
 
-if (!intval($cdnhub->config['update']['type']))
-    $cdnhub->update();
+if (!intval($flixcdn->config['update']['type']))
+    $flixcdn->update();
 
-// CDNHub Update -> End
+// flixcdn Update -> End
 </pre>
 </blockquote>
 

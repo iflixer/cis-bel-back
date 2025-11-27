@@ -120,8 +120,8 @@
 </style>
 
 
-<h3 class="doch3">Модуль CDNHub для DLE</h3>
-<p>Модуль позволяет производить поиск по базе CDNHub как при добавлении новости вручную, так и при массовом добавлении
+<h3 class="doch3">Модуль FLIXcdn для DLE</h3>
+<p>Модуль позволяет производить поиск по базе FLIXcdn как при добавлении новости вручную, так и при массовом добавлении
     плееров через соотвествующий раздел.
     <br>
     <br>
@@ -144,7 +144,7 @@
 <br>
 
 <h3 class="doch3">Архив с модулем</h3>
-<p><a href="/api/dle-plugins/cdnhub-v3.4.1.zip">cdnhub-v3.4.1.zip</a> &middot; <a
+<p><a href="/api/dle-plugins/flixcdn-dle-plugin-v3.4.1.zip">flixcdn-dle-plugin-v3.4.1.zip</a> &middot; <a
             href="/articles/15">История
         обновлений модуля</a></p>
 <div class="spoiled">
@@ -153,7 +153,7 @@
 </div>
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
     <strong style="color:#d39e00"><u>Внимание!</u> Если не сохраняются настройки модуля, выставите права 666 на файл
-        cdnhub/config.php</strong>
+        flixcdn/config.php</strong>
 </blockquote>
 
 <br>

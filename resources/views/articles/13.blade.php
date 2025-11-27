@@ -36,7 +36,7 @@
 
 </style>
 
-<p>1. Залить все файлы из папки <code>upload</code> в корень сайта с заменой, кроме файлов <code>cdnhub_installation.php</code> (файл для ручной установки модуля) и <code>cdnhub/config.php</code> (файл конфигурации модуля)</p>
+<p>1. Залить все файлы из папки <code>upload</code> в корень сайта с заменой, кроме файлов <code>flixcdn_installation.php</code> (файл для ручной установки модуля) и <code>flixcdn/config.php</code> (файл конфигурации модуля)</p>
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
     <strong style="color: rgb(240, 102, 102);"><u>Осторожно!</u> Если зальете файл конфигурации модуля из архива в корень сайта с заменой, слетят все ранее установленные вами настройки модуля.</strong>
 </blockquote>
@@ -45,7 +45,7 @@
 
 <p>2! Если первоначальная установка модуля была через "Управление плагинами" в админапанели DLE, делаем следующее:</p>
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
-Заходим в "Управление плгинами" в админпанели DLE, далее в списке удаляем наш плагин "CDNHub v.3.0", после устанавливаем новый плагин через файл "cdnhub.xml" в архиве с модулем.
+Заходим в "Управление плгинами" в админпанели DLE, далее в списке удаляем наш плагин "flixcdn v.3.0", после устанавливаем новый плагин через файл "flixcdn.xml" в архиве с модулем.
 </blockquote>
 
 <br>
@@ -62,11 +62,11 @@ $tpl->compile ( 'main' );
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
     перед ним вставляем этот код:
     <pre class="html-syntax">
-// CDNHub Script -> Begin
+// flixcdn Script -> Begin
 
-$cdnhub->view(array('script'));
+$flixcdn->view(array('script'));
 
-// CDNHub Script -> End
+// flixcdn Script -> End
 </pre>
 </blockquote>
 

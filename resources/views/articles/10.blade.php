@@ -120,7 +120,7 @@
 
 <h3>Примеры использования</h3>
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
-    <code style="display:inline-block;"><a href="https://futmax.info/api/updates?token={!! $token !!}" target="_blank">https://futmax.info/api/updates?token={!! $token !!}</a></code>
+    <code style="display:inline-block;"><a href="https://api0.flixcdn.biz/api/updates?token={!! $token !!}" target="_blank">https://api0.flixcdn.biz/api/updates?token={!! $token !!}</a></code>
     <pre class="html-syntax">
 {
     "result": {

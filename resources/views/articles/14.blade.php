@@ -58,12 +58,12 @@
 
 <br>
 
-<p>1. Фрейму с нашим плеером добавляем атрибут id="cdnhub"</p>
+<p>1. Фрейму с нашим плеером добавляем атрибут id="flixcdn"</p>
 
 <blockquote style="background-color:#f8f9fa;padding:5px 10px">
 пример, как должно получиться ниже
 <pre class="html-syntax">
-<?php echo htmlspecialchars('<iframe src="https://player0.flixcdn.space/show/1" id="cdnhub" frameborder="0" allowfullscreen></iframe>'); ?>
+<?php echo htmlspecialchars('<iframe src="https://player0.flixcdn.space/show/1" id="flixcdn" frameborder="0" allowfullscreen></iframe>'); ?>
 </pre>
 </blockquote>
 
