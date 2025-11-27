@@ -101,6 +101,10 @@ Route::get('/metrics', ['middleware'=>[], 'uses'=>'TestController@metrics']);
 Route::get('/cronjob/videodb', ['middleware' => [], 'uses' => 'CronjobController@videodb']);
 Route::get('/cronjob/import_empty_posters_tmdb', ['middleware' => [], 'uses' => 'CronjobController@import_empty_posters_tmdb']);
 
+Route::post('/videodb/sync', ['middleware' => [], 'uses' => 'VideoDbSyncController@sync']);
+Route::get('/videodb/sync/progress', ['middleware' => [], 'uses' => 'VideoDbSyncController@progress']);
+Route::post('/videodb/sync/reset', ['middleware' => [], 'uses' => 'VideoDbSyncController@reset']);
+
 // payout calculation
 Route::post('/payouts/daily-payout', ['middleware' => [], 'uses' => 'PayoutController@triggerDailyPayout']);
 Route::post('/payouts/daily-event-stats', ['middleware' => [], 'uses' => 'PayoutController@triggerDailyEventStats']);
