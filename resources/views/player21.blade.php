@@ -1397,6 +1397,19 @@
 
                 }
             }
+
+            if (event == "exitfullscreen") {
+                @if (isset($_GET['smart_tv']) && $_GET['smart_tv'] == '1')
+                CDNplayer.api("pause");
+                nowinfs = false;
+                createFullscreenOverlay();
+                @endif
+            }
+
+
+
+
+
         } catch (e) {
             console.error('Error handling player event:', e);
         }
@@ -1493,6 +1506,82 @@
             }, 500);
         }, 2500);
     }
+
+
+    @if (isset($_GET['smart_tv']) && $_GET['smart_tv'] == '1')
+
+    var nowinfs = false;
+    document.addEventListener("keydown", e => {
+        if(nowinfs) {
+            if (e.key === 'Escape') {
+                CDNplayer.api("pause");
+                createFullscreenOverlay();
+            }
+        }
+
+        if (e.key === 'ArrowUp') {
+           if(!nowinfs) {
+               $('#playfs-overlay').remove();
+               window.parent.postMessage({action: "returnFocus"}, "*");
+           }
+           }
+    });
+
+    function createFullscreenOverlay() {
+        const overlay = document.createElement("div");
+        overlay.id = "playfs-overlay";
+        overlay.tabIndex = 0;
+            Object.assign(overlay.style, {
+            position: "fixed",
+            top: "0",
+            left: "0",
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(255,255,255,0.2)",
+            zIndex: "999999",
+            cursor: "pointer",
+            content: "focus",
+
+        });
+        document.body.appendChild(overlay);
+        overlay.focus();
+        overlay.addEventListener("click", () => {
+            runPlayFS(overlay);
+        });
+
+        // ENTER → playfs()
+        overlay.addEventListener("keydown", (e) => {
+            if (
+                e.key === "Enter" ||
+                e.key === "NumpadEnter" ||
+                e.keyCode === 13
+            ) {
+                e.preventDefault();
+                runPlayFS(overlay);
+            }
+        });
+    }
+    function runPlayFS(){
+        nowinfs = true;
+        CDNplayer.api("fullscreen");
+        CDNplayer.api("play");
+        $('#playfs-overlay').remove();
+    }
+
+
+    console.log("Smart TV Mode");
+    $("#selectors,#shareBlock,#save-holder").remove();
+    window.addEventListener("message", (event) => {
+        if (event.data && event.data.action === "dofsplay") {
+            console.log(event.data.action);
+            createFullscreenOverlay();
+        }
+        if (event.data && event.data.action === "dofocus") {
+            console.log(event.data.action);
+            createFullscreenOverlay();
+        }
+    });
+    @endif
 </script>
 
 <!-- Yandex.Metrika counter -->
