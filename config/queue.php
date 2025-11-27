@@ -64,6 +64,13 @@ return [
             'expire' => 60,
         ],
 
+        'videodb' => [
+            'driver' => 'database',
+            'table' => 'jobs',
+            'queue' => 'videodb',
+            'expire' => 300,
+        ],
+
     ],
 
     /*

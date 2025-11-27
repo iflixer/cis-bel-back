@@ -216,12 +216,7 @@
             window.open(shareLink, '_blank', 'width=600,height=400');
         });
     });
-    function sendAspectRatio() {
-        const width = document.body.scrollWidth;
-        const height = document.body.scrollHeight;
-        const ratio = width / height;
-        window.parent.postMessage({type: "aspectRatio", ratio}, "*");
-    }
+
 </script>
 @php
     endif;
@@ -252,7 +247,8 @@
 
 
     @if ($translations)
-        @if (isset($_GET['extrans']) && $_GET['extrans'] === '1')<div style="display: none !important">@endif
+        @if (isset($_GET['extrans']) && $_GET['extrans'] === '1')
+            <div style="display: none !important">@endif
                 <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_translations'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
 			<select name="translator" id="translator-name" data-select="1">
 				@foreach ($translations as $translation)
@@ -262,7 +258,8 @@
                 @endforeach
 			</select>
 		</span>
-                @if (isset($_GET['extrans']) && $_GET['extrans'] === '1')</div>@endif
+                @if (isset($_GET['extrans']) && $_GET['extrans'] === '1')</div>
+        @endif
     @endif
 
 
@@ -315,9 +312,10 @@
         .extransbtn.selected {
             background: #5d5d5d;
         }
+
         .extransbtn.clicked {
             background: #00a0b0 !important;
-            cursor:wait;
+            cursor: wait;
         }
     </style>
     <script>
@@ -326,16 +324,6 @@
         var selpos = exheight + 7;
         document.getElementById('selectors').style.top = selpos + 'px';
         document.getElementById('shareBlock').style.top = selpos + 'px';
-
-        window.addEventListener("load", sendAspectRatio);
-        let resizeTimerT;
-        window.addEventListener("resize", () => {
-            clearTimeout(resizeTimerT);
-            resizeTimerT = setTimeout(() => {
-                sendAspectRatio();
-            }, 100);
-        });
-
     </script>
 @endif
 {{-- END External translations block --}}
@@ -347,6 +335,7 @@
         var forceauto = false;
         document.addEventListener("DOMContentLoaded", function () {
             const eselect = document.getElementById("episode-number");
+
             function isLastSelected() {
                 return eselect.selectedIndex === eselect.options.length - 1;
             }
@@ -412,13 +401,16 @@
 @if ($type === 'serial' && isset($_GET['extepi']) && $_GET['extepi'] === '1')
     <div id="epiexternal" style="display:flex">
 
-            @foreach ($episodes as $_episode)
+        @foreach ($episodes as $_episode)
             <div class="exepibtn @if ($episode && $episode == $_episode) selected @endif"
                  data-value="{{ $_episode }}">Серия {{ $_episode }}</div>
-            @endforeach
+        @endforeach
     </div>
     <style>
-        span:has(#episode-number){display: none !important}
+        span:has(#episode-number) {
+            display: none !important
+        }
+
         #epiexternal {
             background-color: rgb(21, 21, 21);
             color: #fff;
@@ -427,8 +419,9 @@
             justify-content: flex-start;
             flex-wrap: wrap;
             padding: 6px;
-            margin-bottom:6px;
+            margin-bottom: 6px;
         }
+
         .exepibtn {
             background: #2d2d2d;
             cursor: default;
@@ -442,27 +435,31 @@
             color: #fff;
         }
 
-        @media(min-width:1360px){
+        @media (min-width: 1360px) {
             .exepibtn {
                 width: calc(10% - 23px);
             }
         }
-        @media(max-width:1359px){
+
+        @media (max-width: 1359px) {
             .exepibtn {
                 width: calc(12.5% - 23px);
             }
         }
-        @media(max-width:800px){
+
+        @media (max-width: 800px) {
             .exepibtn {
                 width: calc(20% - 23px);
             }
         }
-        @media(max-width:480px){
+
+        @media (max-width: 480px) {
             .exepibtn {
                 width: calc(25% - 23px);
             }
         }
-        @media(max-width:359px){
+
+        @media (max-width: 359px) {
             .exepibtn {
                 width: calc(33.333% - 23px);
             }
@@ -472,37 +469,29 @@
         .exepibtn.selected {
             background: #5d5d5d;
         }
+
         .exepibtn.clicked {
             background: #00a0b0 !important;
-            cursor:wait;
+            cursor: wait;
         }
     </style>
     <script>
         var exepi = document.getElementById('epiexternal');
         var exepiheight = exepi.clientHeight;
 
-        @if (!isset($_GET['extrans']))
-        window.addEventListener("load", sendAspectRatio);
-        let resizeTimerE;
-        window.addEventListener("resize", () => {
-            clearTimeout(resizeTimerE);
-            resizeTimerE = setTimeout(() => {
-                sendAspectRatio();
-            }, 100);
-        });
-        @endif
 
         let saveobserver = new MutationObserver((mutations) => {
             for (var mutation of mutations) {
                 for (var node of mutation.addedNodes) {
                     if (node.id === 'save-holder') {
-                        node.style.transform = 'translateY(-'+exepiheight +'px)';;
-                       saveobserver.disconnect();
+                        node.style.transform = 'translateY(-' + exepiheight + 'px)';
+                        ;
+                        saveobserver.disconnect();
                     }
                 }
             }
         });
-        saveobserver.observe(document.body, { childList: true, subtree: true });
+        saveobserver.observe(document.body, {childList: true, subtree: true});
 
         $('.exepibtn ').click(function () {
             $(this).addClass('clicked');
@@ -553,21 +542,21 @@
                      ?>';
 
     @if ($type === 'serial' && isset($_GET['last']) && $_GET['last'] === '1')
-            let ssel = document.getElementById("season-number");
-            let lastseanum = ssel.options[ssel.options.length - 1].value;
-            let esel = document.getElementById("episode-number");
-            let lastepinum = esel.options[esel.options.length - 1].value;
-            let initurl = new URL(window.location.href);
-            initurl.searchParams.set("season", lastseanum);
-            initurl.searchParams.set("episode", lastepinum);
-            initurl.searchParams.set("domain", iframeReferer);
-            initurl.searchParams.delete("last");
-            let lastepiUrl = initurl.toString();
-            window.location.href = lastepiUrl;
+    let ssel = document.getElementById("season-number");
+    let lastseanum = ssel.options[ssel.options.length - 1].value;
+    let esel = document.getElementById("episode-number");
+    let lastepinum = esel.options[esel.options.length - 1].value;
+    let initurl = new URL(window.location.href);
+    initurl.searchParams.set("season", lastseanum);
+    initurl.searchParams.set("episode", lastepinum);
+    initurl.searchParams.set("domain", iframeReferer);
+    initurl.searchParams.delete("last");
+    let lastepiUrl = initurl.toString();
+    window.location.href = lastepiUrl;
     @endif
 
 
-    cdn.player = (function () {
+        cdn.player = (function () {
         var pub = {};
 
         var CDNplayer = null,
@@ -1030,7 +1019,7 @@
             @if (isset($_GET['extepi']) && $_GET['extepi'] === '1')
                 extep = '&extepi=1';
             @endif
-            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&season=' + _seasons_select + '&episode=' + _episodes_select + '&extrans=1'+extep+'&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
+                window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&season=' + _seasons_select + '&episode=' + _episodes_select + '&extrans=1' + extep + '&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
         });
 
 
@@ -1076,10 +1065,10 @@
                 <?php if (isset($_GET['no_control_episodes'])): ?>
             _url_params.push('no_control_episodes=1');
             <?php endif; ?>
-            <?php if (isset($_GET['extrans'])): ?>
+                <?php if (isset($_GET['extrans'])): ?>
             _url_params.push('extrans=1');
             <?php endif; ?>
-            <?php if (isset($_GET['extepi'])): ?>
+                <?php if (isset($_GET['extepi'])): ?>
             _url_params.push('extepi=1');
             <?php endif; ?>
 
@@ -1408,6 +1397,19 @@
 
                 }
             }
+
+            if (event == "exitfullscreen") {
+                @if (isset($_GET['smart_tv']) && $_GET['smart_tv'] == '1')
+                CDNplayer.api("pause");
+                nowinfs = false;
+                createFullscreenOverlay();
+                @endif
+            }
+
+
+
+
+
         } catch (e) {
             console.error('Error handling player event:', e);
         }
@@ -1422,22 +1424,16 @@
     }
 
     function hideSelectors() {
-        hideTimeout = setTimeout(function () {
-            @if ($type === 'serial')
-            if (
-                !$('#player').is(':hover') &&
-                !$('#selectors').is(':hover') &&
-                !$('#nextepisode').is(':hover')
-            ) {
-                @else
-                if (
-                    !$('#player').is(':hover') &&
-                    !$('#selectors').is(':hover')
-                ) {
+             hideTimeout = setTimeout(function () {
+            if (!$('#player').is(':hover') && !$('#selectors').is(':hover')
+                    @if ($type === 'serial')
+                    && !$('#nextepisode').is(':hover')
                     @endif
-                    $('#selectors, #nextepisode, #shareBlock').fadeOut('fast');
+             ) {
+             $('#selectors, #nextepisode, #shareBlock').fadeOut('fast');
                 }
-            }, 200);
+            },200);
+
         }
 
 
@@ -1450,7 +1446,10 @@
         let inactivityTimer;
 
         function onInactivity() {
-            $('#selectors,#shareBlock,#nextepisode').fadeOut('fast');
+            var playing = CDNplayer.api("playing");
+            if (playing) {
+                $('#selectors,#shareBlock,#nextepisode').fadeOut('fast');
+            }
         }
 
         function resetInactivityTimer() {
@@ -1468,6 +1467,21 @@
     <div class="small-loader"></div>
 </div>
 <script>
+    window.addEventListener("load", sendAspectRatio);
+    let resizeTimerT;
+    window.addEventListener("resize", () => {
+        clearTimeout(resizeTimerT);
+        resizeTimerT = setTimeout(() => {
+            sendAspectRatio();
+        }, 10);
+    });
+    function sendAspectRatio() {
+        const width = document.body.scrollWidth;
+        const height = document.body.scrollHeight;
+        const ratio = width / height;
+        window.parent.postMessage({type: "aspectRatio", ratio}, "*");
+    }
+
     function showPopupAndChangeTranslation() {
         const popup = document.getElementById('nomedia-message');
         const select = document.querySelector('#translator-name');
@@ -1492,6 +1506,82 @@
             }, 500);
         }, 2500);
     }
+
+
+    @if (isset($_GET['smart_tv']) && $_GET['smart_tv'] == '1')
+
+    var nowinfs = false;
+    document.addEventListener("keydown", e => {
+        if(nowinfs) {
+            if (e.key === 'Escape') {
+                CDNplayer.api("pause");
+                createFullscreenOverlay();
+            }
+        }
+
+        if (e.key === 'ArrowUp') {
+           if(!nowinfs) {
+               $('#playfs-overlay').remove();
+               window.parent.postMessage({action: "returnFocus"}, "*");
+           }
+           }
+    });
+
+    function createFullscreenOverlay() {
+        const overlay = document.createElement("div");
+        overlay.id = "playfs-overlay";
+        overlay.tabIndex = 0;
+            Object.assign(overlay.style, {
+            position: "fixed",
+            top: "0",
+            left: "0",
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(255,255,255,0.2)",
+            zIndex: "999999",
+            cursor: "pointer",
+            content: "focus",
+
+        });
+        document.body.appendChild(overlay);
+        overlay.focus();
+        overlay.addEventListener("click", () => {
+            runPlayFS(overlay);
+        });
+
+        // ENTER → playfs()
+        overlay.addEventListener("keydown", (e) => {
+            if (
+                e.key === "Enter" ||
+                e.key === "NumpadEnter" ||
+                e.keyCode === 13
+            ) {
+                e.preventDefault();
+                runPlayFS(overlay);
+            }
+        });
+    }
+    function runPlayFS(){
+        nowinfs = true;
+        CDNplayer.api("fullscreen");
+        CDNplayer.api("play");
+        $('#playfs-overlay').remove();
+    }
+
+
+    console.log("Smart TV Mode");
+    $("#selectors,#shareBlock,#save-holder").remove();
+    window.addEventListener("message", (event) => {
+        if (event.data && event.data.action === "dofsplay") {
+            console.log(event.data.action);
+            createFullscreenOverlay();
+        }
+        if (event.data && event.data.action === "dofocus") {
+            console.log(event.data.action);
+            createFullscreenOverlay();
+        }
+    });
+    @endif
 </script>
 
 <!-- Yandex.Metrika counter -->

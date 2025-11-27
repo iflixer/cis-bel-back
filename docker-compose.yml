@@ -26,11 +26,13 @@ services:
       - "443:443"
     environment:
       - BACKEND_ADDRESS=app:9000
+      - DOCKER_DEFAULT_PLATFORM=linux/amd64
     volumes:
       - .:/var/www/html
       - ./docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template
     networks:
       - kolobok_network
+      - kolobok-shared-network
     depends_on:
       - app
 
@@ -72,3 +74,5 @@ volumes:
 networks:
   kolobok_network:
     driver: bridge
+  kolobok-shared-network:
+    external: true
