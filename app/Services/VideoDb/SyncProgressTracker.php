@@ -9,6 +9,7 @@ class SyncProgressTracker
     const REDIS_PROGRESS_KEY = 'videodb:sync:progress';
     const REDIS_LOCK_KEY = 'videodb:sync:lock';
     const TTL = 3600;
+    const RESUME_TTL = 86400; // 24 hours for resume capability
 
     public function acquireLock()
     {
@@ -63,7 +64,13 @@ class SyncProgressTracker
             'total' => 0,
             'errors' => json_encode([]),
             'last_processed_id' => null,
+            'next_offset' => 0,
+            'config' => json_encode([]),
         ], $metadata);
+
+        if (isset($metadata['config'])) {
+            $data['config'] = json_encode($metadata['config']);
+        }
 
         Redis::hmset($key, $data);
         Redis::expire($key, self::TTL);
@@ -158,6 +165,51 @@ class SyncProgressTracker
             $data['percentage'] = 0;
         }
 
+        $data['can_resume'] = ($data['status'] === 'interrupted');
+
         return $data;
+    }
+
+    public function markInterrupted()
+    {
+        $key = self::REDIS_PROGRESS_KEY;
+
+        if (!Redis::exists($key)) {
+            return false;
+        }
+
+        Redis::hset($key, 'status', 'interrupted');
+        Redis::hset($key, 'interrupted_at', time());
+        Redis::expire($key, self::RESUME_TTL);
+
+        $this->releaseLock();
+
+        return true;
+    }
+
+    public function getResumeState()
+    {
+        $data = $this->getProgress();
+
+        if (!$data || $data['status'] !== 'interrupted') {
+            return null;
+        }
+
+        $config = [];
+        if (isset($data['config'])) {
+            $config = json_decode($data['config'], true) ?: [];
+        }
+
+        return [
+            'config' => $config,
+            'next_offset' => (int) ($data['next_offset'] ?? 0),
+            'processed' => (int) ($data['current'] ?? 0),
+            'interrupted_at' => $data['interrupted_at'] ?? null,
+        ];
+    }
+
+    public function clearResumeState()
+    {
+        Redis::del(self::REDIS_PROGRESS_KEY);
     }
 }

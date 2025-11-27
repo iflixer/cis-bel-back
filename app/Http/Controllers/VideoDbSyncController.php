@@ -37,17 +37,45 @@ class VideoDbSyncController extends Controller
     /**
      * Main sync endpoint - syncs entire VideoDB database
      * GET /videodb/sync?limit=100&enrich_kp=1&enrich_tmdb=1
+     * GET /videodb/sync?resume=1 - resume interrupted sync
+     * GET /videodb/sync?force=1 - force new sync (clears resume state)
      */
     public function sync(Request $request)
     {
-        set_time_limit(0);
+        $resume = (bool) $request->input('resume', false);
+        $force = (bool) $request->input('force', false);
+        if ($force) {
+            $this->progressTracker->clearResumeState();
+        }
+
+        if ($resume) {
+            return $this->handleResume($request);
+        }
 
         $lockInfo = $this->progressTracker->isLocked();
         if ($lockInfo) {
-            echo "ERROR: Sync already in progress!\n";
-            echo "Locked since: " . $lockInfo['locked_since'] . " seconds ago\n";
-            echo "TTL remaining: " . $lockInfo['ttl_remaining'] . " seconds\n";
-            echo "Use /videodb/sync/reset to force unlock if needed.\n";
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Sync already in progress',
+                'locked_since' => $lockInfo['locked_since'],
+                'ttl_remaining' => $lockInfo['ttl_remaining'],
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        $resumeState = $this->progressTracker->getResumeState();
+        if ($resumeState && !$force) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'interrupted_sync_exists',
+                'message' => 'An interrupted sync exists. Use resume=1 to continue or force=1 to start fresh.',
+                'resume_state' => [
+                    'processed' => $resumeState['processed'],
+                    'next_offset' => $resumeState['next_offset'],
+                    'interrupted_at' => $resumeState['interrupted_at'],
+                ],
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
             return;
         }
 
@@ -67,7 +95,33 @@ class VideoDbSyncController extends Controller
 
         $useJobs = (bool) $request->input('use_jobs', false);
 
-        echo "VideoDB Full Sync Start: limit={$limit} offset={$offset}\n";
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status' => 'started',
+            'message' => 'Sync started in background',
+            'resumable' => true,
+            'params' => [
+                'limit' => $limit,
+                'offset' => $offset,
+                'vdb_id' => $vdbId,
+            ],
+            'progress_url' => '/videodb/sync/progress',
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+
+        set_time_limit(0);
+        ignore_user_abort(true);
+
+        $progressTracker = $this->progressTracker;
+        register_shutdown_function(function() use ($progressTracker) {
+            if ($progressTracker->hasLock()) {
+                $progressTracker->markInterrupted();
+                \Log::info('VideoDb sync interrupted - marked for resume');
+            }
+        });
 
         try {
             $configDto = SyncConfigDto::fromArray([
@@ -80,18 +134,86 @@ class VideoDbSyncController extends Controller
                 'use_jobs' => $useJobs,
             ]);
 
-            $result = $this->syncService->syncMedias($configDto);
-
-            echo "\nSync completed successfully!\n";
-            echo "Total processed: {$result['processed']}\n";
-            echo "New videos: {$result['new_videos']}\n";
-            echo "Updated videos: {$result['updated_videos']}\n";
-            echo "Enrichments queued: {$result['enrichments_queued']}\n";
-            echo "Errors: {$result['errors']}\n";
+            $this->syncService->syncMedias($configDto);
 
         } catch (\Exception $e) {
-            echo "\nSync failed: " . $e->getMessage() . "\n";
-            echo "Stack trace:\n" . $e->getTraceAsString() . "\n";
+            \Log::error('VideoDb sync failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    }
+
+    protected function handleResume(Request $request)
+    {
+        $resumeState = $this->progressTracker->getResumeState();
+
+        if (!$resumeState) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'No interrupted sync to resume',
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        $lockInfo = $this->progressTracker->isLocked();
+        if ($lockInfo) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Sync already in progress',
+                'locked_since' => $lockInfo['locked_since'],
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        $config = $resumeState['config'];
+        $nextOffset = $resumeState['next_offset'];
+        $previouslyProcessed = $resumeState['processed'];
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status' => 'resumed',
+            'message' => 'Sync resumed from offset ' . $nextOffset,
+            'from_offset' => $nextOffset,
+            'previously_processed' => $previouslyProcessed,
+            'progress_url' => '/videodb/sync/progress',
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+
+        set_time_limit(0);
+        ignore_user_abort(true);
+
+        $progressTracker = $this->progressTracker;
+        register_shutdown_function(function() use ($progressTracker) {
+            if ($progressTracker->hasLock()) {
+                $progressTracker->markInterrupted();
+                \Log::info('VideoDb sync interrupted during resume - marked for resume');
+            }
+        });
+
+        try {
+            $configDto = SyncConfigDto::fromArray([
+                'limit' => $config['limit'] ?? 100,
+                'offset' => $nextOffset,
+                'vdb_id' => $config['vdb_id'] ?? null,
+                'extra_params' => $config['extra_params'] ?? '',
+                'force_import' => $config['force_import'] ?? false,
+                'enrich_flags' => $config['enrich_flags'] ?? [],
+                'use_jobs' => $config['use_jobs'] ?? false,
+                'is_resume' => true,
+                'previously_processed' => $previouslyProcessed,
+            ]);
+
+            $this->syncService->syncMedias($configDto);
+
+        } catch (\Exception $e) {
+            \Log::error('VideoDb sync resume failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
         }
     }
 

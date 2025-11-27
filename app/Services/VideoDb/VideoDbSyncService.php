@@ -57,14 +57,17 @@ class VideoDbSyncService
         $this->progressTracker->start([
             'limit' => $configDto->limit,
             'offset' => $configDto->offset,
+            'next_offset' => $configDto->offset,
+            'config' => $configDto->toArray(),
         ]);
 
         $stats = [
-            'processed' => 0,
+            'processed' => $configDto->previouslyProcessed,
             'new_videos' => 0,
             'updated_videos' => 0,
             'enrichments_queued' => 0,
             'errors' => 0,
+            'is_resume' => $configDto->isResume,
         ];
 
         try {
@@ -131,7 +134,11 @@ class VideoDbSyncService
         $offset = $config->offset;
         $totalFetched = 0;
 
-        echo "Starting full database sync (using Generator for memory efficiency)...\n";
+        $mode = $config->isResume ? 'RESUME' : 'FULL';
+        echo "Starting {$mode} database sync (using Generator for memory efficiency)...\n";
+        if ($config->isResume) {
+            echo "Resuming from offset: {$offset}\n";
+        }
 
         while (true) {
             if (!$this->progressTracker->hasLock()) {
@@ -153,6 +160,10 @@ class VideoDbSyncService
 
             echo "API call duration: " . (microtime(true) - $requestStart) . "s\n";
             echo "Fetched batch: offset={$offset} count={$batchCount} (total: {$totalFetched})\n";
+
+            $this->progressTracker->updateProgress([
+                'next_offset' => $offset + $batchCount,
+            ]);
 
             foreach ($response->results as $media) {
                 yield $media;
