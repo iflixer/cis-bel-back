@@ -11,6 +11,8 @@ class SyncConfigDto
     public $forceImport;
     public $enrichFlags;
     public $useJobs;
+    public $isResume = false;
+    public $previouslyProcessed = 0;
 
     public static function fromArray(array $data)
     {
@@ -22,7 +24,22 @@ class SyncConfigDto
         $dto->forceImport = $data['force_import'] ?? false;
         $dto->enrichFlags = $data['enrich_flags'] ?? [];
         $dto->useJobs = $data['use_jobs'] ?? false;
+        $dto->isResume = $data['is_resume'] ?? false;
+        $dto->previouslyProcessed = $data['previously_processed'] ?? 0;
 
         return $dto;
+    }
+
+    public function toArray()
+    {
+        return [
+            'limit' => $this->limit,
+            'offset' => $this->offset,
+            'vdb_id' => $this->vdbId,
+            'extra_params' => $this->extraParams,
+            'force_import' => $this->forceImport,
+            'enrich_flags' => $this->enrichFlags,
+            'use_jobs' => $this->useJobs,
+        ];
     }
 }
