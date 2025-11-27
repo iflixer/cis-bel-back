@@ -8,7 +8,7 @@ class SyncProgressTracker
 {
     const REDIS_PROGRESS_KEY = 'videodb:sync:progress';
     const REDIS_LOCK_KEY = 'videodb:sync:lock';
-    const TTL = 86400; // 24 hours
+    const TTL = 3600;
 
     public function acquireLock()
     {

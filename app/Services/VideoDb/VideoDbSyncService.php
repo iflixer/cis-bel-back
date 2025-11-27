@@ -9,6 +9,7 @@ use App\Video;
 use App\File;
 use App\Translation;
 use App\Screenshot;
+use App\Subtitle;
 use App\Seting;
 use Queue;
 
@@ -278,6 +279,7 @@ class VideoDbSyncService
         }
 
         $this->processScreenshots($media, $file, $video, $config);
+        $this->processSubtitles($media, $file);
 
         return ['video' => $video, 'is_new' => $isNew, 'was_updated' => $wasUpdated];
     }
@@ -342,6 +344,7 @@ class VideoDbSyncService
         }
 
         $this->processScreenshots($media, $file, $video, $config);
+        $this->processSubtitles($media, $file);
 
         return ['video' => $video, 'is_new' => $isNew, 'was_updated' => $wasUpdated];
     }
@@ -376,6 +379,7 @@ class VideoDbSyncService
                 echo "  Removing orphaned file: {$file->id} (VDB: {$file->id_VDB})\n";
 
                 Screenshot::where('id_file', $file->id)->delete();
+                Subtitle::where('file_id', $file->id)->delete();
 
                 $file->delete();
                 $removedCount++;
@@ -417,6 +421,28 @@ class VideoDbSyncService
         if (empty($video->backdrop) && !empty($firstScreenshot)) {
             $video->backdrop = $firstScreenshot;
             $video->save();
+        }
+    }
+
+    protected function processSubtitles($media, $file)
+    {
+        if (empty($media->subtitles)) {
+            return;
+        }
+
+        foreach ($media->subtitles as $subtitle) {
+            Subtitle::updateOrCreate(
+                [
+                    'file_id' => $file->id,
+                    'track_num' => $subtitle->track_num,
+                ],
+                [
+                    'lang' => $subtitle->lang,
+                    'subtitle_type' => $subtitle->subtitle_type,
+                    'filename' => $subtitle->file,
+                    'url' => $subtitle->url,
+                ]
+            );
         }
     }
 

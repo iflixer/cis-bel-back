@@ -35,4 +35,9 @@ class File extends Model{
         return $this->belongsTo(Translation::class, 'translation_id');
     }
 
+    public function subtitles()
+    {
+        return $this->hasMany(Subtitle::class, 'file_id');
+    }
+
 }
