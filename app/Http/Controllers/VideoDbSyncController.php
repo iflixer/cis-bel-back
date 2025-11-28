@@ -197,7 +197,7 @@ class VideoDbSyncController extends Controller
 
         try {
             $configDto = SyncConfigDto::fromArray([
-                'limit' => $config['limit'] ?? 100,
+                'limit' => $config['limit'] ?? 500,
                 'offset' => $nextOffset,
                 'vdb_id' => $config['vdb_id'] ?? null,
                 'extra_params' => $config['extra_params'] ?? '',
@@ -250,18 +250,25 @@ class VideoDbSyncController extends Controller
     public function reset(Request $request)
     {
         $lockInfo = $this->progressTracker->isLocked();
+        $progress = $this->progressTracker->getProgress();
 
-        if (!$lockInfo) {
-            echo "No active lock found. Nothing to reset.\n";
+        if (!$lockInfo && !$progress) {
+            echo "No active lock or progress found. Nothing to reset.\n";
             return;
         }
 
-        echo "WARNING: Forcing reset of sync lock!\n";
-        echo "Previous lock was active for " . $lockInfo['locked_since'] . " seconds\n";
+        if ($lockInfo) {
+            echo "WARNING: Forcing reset of sync lock!\n";
+            echo "Previous lock was active for " . $lockInfo['locked_since'] . " seconds\n";
+        }
+
+        if ($progress) {
+            echo "Clearing progress data (status: " . ($progress['status'] ?? 'unknown') . ")\n";
+        }
 
         $this->progressTracker->forceResetLock();
 
-        echo "Lock released successfully.\n";
+        echo "Lock and progress cleared successfully.\n";
         echo "You can now start a new sync.\n";
     }
 }

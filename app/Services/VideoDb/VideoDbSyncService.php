@@ -12,12 +12,16 @@ use App\Screenshot;
 use App\Subtitle;
 use App\Seting;
 use Queue;
+use DB;
 
 class VideoDbSyncService
 {
-    protected $apiClient;
-    protected $progressTracker;
-    protected $enrichmentStrategies;
+    protected VideoDbApiClient $apiClient;
+    protected SyncProgressTracker $progressTracker;
+    protected array $enrichmentStrategies;
+    protected array $cachedSettings = [];
+
+    protected $translationsCache = null;
 
     const VIDEO_SYNC_FIELDS = [
         'name',
@@ -34,6 +38,40 @@ class VideoDbSyncService
         $this->apiClient = $apiClient;
         $this->progressTracker = $progressTracker;
         $this->enrichmentStrategies = [];
+        $this->loadCachedSettings();
+    }
+
+    protected function loadCachedSettings()
+    {
+        $this->cachedSettings = Seting::whereIn('name', ['keyWin'])
+            ->pluck('value', 'name')
+            ->toArray();
+    }
+
+    protected function loadTranslationsCache()
+    {
+        $this->translationsCache = Translation::all()->keyBy('id_VDB');
+        echo "Loaded " . $this->translationsCache->count() . " translations into cache\n";
+    }
+
+    protected function getOrCreateTranslation($vdbTranslation)
+    {
+        $vdbId = $vdbTranslation->id;
+
+        if ($this->translationsCache && $this->translationsCache->has($vdbId)) {
+            return $this->translationsCache->get($vdbId);
+        }
+
+        $translation = Translation::updateOrCreate(
+            ['id_VDB' => $vdbId],
+            ['title' => $vdbTranslation->title]
+        );
+
+        if ($this->translationsCache) {
+            $this->translationsCache->put($vdbId, $translation);
+        }
+
+        return $translation;
     }
 
     public function registerEnrichment($key, EnrichmentStrategyInterface $strategy)
@@ -60,6 +98,8 @@ class VideoDbSyncService
             'next_offset' => $configDto->offset,
             'config' => $configDto->toArray(),
         ]);
+
+        $this->loadTranslationsCache();
 
         $stats = [
             'processed' => $configDto->previouslyProcessed,
@@ -190,10 +230,7 @@ class VideoDbSyncService
 
         $resolutions = $this->extractResolutions($media->qualities);
 
-        $translation = Translation::updateOrCreate(
-            ['id_VDB' => $media->translation->id],
-            ['title' => $media->translation->title]
-        );
+        $translation = $this->getOrCreateTranslation($media->translation);
 
         $contentType = $media->content_object->content_type;
 
@@ -505,7 +542,10 @@ class VideoDbSyncService
 
     protected function makeProtectedScreenshotUrl($url)
     {
-        $keyWin = Seting::where('name', 'keyWin')->first()->value;
+        $keyWin = $this->cachedSettings['keyWin'] ?? null;
+        if (!$keyWin) {
+            throw new \Exception('keyWin setting not found in cache');
+        }
 
         $host = parse_url($url, PHP_URL_HOST);
         $path = parse_url($url, PHP_URL_PATH);
