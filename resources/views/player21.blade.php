@@ -398,7 +398,7 @@
 <div id="player" class="player"></div>
 
 {{-- External episodes block --}}
-@if ($type === 'serial' && isset($_GET['extepi']) && $_GET['extepi'] === '1')
+@if ($type === 'serial' && isset($_GET['extepi']) && $_GET['extepi'] == '1')
     <div id="epiexternal" style="display:flex">
 
         @foreach ($episodes as $_episode)
@@ -506,6 +506,74 @@
     </script>
 @endif
 {{-- END External episodes block --}}
+
+{{-- JSON data block --}}
+    @if (isset($_GET['smart_tv']) && $_GET['smart_tv'] == '1')
+        @php
+            $transarray = [];
+            $seasonarray = [];
+            $epiarray = [];
+        @endphp
+        @if (!empty($translations))
+            @php
+                foreach ($translations as $translation) {
+                    $transactive = 0;
+
+                    if (!empty($translate) && $translate == $translation['id']) {
+                        $transactive = 1;
+                    }
+
+                    $transarray[] = [
+                        "translation_id"   => $translation['id'],
+                        "translation_title" => $translation['title'],
+                        "is_active"        => $transactive,
+                    ];
+                }
+         @endphp
+        @endif
+        @if (!empty($seasons))
+            @php
+                    foreach ($seasons as $_season) {
+                        $seasonactive = 0;
+                            if ($season && $season == $_season) {
+                            $seasonactive = 1;
+                        }
+                            $seasonarray[] = [
+                            "season"   => $_season,
+                            "is_active" => $seasonactive,
+                        ];
+                    }
+            @endphp
+        @endif
+        @if (!empty($episodes))
+            @php
+                foreach ($episodes as $_episode) {
+                    $epiactive = 0;
+                        if ($episode && $episode == $_episode) {
+                        $epiactive = 1;
+                    }
+                        $epiarray[] = [
+                        "episode"   => $_episode,
+                        "is_active" => $epiactive,
+                    ];
+                }
+            @endphp
+        @endif
+        @php
+            $itemdata = [
+                     "type"       => $type,
+                     "translations" => $transarray,
+                     "seasons"      => $seasonarray,
+                     "series"        => $epiarray,
+                 ];
+               $jsonitemdata = json_encode($itemdata, JSON_UNESCAPED_UNICODE);
+               echo  '<script>const jsonitemdata = '.$jsonitemdata.';window.parent.postMessage({action: "itemdatalist", list: jsonitemdata}, "*")</script>';
+        @endphp
+    @endif
+{{-- JSON data block --}}
+
+
+
 
 <script>
 
