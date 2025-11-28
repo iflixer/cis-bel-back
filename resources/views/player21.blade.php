@@ -519,7 +519,7 @@
                 foreach ($translations as $translation) {
                     $transactive = 0;
 
-                    if (!empty($translate) && $translate == $translation['id']) {
+                    if ($translate && $translate == $translation['id']) {
                         $transactive = 1;
                     }
 
