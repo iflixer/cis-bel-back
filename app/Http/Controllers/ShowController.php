@@ -790,16 +790,21 @@ class ShowController extends Controller{
         $susuritiKey = $this->keyWin;
         $hash = md5($folder.'--'.$date.'-'.$susuritiKey);
         $file_url = "{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$target_resolution}.mp4";
-        // $file_name = $video["ru_name"];
-        // if ($media["season"] != 0) { 
-        //     $file_name .= "_S{$media['season']}";
-        // }
-        // if ($media["num"] != 0) { 
-        //     $file_name .= "_E{$media['num']}";
-        // }
-        // $file_name .= "_{$target_resolution}p";
-        // $file_name .= ".mp4";
-        return response($file_url, 200);
+        $file_name = $video["ru_name"];
+        if ($media["season"] != 0) { 
+            $file_name .= "_S{$media['season']}";
+        }
+        if ($media["num"] != 0) { 
+            $file_name .= "_E{$media['num']}";
+        }
+        $file_name .= "_{$target_resolution}p";
+        $file_name .= ".mp4";
+        $file_name = preg_replace(
+            '/[^0-9A-Za-zА-Яа-яЁё\s\.\-_]+/u',
+            '',
+            $file_name
+        );
+        return response("{$file_url}?fname={$file_name}", 200);
         // return response()->download($file_url);
         // return redirect()->away($file_url); // 302 редирект на CDN
     }
