@@ -15,72 +15,86 @@ use Illuminate\Http\Request;
 
 class VideoDbSyncController extends Controller
 {
-    protected $syncService;
-    protected $progressTracker;
-
-    public function __construct()
-    {
-        $apiClient = new VideoDbApiClient();
-        $progressTracker = new SyncProgressTracker();
-
-        $this->syncService = new VideoDbSyncService($apiClient, $progressTracker);
-
-        $this->syncService->registerEnrichment('kinopoisk', new KinopoiskEnrichment());
-        $this->syncService->registerEnrichment('tmdb', new TmdbEnrichment());
-        $this->syncService->registerEnrichment('thetvdb', new ThetvdbEnrichment());
-        $this->syncService->registerEnrichment('fanart', new FanartEnrichment());
-        $this->syncService->registerEnrichment('openai', new OpenaiEnrichment());
-
-        $this->progressTracker = $progressTracker;
-    }
-
     /**
-     * Main sync endpoint - syncs entire VideoDB database
-     * GET /videodb/sync?limit=100&enrich_kp=1&enrich_tmdb=1
-     * GET /videodb/sync?resume=1 - resume interrupted sync
-     * GET /videodb/sync?force=1 - force new sync (clears resume state)
+     * Main sync endpoint - processes ONE batch per request
+     * GET /videodb/sync?sort=created&max_records=10000
+     * GET /videodb/sync?resume=1&sort=created - continue from last offset
      */
     public function sync(Request $request)
     {
+        $sortDirection = $request->input('sort', 'created');
+
+        if (!in_array($sortDirection, ['created', '-accepted'])) {
+            return response()->json([
+                'status' => 'error',
+                'error' => 'Invalid sort direction. Must be "created" or "accepted".',
+            ], 400);
+        }
+
+        $progressTracker = new SyncProgressTracker($sortDirection);
+        $lockInfo = $progressTracker->isLocked();
+        if ($lockInfo) {
+            return response()->json([
+                'status' => 'error',
+                'error' => 'Another batch is in progress for this sort direction',
+                'sort_direction' => $sortDirection,
+                'lock_info' => $lockInfo,
+            ], 409);
+        }
+
+        // Create sync service with this progress tracker
+        $apiClient = new VideoDbApiClient();
+        $syncService = new VideoDbSyncService($apiClient, $progressTracker);
+
+        $syncService->registerEnrichment('kinopoisk', new KinopoiskEnrichment());
+        $syncService->registerEnrichment('tmdb', new TmdbEnrichment());
+        $syncService->registerEnrichment('thetvdb', new ThetvdbEnrichment());
+        $syncService->registerEnrichment('fanart', new FanartEnrichment());
+        $syncService->registerEnrichment('openai', new OpenaiEnrichment());
+
+        // Build config
         $resume = (bool) $request->input('resume', false);
         $force = (bool) $request->input('force', false);
+
         if ($force) {
-            $this->progressTracker->clearResumeState();
+            $progressTracker->clearProgress();
         }
 
-        if ($resume) {
-            return $this->handleResume($request);
-        }
+        $config = $this->buildConfig($request, $progressTracker, $resume);
 
-        $lockInfo = $this->progressTracker->isLocked();
-        if ($lockInfo) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Sync already in progress',
-                'locked_since' => $lockInfo['locked_since'],
-                'ttl_remaining' => $lockInfo['ttl_remaining'],
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-            return;
-        }
+        $result = $syncService->syncBatch($config);
 
-        $resumeState = $this->progressTracker->getResumeState();
-        if ($resumeState && !$force) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'status' => 'interrupted_sync_exists',
-                'message' => 'An interrupted sync exists. Use resume=1 to continue or force=1 to start fresh.',
-                'resume_state' => [
-                    'processed' => $resumeState['processed'],
-                    'next_offset' => $resumeState['next_offset'],
-                    'interrupted_at' => $resumeState['interrupted_at'],
-                ],
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-            return;
-        }
+        return response()->json($result, $result['status'] === 'error' ? 500 : 200);
+    }
 
+
+    protected function buildConfig(Request $request, SyncProgressTracker $progressTracker, $resume)
+    {
+        $sortDirection = $request->input('sort', 'created');
         $limit = (int) $request->input('limit', 100);
-        $offset = (int) $request->input('offset', 0);
+        $maxRecords = $request->input('max_records') ? (int) $request->input('max_records') : null;
+
+        $offset = 0;
+        if ($resume) {
+            $resumeState = $progressTracker->getResumeState();
+            if ($resumeState) {
+                $offset = $resumeState['offset'];
+                if ($maxRecords === null && $resumeState['max_records'] !== null) {
+                    $maxRecords = $resumeState['max_records'];
+                }
+            }
+        } else {
+            $offset = (int) $request->input('offset', 0);
+        }
+
+        if (!$progressTracker->hasProgress()) {
+            $progressTracker->initProgress([
+                'sort_direction' => $sortDirection,
+                'limit' => $limit,
+                'max_records' => $maxRecords,
+            ]);
+        }
+
         $vdbId = $request->input('vdb_id');
         $extraParams = $request->input('extra_vdb_parameters', '');
         $forceImport = (bool) $request->input('force_import_extra', false);
@@ -95,180 +109,104 @@ class VideoDbSyncController extends Controller
 
         $useJobs = (bool) $request->input('use_jobs', false);
 
-        header('Content-Type: application/json');
-        echo json_encode([
-            'status' => 'started',
-            'message' => 'Sync started in background',
-            'resumable' => true,
-            'params' => [
-                'limit' => $limit,
-                'offset' => $offset,
-                'vdb_id' => $vdbId,
-            ],
-            'progress_url' => '/videodb/sync/progress',
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request();
-        }
-
-        set_time_limit(0);
-        ignore_user_abort(true);
-
-        $progressTracker = $this->progressTracker;
-        register_shutdown_function(function() use ($progressTracker) {
-            if ($progressTracker->hasLock()) {
-                $progressTracker->markInterrupted();
-                \Log::info('VideoDb sync interrupted - marked for resume');
-            }
-        });
-
-        try {
-            $configDto = SyncConfigDto::fromArray([
-                'limit' => $limit,
-                'offset' => $offset,
-                'vdb_id' => $vdbId,
-                'extra_params' => $extraParams,
-                'force_import' => $forceImport,
-                'enrich_flags' => $enrichFlags,
-                'use_jobs' => $useJobs,
-            ]);
-
-            $this->syncService->syncMedias($configDto);
-
-        } catch (\Exception $e) {
-            \Log::error('VideoDb sync failed: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-        }
-    }
-
-    protected function handleResume(Request $request)
-    {
-        $resumeState = $this->progressTracker->getResumeState();
-
-        if (!$resumeState) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'No interrupted sync to resume',
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-            return;
-        }
-
-        $lockInfo = $this->progressTracker->isLocked();
-        if ($lockInfo) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Sync already in progress',
-                'locked_since' => $lockInfo['locked_since'],
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-            return;
-        }
-
-        $config = $resumeState['config'];
-        $nextOffset = $resumeState['next_offset'];
-        $previouslyProcessed = $resumeState['processed'];
-
-        header('Content-Type: application/json');
-        echo json_encode([
-            'status' => 'resumed',
-            'message' => 'Sync resumed from offset ' . $nextOffset,
-            'from_offset' => $nextOffset,
-            'previously_processed' => $previouslyProcessed,
-            'progress_url' => '/videodb/sync/progress',
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request();
-        }
-
-        set_time_limit(0);
-        ignore_user_abort(true);
-
-        $progressTracker = $this->progressTracker;
-        register_shutdown_function(function() use ($progressTracker) {
-            if ($progressTracker->hasLock()) {
-                $progressTracker->markInterrupted();
-                \Log::info('VideoDb sync interrupted during resume - marked for resume');
-            }
-        });
-
-        try {
-            $configDto = SyncConfigDto::fromArray([
-                'limit' => $config['limit'] ?? 500,
-                'offset' => $nextOffset,
-                'vdb_id' => $config['vdb_id'] ?? null,
-                'extra_params' => $config['extra_params'] ?? '',
-                'force_import' => $config['force_import'] ?? false,
-                'enrich_flags' => $config['enrich_flags'] ?? [],
-                'use_jobs' => $config['use_jobs'] ?? false,
-                'is_resume' => true,
-                'previously_processed' => $previouslyProcessed,
-            ]);
-
-            $this->syncService->syncMedias($configDto);
-
-        } catch (\Exception $e) {
-            \Log::error('VideoDb sync resume failed: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-        }
+        return SyncConfigDto::fromArray([
+            'limit' => $limit,
+            'offset' => $offset,
+            'vdb_id' => $vdbId,
+            'extra_params' => $extraParams,
+            'force_import' => $forceImport,
+            'enrich_flags' => $enrichFlags,
+            'use_jobs' => $useJobs,
+            'sort_direction' => $sortDirection,
+            'max_records' => $maxRecords,
+        ]);
     }
 
     /**
      * Get current sync progress
-     * GET /videodb/sync/progress
+     * GET /videodb/sync/progress?sort=created
      */
     public function progress(Request $request)
     {
-        $lockInfo = $this->progressTracker->isLocked();
-        $progress = $this->progressTracker->getProgress();
+        $sortDirection = $request->input('sort', 'created');
 
-        if (!$progress) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'error' => 'No active sync found',
-                'lock_status' => $lockInfo ? 'locked' : 'unlocked',
-                'lock_info' => $lockInfo
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-            return;
+        if (!in_array($sortDirection, ['created', '-accepted'])) {
+            return response()->json([
+                'error' => 'Invalid sort direction',
+            ], 400);
         }
 
-        $progress['lock_status'] = $lockInfo ? 'locked' : 'unlocked';
-        $progress['lock_info'] = $lockInfo;
+        $progressTracker = new SyncProgressTracker($sortDirection);
 
-        header('Content-Type: application/json');
-        echo json_encode($progress, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        $lockInfo = $progressTracker->isLocked();
+        $progress = $progressTracker->getProgress();
+
+        if (!$progress) {
+            return response()->json([
+                'status' => 'no_progress',
+                'sort_direction' => $sortDirection,
+                'lock_status' => $lockInfo ? 'locked' : 'unlocked',
+                'lock_info' => $lockInfo,
+                'message' => 'No active sync found for this sort direction',
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'ok',
+            'sort_direction' => $sortDirection,
+            'lock_status' => $lockInfo ? 'locked' : 'unlocked',
+            'lock_info' => $lockInfo,
+            'progress' => $progress,
+        ]);
     }
 
     /**
-     * Reset sync lock (emergency use only)
-     * GET /videodb/sync/reset
+     * Reset sync lock and progress
+     * POST /videodb/sync/reset?sort=created
      */
     public function reset(Request $request)
     {
-        $lockInfo = $this->progressTracker->isLocked();
-        $progress = $this->progressTracker->getProgress();
+        $sortDirection = $request->input('sort', 'created');
 
-        if (!$lockInfo && !$progress) {
-            echo "No active lock or progress found. Nothing to reset.\n";
-            return;
+        if (!in_array($sortDirection, ['created', '-accepted'])) {
+            return response()->json([
+                'error' => 'Invalid sort direction',
+            ], 400);
         }
 
+        $progressTracker = new SyncProgressTracker($sortDirection);
+
+        $lockInfo = $progressTracker->isLocked();
+        $progress = $progressTracker->getProgress();
+
+        if (!$lockInfo && !$progress) {
+            return response()->json([
+                'status' => 'ok',
+                'sort_direction' => $sortDirection,
+                'message' => 'No active lock or progress found. Nothing to reset.',
+            ]);
+        }
+
+        $result = [
+            'status' => 'ok',
+            'sort_direction' => $sortDirection,
+            'cleared' => [],
+        ];
+
         if ($lockInfo) {
-            echo "WARNING: Forcing reset of sync lock!\n";
-            echo "Previous lock was active for " . $lockInfo['locked_since'] . " seconds\n";
+            $result['cleared'][] = 'lock';
+            $result['previous_lock'] = $lockInfo;
         }
 
         if ($progress) {
-            echo "Clearing progress data (status: " . ($progress['status'] ?? 'unknown') . ")\n";
+            $result['cleared'][] = 'progress';
+            $result['previous_progress'] = $progress;
         }
 
-        $this->progressTracker->forceResetLock();
+        $progressTracker->forceResetLock();
 
-        echo "Lock and progress cleared successfully.\n";
-        echo "You can now start a new sync.\n";
+        $result['message'] = 'Lock and progress cleared successfully. You can now start a new sync.';
+
+        return response()->json($result);
     }
 }

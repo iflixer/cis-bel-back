@@ -36,8 +36,6 @@ class VideoDbApiClient
 
         $url = $this->baseUrl . '/medias?' . http_build_query($queryParams);
 
-        echo "VideoDB API URL: {$url}\n";
-
         $response = $this->makeRequest('GET', $url);
 
         return $response;
@@ -66,9 +64,6 @@ class VideoDbApiClient
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $curlError = curl_error($curl);
         curl_close($curl);
-
-        $duration = microtime(true) - $startTime;
-        echo "VideoDB API call duration: {$duration}s (HTTP {$httpCode})\n";
 
         if ($curlError) {
             throw new VideoDbApiException("cURL error: {$curlError}");

@@ -6,32 +6,47 @@ use Illuminate\Support\Facades\Redis;
 
 class SyncProgressTracker
 {
-    const REDIS_PROGRESS_KEY = 'videodb:sync:progress';
-    const REDIS_LOCK_KEY = 'videodb:sync:lock';
-    const TTL = 3600;
-    const RESUME_TTL = 86400; // 24 hours for resume capability
+    const REDIS_PROGRESS_KEY_TEMPLATE = 'videodb:sync:%s:progress';
+    const REDIS_LOCK_KEY_TEMPLATE = 'videodb:sync:%s:lock';
+    const LOCK_TTL = 120;
+    const PROGRESS_TTL = 86400;
+
+    protected $sortDirection;
+    protected $progressKey;
+    protected $lockKey;
+
+    public function __construct($sortDirection = 'created')
+    {
+        $this->sortDirection = $sortDirection;
+        $this->progressKey = sprintf(self::REDIS_PROGRESS_KEY_TEMPLATE, $sortDirection);
+        $this->lockKey = sprintf(self::REDIS_LOCK_KEY_TEMPLATE, $sortDirection);
+    }
+
+    public function getSortDirection()
+    {
+        return $this->sortDirection;
+    }
 
     public function acquireLock()
     {
-        $result = Redis::set(self::REDIS_LOCK_KEY, time(), 'EX', self::TTL, 'NX');
-
+        $result = Redis::set($this->lockKey, time(), 'EX', self::LOCK_TTL, 'NX');
         return $result !== null;
     }
 
     public function releaseLock()
     {
-        Redis::del(self::REDIS_LOCK_KEY);
+        Redis::del($this->lockKey);
     }
 
     public function isLocked()
     {
-        $lockTime = Redis::get(self::REDIS_LOCK_KEY);
+        $lockTime = Redis::get($this->lockKey);
 
         if ($lockTime === null) {
             return null;
         }
 
-        $ttl = Redis::ttl(self::REDIS_LOCK_KEY);
+        $ttl = Redis::ttl($this->lockKey);
 
         return [
             'locked' => true,
@@ -43,173 +58,110 @@ class SyncProgressTracker
 
     public function hasLock()
     {
-        return Redis::exists(self::REDIS_LOCK_KEY) > 0;
+        return Redis::exists($this->lockKey) > 0;
     }
 
     public function forceResetLock()
     {
         $this->releaseLock();
-
-        Redis::del(self::REDIS_PROGRESS_KEY);
+        Redis::del($this->progressKey);
     }
 
-    public function start(array $metadata)
+    public function initProgress(array $config)
     {
-        $key = self::REDIS_PROGRESS_KEY;
+        $data = [
+            'sort_direction' => $this->sortDirection,
+            'offset' => 0,
+            'total_processed' => 0,
+            'max_records' => $config['max_records'] ?? null,
+            'config' => json_encode($config),
+            'created_at' => time(),
+            'updated_at' => time(),
+        ];
 
-        $data = array_merge([
-            'status' => 'running',
-            'start_time' => time(),
-            'current' => 0,
-            'total' => 0,
-            'errors' => json_encode([]),
-            'last_processed_id' => null,
-            'next_offset' => 0,
-            'config' => json_encode([]),
-        ], $metadata);
-
-        if (isset($metadata['config'])) {
-            $data['config'] = json_encode($metadata['config']);
-        }
-
-        Redis::hmset($key, $data);
-        Redis::expire($key, self::TTL);
-    }
-
-    public function updateProgress(array $updates)
-    {
-        $key = self::REDIS_PROGRESS_KEY;
-
-        if (!Redis::exists($key)) {
-            return false;
-        }
-
-        $updates['updated_at'] = time();
-
-        Redis::hmset($key, $updates);
-        Redis::expire($key, self::TTL);
-
-        return true;
-    }
-
-    public function addError(array $error)
-    {
-        $key = self::REDIS_PROGRESS_KEY;
-
-        if (!Redis::exists($key)) {
-            return false;
-        }
-
-        $errorsJson = Redis::hget($key, 'errors') ?: '[]';
-        $errors = json_decode($errorsJson, true);
-
-        $errors[] = array_merge($error, ['timestamp' => time()]);
-
-        Redis::hset($key, 'errors', json_encode($errors));
-        Redis::expire($key, self::TTL);
-
-        return true;
-    }
-
-    public function complete(array $stats, $duration)
-    {
-        $key = self::REDIS_PROGRESS_KEY;
-
-        Redis::hmset($key, [
-            'status' => 'completed',
-            'end_time' => time(),
-            'duration' => $duration,
-            'stats' => json_encode($stats),
-        ]);
-
-        Redis::expire($key, self::TTL);
-
-        $this->releaseLock();
-    }
-
-    public function fail($error)
-    {
-        $key = self::REDIS_PROGRESS_KEY;
-
-        Redis::hmset($key, [
-            'status' => 'failed',
-            'end_time' => time(),
-            'error' => $error,
-        ]);
-
-        Redis::expire($key, self::TTL);
-
-        $this->releaseLock();
+        Redis::hmset($this->progressKey, $data);
+        Redis::expire($this->progressKey, self::PROGRESS_TTL);
     }
 
     public function getProgress()
     {
-        $key = self::REDIS_PROGRESS_KEY;
-
-        if (!Redis::exists($key)) {
+        if (!Redis::exists($this->progressKey)) {
             return null;
         }
 
-        $data = Redis::hgetall($key);
+        $data = Redis::hgetall($this->progressKey);
 
-        if (isset($data['errors'])) {
-            $data['errors'] = json_decode($data['errors'], true);
-        }
-        if (isset($data['stats'])) {
-            $data['stats'] = json_decode($data['stats'], true);
+        if (isset($data['config'])) {
+            $data['config'] = json_decode($data['config'], true);
         }
 
-        if ($data['total'] > 0) {
-            $data['percentage'] = round(($data['current'] / $data['total']) * 100, 2);
-        } else {
-            $data['percentage'] = 0;
-        }
-
-        $data['can_resume'] = ($data['status'] === 'interrupted');
+        $data['offset'] = (int)($data['offset'] ?? 0);
+        $data['total_processed'] = (int)($data['total_processed'] ?? 0);
+        $data['max_records'] = isset($data['max_records']) && $data['max_records'] !== ''
+            ? (int)$data['max_records']
+            : null;
 
         return $data;
     }
 
-    public function markInterrupted()
+    public function updateProgress(int $newOffset, int $batchProcessed)
     {
-        $key = self::REDIS_PROGRESS_KEY;
-
-        if (!Redis::exists($key)) {
+        if (!Redis::exists($this->progressKey)) {
             return false;
         }
 
-        Redis::hset($key, 'status', 'interrupted');
-        Redis::hset($key, 'interrupted_at', time());
-        Redis::expire($key, self::RESUME_TTL);
+        $currentProcessed = (int)Redis::hget($this->progressKey, 'total_processed');
+        $newTotalProcessed = $currentProcessed + $batchProcessed;
 
-        $this->releaseLock();
+        Redis::hmset($this->progressKey, [
+            'offset' => $newOffset,
+            'total_processed' => $newTotalProcessed,
+            'updated_at' => time(),
+        ]);
+        Redis::expire($this->progressKey, self::PROGRESS_TTL);
 
-        return true;
+        return $newTotalProcessed;
+    }
+
+    public function hasReachedMaxRecords()
+    {
+        $progress = $this->getProgress();
+
+        if (!$progress) {
+            return false;
+        }
+
+        $maxRecords = $progress['max_records'];
+        if ($maxRecords === null) {
+            return false;
+        }
+
+        return $progress['total_processed'] >= $maxRecords;
+    }
+
+    public function clearProgress()
+    {
+        Redis::del($this->progressKey);
+    }
+
+    public function hasProgress()
+    {
+        return Redis::exists($this->progressKey) > 0;
     }
 
     public function getResumeState()
     {
-        $data = $this->getProgress();
+        $progress = $this->getProgress();
 
-        if (!$data || $data['status'] !== 'interrupted') {
+        if (!$progress) {
             return null;
         }
 
-        $config = [];
-        if (isset($data['config'])) {
-            $config = json_decode($data['config'], true) ?: [];
-        }
-
         return [
-            'config' => $config,
-            'next_offset' => (int) ($data['next_offset'] ?? 0),
-            'processed' => (int) ($data['current'] ?? 0),
-            'interrupted_at' => $data['interrupted_at'] ?? null,
+            'offset' => $progress['offset'],
+            'total_processed' => $progress['total_processed'],
+            'max_records' => $progress['max_records'],
+            'config' => $progress['config'],
         ];
-    }
-
-    public function clearResumeState()
-    {
-        Redis::del(self::REDIS_PROGRESS_KEY);
     }
 }

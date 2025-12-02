@@ -11,8 +11,8 @@ class SyncConfigDto
     public $forceImport;
     public $enrichFlags;
     public $useJobs;
-    public $isResume = false;
-    public $previouslyProcessed = 0;
+    public $sortDirection = 'created';
+    public $maxRecords = null;
 
     public static function fromArray(array $data)
     {
@@ -24,8 +24,8 @@ class SyncConfigDto
         $dto->forceImport = $data['force_import'] ?? false;
         $dto->enrichFlags = $data['enrich_flags'] ?? [];
         $dto->useJobs = $data['use_jobs'] ?? false;
-        $dto->isResume = $data['is_resume'] ?? false;
-        $dto->previouslyProcessed = $data['previously_processed'] ?? 0;
+        $dto->sortDirection = $data['sort_direction'] ?? 'created';
+        $dto->maxRecords = isset($data['max_records']) ? (int) $data['max_records'] : null;
 
         return $dto;
     }
@@ -40,6 +40,8 @@ class SyncConfigDto
             'force_import' => $this->forceImport,
             'enrich_flags' => $this->enrichFlags,
             'use_jobs' => $this->useJobs,
+            'sort_direction' => $this->sortDirection,
+            'max_records' => $this->maxRecords,
         ];
     }
 }

@@ -227,7 +227,14 @@ class KinoPoiskService
             }
 
             if ($is_cartoon && $video->tupe === 'movie') {
-                $video->tupe = 'cartoon';
+                $existingCartoon = Video::where('id_VDB', $video->id_VDB)
+                    ->where('tupe', 'cartoon')
+                    ->where('id', '!=', $video->id)
+                    ->first();
+
+                if (!$existingCartoon) {
+                    $video->tupe = 'cartoon';
+                }
             }
         }
 

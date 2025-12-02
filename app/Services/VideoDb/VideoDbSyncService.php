@@ -23,6 +23,10 @@ class VideoDbSyncService
 
     protected $translationsCache = null;
 
+    protected $startTime;
+    protected $logs = [];
+    protected $timings = [];
+
     const VIDEO_SYNC_FIELDS = [
         'name',
         'ru_name',
@@ -51,7 +55,7 @@ class VideoDbSyncService
     protected function loadTranslationsCache()
     {
         $this->translationsCache = Translation::all()->keyBy('id_VDB');
-        echo "Loaded " . $this->translationsCache->count() . " translations into cache\n";
+        $this->log("Loaded " . $this->translationsCache->count() . " translations into cache");
     }
 
     protected function getOrCreateTranslation($vdbTranslation)
@@ -79,146 +83,160 @@ class VideoDbSyncService
         $this->enrichmentStrategies[$key] = $strategy;
     }
 
-    public function syncMedias(SyncConfigDto $configDto)
+    protected function log($message)
     {
-        $startTime = microtime(true);
+        $elapsed = microtime(true) - $this->startTime;
+        $this->logs[] = sprintf("[%.2fs] %s", $elapsed, $message);
+    }
 
+    protected function timeOperation($name, callable $fn)
+    {
+        $start = microtime(true);
+        $result = $fn();
+        $duration = (microtime(true) - $start) * 1000;
+        $this->timings[$name] = ($this->timings[$name] ?? 0) + $duration;
+        return $result;
+    }
+
+    public function syncBatch(SyncConfigDto $configDto)
+    {
+        $this->startTime = microtime(true);
+        $this->logs = [];
+        $this->timings = [];
+
+        $this->log("Starting batch sync (sort={$configDto->sortDirection}, offset={$configDto->offset}, limit={$configDto->limit})");
         if (!$this->progressTracker->acquireLock()) {
             $lockInfo = $this->progressTracker->isLocked();
-            throw new \Exception(
-                "Sync already in progress! Locked since " . $lockInfo['locked_since'] . " seconds ago. " .
-                "TTL remaining: " . $lockInfo['ttl_remaining'] . " seconds. " .
-                "Use /videodb/sync/reset to force unlock if needed."
-            );
+            return [
+                'status' => 'error',
+                'error' => 'Another batch is in progress for this sort direction',
+                'lock_info' => $lockInfo,
+            ];
         }
 
-        $this->progressTracker->start([
-            'limit' => $configDto->limit,
-            'offset' => $configDto->offset,
-            'next_offset' => $configDto->offset,
-            'config' => $configDto->toArray(),
-        ]);
-
-        $this->loadTranslationsCache();
-
-        $stats = [
-            'processed' => $configDto->previouslyProcessed,
-            'new_videos' => 0,
-            'updated_videos' => 0,
-            'enrichments_queued' => 0,
-            'errors' => 0,
-            'is_resume' => $configDto->isResume,
-        ];
-
         try {
-            echo "Starting to process medias...\n";
+            $this->loadTranslationsCache();
+            $this->log("Fetching batch from VideoDB API...");
+            $response = $this->timeOperation('api_request', function() use ($configDto) {
+                return $this->apiClient->fetchMedias([
+                    'limit' => $configDto->limit,
+                    'offset' => $configDto->offset,
+                    'ordering' => $configDto->sortDirection,
+                    'vdb_id' => $configDto->vdbId,
+                    'extra_params' => $configDto->extraParams,
+                ]);
+            });
 
-            foreach ($this->fetchMediasFromApi($configDto) as $index => $media) {
+            $batchCount = count($response->results);
+            $this->log("API: Fetched {$batchCount} records");
+
+            $stats = [
+                'new_videos' => 0,
+                'updated_videos' => 0,
+                'unchanged' => 0,
+                'errors' => 0,
+                'enrichments_run' => 0,
+            ];
+            $errors = [];
+
+            foreach ($response->results as $media) {
                 try {
-                    $result = $this->processMedia($media, $configDto);
+                    $result = $this->timeOperation('processing', function() use ($media, $configDto) {
+                        return $this->processMedia($media, $configDto);
+                    });
 
                     if ($result['is_new']) {
                         $stats['new_videos']++;
-                    } else if ($result['was_updated']) {
+                    } elseif ($result['was_updated']) {
                         $stats['updated_videos']++;
+                    } else {
+                        $stats['unchanged']++;
                     }
 
-                    $stats['processed']++;
-                    $stats['enrichments_queued'] += $result['enrichments_queued'];
+                    $stats['enrichments_run'] += $result['enrichments_queued'];
 
-                    if (!$this->progressTracker->hasLock()) {
-                        echo "Lock check failed - lock was released\n";
-                        throw new SyncCancelledException('Sync was cancelled - lock was released');
-                    }
-
-                    $this->progressTracker->updateProgress([
-                        'current' => $stats['processed'],
-                        'total' => $stats['processed'],
-                        'last_processed_id' => $media->id,
-                    ]);
-
-                    if (($stats['processed'] % 10) == 0) {
-                        echo "Processed: {$stats['processed']}\n";
-                    }
-
-                } catch (SyncCancelledException $e) {
-                    throw $e;
                 } catch (\Exception $e) {
                     $stats['errors']++;
-                    echo "Error processing media {$media->id}: " . $e->getMessage() . "\n";
-                    $this->progressTracker->addError([
+                    $errors[] = [
                         'media_id' => $media->id,
                         'error' => $e->getMessage(),
-                    ]);
+                    ];
+                    $this->log("Error processing media {$media->id}: " . $e->getMessage());
                 }
             }
 
-            echo "Sync loop completed.\n";
+            $newOffset = $configDto->offset + $batchCount;
+            $currentProgress = $this->progressTracker->getProgress();
+            $previousTotal = $currentProgress ? $currentProgress['total_processed'] : 0;
+            $newTotalProcessed = $previousTotal + $batchCount;
 
-            $duration = microtime(true) - $startTime;
-            $this->progressTracker->complete($stats, $duration);
+            $this->progressTracker->updateProgress($newOffset, $batchCount);
 
-        } catch (SyncCancelledException $e) {
-            echo "Sync cancelled: " . $e->getMessage() . "\n";
-            throw $e;
+            $hasMore = $batchCount >= $configDto->limit;
+            $cycleCompleted = false;
+
+            if ($configDto->maxRecords !== null && $newTotalProcessed >= $configDto->maxRecords) {
+                $this->log("Max records limit reached ({$configDto->maxRecords}). Clearing progress.");
+                $this->progressTracker->clearProgress();
+                $cycleCompleted = true;
+                $hasMore = false;
+            }
+
+            if (!$hasMore && !$cycleCompleted) {
+                $this->log("End of database reached. Clearing progress.");
+                $this->progressTracker->clearProgress();
+            }
+
+            $totalTime = (microtime(true) - $this->startTime) * 1000;
+            $this->log("Batch completed in " . round($totalTime) . "ms");
+
+            $this->progressTracker->releaseLock();
+
+
+            return [
+                'status' => $cycleCompleted ? 'cycle_completed' : ($hasMore ? 'batch_completed' : 'sync_completed'),
+                'sort_direction' => $configDto->sortDirection,
+                'batch' => [
+                    'offset' => $configDto->offset,
+                    'limit' => $configDto->limit,
+                    'fetched' => $batchCount,
+                    'processed' => $batchCount,
+                ],
+                'totals' => [
+                    'total_processed' => $newTotalProcessed,
+                    'max_records' => $configDto->maxRecords,
+                    'progress_percent' => $configDto->maxRecords
+                        ? round(($newTotalProcessed / $configDto->maxRecords) * 100, 2)
+                        : null,
+                ],
+                'stats' => $stats,
+                'errors' => $errors,
+                'timings' => [
+                    'api_request_ms' => round($this->timings['api_request'] ?? 0),
+                    'processing_ms' => round($this->timings['processing'] ?? 0),
+                    'inserts_ms' => round($this->timings['inserts'] ?? 0),
+                    'updates_ms' => round($this->timings['updates'] ?? 0),
+                    'total_ms' => round($totalTime),
+                ],
+                'logs' => $this->logs,
+                'next' => [
+                    'offset' => $hasMore ? $newOffset : 0,
+                    'has_more' => $hasMore,
+                    'call_url' => $hasMore
+                        ? "/videodb/sync?resume=1&sort={$configDto->sortDirection}"
+                        : null,
+                ],
+            ];
+
         } catch (\Exception $e) {
-            $this->progressTracker->fail($e->getMessage());
-            throw $e;
-        }
+            $this->progressTracker->releaseLock();
 
-        return $stats;
-    }
-
-    protected function fetchMediasFromApi(SyncConfigDto $config)
-    {
-        $offset = $config->offset;
-        $totalFetched = 0;
-
-        $mode = $config->isResume ? 'RESUME' : 'FULL';
-        echo "Starting {$mode} database sync (using Generator for memory efficiency)...\n";
-        if ($config->isResume) {
-            echo "Resuming from offset: {$offset}\n";
-        }
-
-        while (true) {
-            if (!$this->progressTracker->hasLock()) {
-                echo "Lock released - stopping sync\n";
-                throw new SyncCancelledException('Sync was cancelled - lock was released');
-            }
-
-            $requestStart = microtime(true);
-            $response = $this->apiClient->fetchMedias([
-                'limit' => $config->limit,
-                'offset' => $offset,
-                'ordering' => 'created',
-                'vdb_id' => $config->vdbId,
-                'extra_params' => $config->extraParams,
-            ]);
-
-            $batchCount = count($response->results);
-            $totalFetched += $batchCount;
-
-            echo "API call duration: " . (microtime(true) - $requestStart) . "s\n";
-            echo "Fetched batch: offset={$offset} count={$batchCount} (total: {$totalFetched})\n";
-
-            $this->progressTracker->updateProgress([
-                'next_offset' => $offset + $batchCount,
-            ]);
-
-            foreach ($response->results as $media) {
-                yield $media;
-            }
-
-            if ($batchCount < $config->limit) {
-                echo "Reached end of database. Total fetched: {$totalFetched}\n";
-                break;
-            }
-
-            if (!empty($config->vdbId)) {
-                break;
-            }
-
-            $offset += $config->limit;
+            return [
+                'status' => 'error',
+                'error' => $e->getMessage(),
+                'logs' => $this->logs,
+                'timings' => $this->timings,
+            ];
         }
     }
 
@@ -245,7 +263,7 @@ class VideoDbSyncService
             $wasUpdated = $result['was_updated'];
             $video = $result['video'];
         } else {
-            echo "Unknown content type: {$contentType}\n";
+            $this->log("Unknown content type: {$contentType}");
             return ['is_new' => false, 'was_updated' => false, 'enrichments_queued' => 0];
         }
 
@@ -282,19 +300,22 @@ class VideoDbSyncService
         $wasUpdated = false;
 
         if (empty($video)) {
-            $video = new Video($newData);
-            $video->save();
+            $video = $this->timeOperation('inserts', function() use ($newData) {
+                $v = new Video($newData);
+                $v->save();
+                return $v;
+            });
             $isNew = true;
-            echo "Created new video: {$video->id} (VDB: {$contentObj->id}, type: {$contentType})\n";
+            $this->log("Created new video: {$video->id} (VDB: {$contentObj->id}, type: {$contentType})");
         } else {
             if ($this->shouldUpdateVideo($video, $newData)) {
-                $video->fill($newData);
-                $video->updated_at = date('Y-m-d H:i:s');
-                $video->save();
+                $this->timeOperation('updates', function() use ($video, $newData) {
+                    $video->fill($newData);
+                    $video->updated_at = date('Y-m-d H:i:s');
+                    $video->save();
+                });
                 $wasUpdated = true;
-                echo "Updated video: {$video->id} (VDB: {$contentObj->id}, type: {$contentType})\n";
-            } else {
-                echo "Video unchanged: {$video->id} (VDB: {$contentObj->id}, type: {$contentType})\n";
+                $this->log("Updated video: {$video->id} (VDB: {$contentObj->id}, type: {$contentType})");
             }
         }
 
@@ -307,23 +328,24 @@ class VideoDbSyncService
             ->first();
 
         if (empty($file)) {
-            $file = File::create([
-                'id_VDB' => $media->id,
-                'id_parent' => $video->id,
-                'path' => $media->path,
-                'name' => $contentObj->orig_title,
-                'ru_name' => $contentObj->ru_title,
-                'season' => 0,
-                'resolutions' => $resolutions,
-                'num' => 0,
-                'translation_id' => $translation->id,
-                'translation' => $media->translation->title,
-                'sids' => 'VDB',
-            ]);
+            $file = $this->timeOperation('inserts', function() use ($media, $video, $contentObj, $translation, $resolutions) {
+                return File::create([
+                    'id_VDB' => $media->id,
+                    'id_parent' => $video->id,
+                    'path' => $media->path,
+                    'name' => $contentObj->orig_title,
+                    'ru_name' => $contentObj->ru_title,
+                    'season' => 0,
+                    'resolutions' => $resolutions,
+                    'num' => 0,
+                    'translation_id' => $translation->id,
+                    'translation' => $media->translation->title,
+                    'sids' => 'VDB',
+                ]);
+            });
 
             $wasUpdated = true;
-
-            echo "Created file: {$file->id} (VDB: {$media->id})\n";
+            $this->log("Created file: {$file->id} (VDB: {$media->id})");
         }
 
         $this->processScreenshots($media, $file, $video, $config);
@@ -355,17 +377,22 @@ class VideoDbSyncService
         $wasUpdated = false;
 
         if (empty($video)) {
-            $video = new Video($newData);
-            $video->save();
+            $video = $this->timeOperation('inserts', function() use ($newData) {
+                $v = new Video($newData);
+                $v->save();
+                return $v;
+            });
             $isNew = true;
-            echo "Created new series: {$video->id} (VDB: {$tvSeriesId}, type: {$contentType})\n";
+            $this->log("Created new series: {$video->id} (VDB: {$tvSeriesId}, type: {$contentType})");
         } else {
             if ($this->shouldUpdateVideo($video, $newData)) {
-                $video->fill($newData);
-                $video->updated_at = date('Y-m-d H:i:s');
-                $video->save();
+                $this->timeOperation('updates', function() use ($video, $newData) {
+                    $video->fill($newData);
+                    $video->updated_at = date('Y-m-d H:i:s');
+                    $video->saveOrFail();
+                });
                 $wasUpdated = true;
-                echo "Updated series: {$video->id}\n";
+                $this->log("Updated series: {$video->id}");
             }
         }
 
@@ -374,19 +401,21 @@ class VideoDbSyncService
             ->first();
 
         if (empty($file)) {
-            $file = File::create([
-                'id_VDB' => $media->id,
-                'id_parent' => $video->id,
-                'path' => $media->path,
-                'name' => $contentObj->orig_title,
-                'ru_name' => $contentObj->ru_title,
-                'season' => $contentObj->season->num,
-                'resolutions' => $resolutions,
-                'num' => $contentObj->num,
-                'translation_id' => $translation->id,
-                'translation' => $media->translation->title,
-                'sids' => 'VDB',
-            ]);
+            $file = $this->timeOperation('inserts', function() use ($media, $video, $contentObj, $translation, $resolutions) {
+                return File::create([
+                    'id_VDB' => $media->id,
+                    'id_parent' => $video->id,
+                    'path' => $media->path,
+                    'name' => $contentObj->orig_title,
+                    'ru_name' => $contentObj->ru_title,
+                    'season' => $contentObj->season->num,
+                    'resolutions' => $resolutions,
+                    'num' => $contentObj->num,
+                    'translation_id' => $translation->id,
+                    'translation' => $media->translation->title,
+                    'sids' => 'VDB',
+                ]);
+            });
 
             $wasUpdated = true;
         }
@@ -406,7 +435,7 @@ class VideoDbSyncService
             $newValue = $newData[$field];
 
             if ($oldValue != $newValue) {
-                echo "  Field '{$field}' changed: '{$oldValue}' → '{$newValue}'\n";
+                $this->log("  Field '{$field}' changed: '{$oldValue}' → '{$newValue}'");
                 return true;
             }
         }
@@ -424,7 +453,7 @@ class VideoDbSyncService
 
         foreach ($existingFiles as $file) {
             if (!in_array($file->id_VDB, $vdbFileIds)) {
-                echo "  Removing orphaned file: {$file->id} (VDB: {$file->id_VDB})\n";
+                $this->log("  Removing orphaned file: {$file->id} (VDB: {$file->id_VDB})");
 
                 Screenshot::where('id_file', $file->id)->delete();
                 Subtitle::where('file_id', $file->id)->delete();
@@ -435,7 +464,7 @@ class VideoDbSyncService
         }
 
         if ($removedCount > 0) {
-            echo "  Cleaned up {$removedCount} orphaned file(s)\n";
+            $this->log("  Cleaned up {$removedCount} orphaned file(s)");
         }
     }
 
@@ -514,11 +543,15 @@ class VideoDbSyncService
                 try {
                     $strategy = $this->enrichmentStrategies[$key];
                     if ($strategy->shouldEnrich($video, $config->forceImport)) {
-                        $strategy->enrich($video);
-                        $video->save();
+                        $this->timeOperation('enrichments', function() use ($strategy, $video) {
+                            $strategy->enrich($video);
+                            $video->save();
+                        });
+                        $queued++;
+                        $this->log("Enrichment {$key} applied to video {$video->id}");
                     }
                 } catch (\Exception $e) {
-                    echo "Enrichment {$key} failed for video {$video->id}: {$e->getMessage()}\n";
+                    $this->log("Enrichment {$key} failed for video {$video->id}: {$e->getMessage()}");
                 }
             }
         }
