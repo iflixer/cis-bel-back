@@ -796,7 +796,8 @@ class ShowController extends Controller{
         // }
         // $file_name .= "_{$target_resolution}p";
         // $file_name .= ".mp4";
-        return response()->download($file_url);
+        return response($file_url, 200);
+        // return response()->download($file_url);
         // return redirect()->away($file_url); // 302 редирект на CDN
     }
 
