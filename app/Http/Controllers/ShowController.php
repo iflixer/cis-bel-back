@@ -40,6 +40,7 @@ class ShowController extends Controller{
     protected $cdnhub_api_domain;
 
     protected $cloudflare_captcha_secret;
+    protected $cloudflare_captcha_public;
 
 
     public function __construct(Request $request){
@@ -51,6 +52,7 @@ class ShowController extends Controller{
         $this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
         $this->keyWin = Seting::where('name', 'keyWin')->first()->toArray()['value'];
         $this->cdnhub_api_domain = Seting::where('name', 'cdnhub_api_domain')->first()->toArray()['value'];
+        $this->cloudflare_captcha_public = Seting::where('name', 'cloudflare_captcha_public')->first()->toArray()['value'];
         $this->cloudflare_captcha_secret = Seting::where('name', 'cloudflare_captcha_secret')->first()->toArray()['value'];
     }
 
@@ -61,6 +63,7 @@ class ShowController extends Controller{
         $data = [];
 
         $data['version'] = '1.0.2';
+        $data['cloudflare_captcha_public'] = $this->cloudflare_captcha_public;
 
         if ($type && $id) {
             $video = Video::where($type, $id)->first();

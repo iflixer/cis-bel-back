@@ -1728,12 +1728,12 @@
     }
 
     // -------------------------------------------
-    // Render widget
+    // Render widget 
     // -------------------------------------------
     function renderTurnstileWidget() {
         $("#turnstile-container").html(""); // reset container
         turnstile.render("#turnstile-container", {
-            sitekey: "0x4AAAAAACERvWROYBKWoicp",
+            sitekey: "{{ $cloudflare_captcha_public }}",
             callback: function (token) {
                 turnstileToken = token;
                 $("#getdwnlink").prop("disabled", false);
