@@ -1685,6 +1685,9 @@
                 alert("Please complete the CAPTCHA first.");
                 return;
             }
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'File Download', {'event_category': 'Videos'});
+            }
             $(this).addClass('loading').prop("disabled", true);
             let s = "";
             let e = "";
