@@ -727,8 +727,10 @@ class ShowController extends Controller{
 
     public function download($video_id)
     {
+        // dd($this->request->all());
+
         $secret = $this->cloudflare_captcha_secret; // из Cloudflare Turnstile
-        $token  = $_POST['cf-turnstile-response'] ?? null;
+        $token  = $this->request->input('cf-turnstile-response') ?? null;
         $remoteIp = null; //$_SERVER['REMOTE_ADDR'] ?? null;
         $translation_id = $this->request->input('translation_id') ?? null;
         $season = $this->request->input('season') ?? null;
@@ -804,7 +806,7 @@ class ShowController extends Controller{
             '',
             $file_name
         );
-        return response("{$file_url}?fname={$file_name}", 200);
+        return response("{$file_url}?filename={$file_name}", 200);
         // return response()->download($file_url);
         // return redirect()->away($file_url); // 302 редирект на CDN
     }
