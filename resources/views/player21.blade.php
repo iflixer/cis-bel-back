@@ -1685,6 +1685,7 @@
                 alert("Please complete the CAPTCHA first.");
                 return;
             }
+            $(this).addClass('loading').prop("disabled", true);
             let s = "";
             let e = "";
             @if($season)
@@ -1701,10 +1702,19 @@
                     'cf-turnstile-response': turnstileToken,
                 },
                 success: function (res) {
-                    console.log(res);
                     let newbtnlink = res;
-                    $('#getdwnlink').hide();
-                    $("#downloadthis").attr("href", newbtnlink).show();
+                    let a = document.createElement("a");
+                    let params = new URLSearchParams(newbtnlink.split("?")[1]);
+                    var filename = params.get("filename");
+                    filename = filename.replace(/\+/g, "_");
+                    filename = decodeURIComponent(filename);
+                    a.href = newbtnlink;
+                    a.download = filename;
+                    a.target = "_blank";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    $('#getdwnlink').removeClass('loading').prop("disabled", false)
                 },
                 error: function () {
                     alert("Ошибка запроса");
@@ -1770,18 +1780,39 @@
         text-align: center;
     }
     #popupContent button{border-radius:8px;padding:6px 8px;background-color: #2d2d2d;border:0;color:#fff}
-    #popupContent button#getdwnlink{background-color: #0673a6;cursor:pointer;}
+    #popupContent button#getdwnlink{background-color:  #1ea666;cursor:pointer;padding:6px 26px}
     #popupContent a#downloadthis{border-radius:8px;padding:6px 8px;background-color:  #1ea666;border:0;color:#fff;cursor:pointer;text-decoration: none}
+    #getdwnlink.loading {
+        position: relative;
+        pointer-events: none;
+        opacity: 0.8;
+    }
 
+    #getdwnlink.loading::after {
+        content: "";
+        position: absolute;
+        left: 6px;
+        top: 50%;
+        width: 12px;
+        height: 12px;
+        margin-top: -8px;
+        border: 2px solid #fff;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
 </style>
 <div id="popupOverlay"></div>
 <div id="popupModal">
     <div id="popupContent">
-        <h3>Проверка</h3>
+        <h3>Загрузка</h3>
         <div id="turnstile-container"></div>
         <button id="closePopup">Закрыть</button>
-        <button id="getdwnlink" disabled>Получить ссылку</button>
-        <a id="downloadthis" style="display:none" href="#" download target="_blank">Скачать</a>
+        <button id="getdwnlink" disabled>Скачать</button>
     </div>
 </div>
 <!--  END DOWNLOAD FUNCTIONALITY  -->
