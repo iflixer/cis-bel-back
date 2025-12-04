@@ -101,8 +101,9 @@
         z-index: 999;
         width: auto;
         height: 28px;
+        justify-content: flex-end;
     }
-
+    .downloadbtn{position:absolute;top:35px;right:10px}
     .share-container {
         position: relative;
         display: flex;
@@ -185,6 +186,9 @@
                       fill="#ffffff"></path>
             </g>
         </svg>
+    </div>
+    <div id="downloadBtn" data-itemid="{{ $id }}">
+        <svg width="20" height="20"><g fill-rule="nonzero" fill="#ffffff" transform="translate(1, 1)"><path d="M16,11.6666667 L16,15.2222222 C16,15.651777 15.651777,16 15.2222222,16 L2.77777778,16 C2.34822297,16 2,15.651777 2,15.2222222 L2,11.6666667 C2,11.1143819 1.55228475,10.6666667 1,10.6666667 C0.44771525,10.6666667 0,11.1143819 0,11.6666667 L0,15.2222222 C0,16.7563465 1.24365347,18 2.77777778,18 L15.2222222,18 C16.7563465,18 18,16.7563465 18,15.2222222 L18,11.6666667 C18,11.1143819 17.5522847,10.6666667 17,10.6666667 C16.4477153,10.6666667 16,11.1143819 16,11.6666667 Z" fill="#ffffff"></path><path d="M5.26266234,6.51511544 C4.87213804,6.12459115 4.23897307,6.12459115 3.84844877,6.51511544 C3.45792448,6.90563973 3.45792448,7.53880471 3.84844877,7.929329 L8.29289322,12.3737734 C8.68341751,12.7642977 9.31658249,12.7642977 9.70710678,12.3737734 L14.1515512,7.929329 C14.5420755,7.53880471 14.5420755,6.90563973 14.1515512,6.51511544 C13.7610269,6.12459115 13.127862,6.12459115 12.7373377,6.51511544 L9,10.2524531 L5.26266234,6.51511544 Z" fill="#ffffff"></path><path d="M10,11.6666667 L10,1 C10,0.44771525 9.55228475,0 9,0 C8.44771525,0 8,0.44771525 8,1 L8,11.6666667 C8,12.2189514 8.44771525,12.6666667 9,12.6666667 C9.55228475,12.6666667 10,12.2189514 10,11.6666667 Z" fill="#ffffff"></path></g></svg>
     </div>
 </div>
 <script>
@@ -1493,7 +1497,7 @@
 
     function hideSelectors() {
              hideTimeout = setTimeout(function () {
-            if (!$('#player').is(':hover') && !$('#selectors').is(':hover')
+            if (!$('#player').is(':hover') && !$('#selectors').is(':hover')&& !$('.share-container').is(':hover')
                     @if ($type === 'serial')
                     && !$('#nextepisode').is(':hover')
                     @endif
@@ -1651,6 +1655,170 @@
     });
     @endif
 </script>
+
+<!--  DOWNLOAD FUNCTIONALITY  -->
+<script>
+    let turnstileLoaded = false;
+    let turnstileToken = "";
+    let currentItemId = "";
+
+    $(document).ready(function () {
+        $("#downloadBtn").on("click", function () {
+            currentItemId = $(this).data("itemid"); // take id from clicked element
+            $("#popupOverlay, #popupModal").fadeIn(200);
+            if (!turnstileLoaded) {
+                loadTurnstileScript();
+                turnstileLoaded = true;
+            } else {
+                renderTurnstileWidget();
+            }
+        });
+        $("#closePopup, #popupOverlay").on("click", function () {
+            $("#popupOverlay, #popupModal").fadeOut(200);
+            turnstileToken = "";
+            $("#getdwnlink").prop("disabled", true).show();
+            $("#downloadthis").attr("href", "#").hide();
+
+        });
+        $("#getdwnlink").on("click", function () {
+            if (!turnstileToken) {
+                alert("Please complete the CAPTCHA first.");
+                return;
+            }
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'File Download', {'event_category': 'Videos'});
+            }
+            $(this).addClass('loading').prop("disabled", true);
+            let s = "";
+            let e = "";
+            @if($season)
+            s = {{$season}};
+            @endif
+            @if($episode)
+            e = {{$episode}};
+            @endif
+
+            $.ajax({
+                url: "/download/"+currentItemId+"?translation_id={{$translate}}&season="+s+"&episode="+e,
+                method: "POST",
+                data: {
+                    'cf-turnstile-response': turnstileToken,
+                },
+                success: function (res) {
+                    let newbtnlink = res;
+                    let a = document.createElement("a");
+                    let params = new URLSearchParams(newbtnlink.split("?")[1]);
+                    var filename = params.get("filename");
+                    filename = filename.replace(/\+/g, "_");
+                    filename = decodeURIComponent(filename);
+                    a.href = newbtnlink;
+                    a.download = filename;
+                    a.target = "_blank";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    $('#getdwnlink').removeClass('loading').prop("disabled", false)
+                },
+                error: function () {
+                    alert("Ошибка запроса");
+                }
+            });
+        });
+    });
+    // -------------------------------------------
+    // Load Turnstile Script
+    // -------------------------------------------
+    function loadTurnstileScript() {
+        const script = document.createElement("script");
+        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=tsInit";
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+    }
+    // Called when Turnstile script is loaded
+    function tsInit() {
+        renderTurnstileWidget();
+    }
+
+    // -------------------------------------------
+    // Render widget 
+    // -------------------------------------------
+    function renderTurnstileWidget() {
+        $("#turnstile-container").html(""); // reset container
+        turnstile.render("#turnstile-container", {
+            sitekey: "{{ $cloudflare_captcha_public }}",
+            callback: function (token) {
+                turnstileToken = token;
+                $("#getdwnlink").prop("disabled", false);
+            }
+        });
+    }
+</script>
+<style>
+    #downloadBtn{position:absolute;right:10px;top:35px;}
+    #turnstile-container{margin-bottom: 8px}
+    #popupOverlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.55);
+        z-index: 999;
+    }
+
+    #popupModal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #fff;
+        width: 340px;
+        padding: 10px 20px 20px;
+        border-radius: 14px;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+        z-index: 1000;
+    }
+
+    #popupContent {
+        text-align: center;
+    }
+    #popupContent button{border-radius:8px;padding:6px 8px;background-color: #2d2d2d;border:0;color:#fff}
+    #popupContent button#getdwnlink{background-color:  #1ea666;cursor:pointer;padding:6px 26px}
+    #popupContent a#downloadthis{border-radius:8px;padding:6px 8px;background-color:  #1ea666;border:0;color:#fff;cursor:pointer;text-decoration: none}
+    #getdwnlink.loading {
+        position: relative;
+        pointer-events: none;
+        opacity: 0.8;
+    }
+
+    #getdwnlink.loading::after {
+        content: "";
+        position: absolute;
+        left: 6px;
+        top: 50%;
+        width: 12px;
+        height: 12px;
+        margin-top: -8px;
+        border: 2px solid #fff;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+<div id="popupOverlay"></div>
+<div id="popupModal">
+    <div id="popupContent">
+        <h3>Загрузка</h3>
+        <div id="turnstile-container"></div>
+        <button id="closePopup">Закрыть</button>
+        <button id="getdwnlink" disabled>Скачать</button>
+    </div>
+</div>
+<!--  END DOWNLOAD FUNCTIONALITY  -->
 
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript">

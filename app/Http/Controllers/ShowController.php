@@ -30,11 +30,17 @@ use App\Show;
 
 use Cookie;
 use Illuminate\Support\Arr;
+
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
 class ShowController extends Controller{
 
     protected $loginVDB;
     protected $passVDB;
     protected $cdnhub_api_domain;
+
+    protected $cloudflare_captcha_secret;
+    protected $cloudflare_captcha_public;
 
 
     public function __construct(Request $request){
@@ -46,6 +52,8 @@ class ShowController extends Controller{
         $this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
         $this->keyWin = Seting::where('name', 'keyWin')->first()->toArray()['value'];
         $this->cdnhub_api_domain = Seting::where('name', 'cdnhub_api_domain')->first()->toArray()['value'];
+        $this->cloudflare_captcha_public = Seting::where('name', 'cloudflare_captcha_public')->first()->toArray()['value'];
+        $this->cloudflare_captcha_secret = Seting::where('name', 'cloudflare_captcha_secret')->first()->toArray()['value'];
     }
 
     public function player($type = null, $id = 0)
@@ -55,6 +63,7 @@ class ShowController extends Controller{
         $data = [];
 
         $data['version'] = '1.0.2';
+        $data['cloudflare_captcha_public'] = $this->cloudflare_captcha_public;
 
         if ($type && $id) {
             $video = Video::where($type, $id)->first();
@@ -714,6 +723,92 @@ class ShowController extends Controller{
             'title' => rawurlencode($video->ru_name . ($video->year ? ' (' . $video->year . ')' : '') . ' смотреть в HD онлайн'),
             'image' => rawurlencode("https://{$serverDomain}/share/share.jpg")
         ]);
+    }
+
+    public function download($video_id)
+    {
+        // dd($this->request->all());
+
+        $secret = $this->cloudflare_captcha_secret; // из Cloudflare Turnstile
+        $token  = $this->request->input('cf-turnstile-response') ?? null;
+        $remoteIp = null; //$_SERVER['REMOTE_ADDR'] ?? null;
+        $translation_id = $this->request->input('translation_id') ?? null;
+        $season = $this->request->input('season') ?? null;
+        $episode = $this->request->input('episode') ?? null;
+        $skip_captcha_check = $this->request->input('skip_captcha_check') ?? null;
+        $skip_captcha_check = ($skip_captcha_check == 'FHJFGFJHJHDDUERU77734HHGJJG') ? true : false;
+
+
+        if (!$translation_id) {
+            return response('Give me translation_id', 400);
+        }
+
+        if (!$secret) {
+            return response('No secret found', 503);
+        }
+        if (!$token) {
+            return response('Give me cf-turnstile-response', 400);
+            
+        }
+        // if (!$remoteIp) {
+        //     abort(403, 'No remote_addr found');
+        // }
+
+        $isCaptchaValid = Cloudflare::check_captcha($token, $remoteIp, $secret);
+
+        if (!$skip_captcha_check && !$isCaptchaValid) {
+            return response('Captcha validation failed', 403);
+        }
+
+        $video = Video::where('id', $video_id)->first();
+
+        if (!$video) {
+            return response('Video not found', 404);
+        }
+
+        $media = File::where('id_parent', $video_id)
+            ->where('translation_id', $translation_id)
+            ->where('season', $season)
+            ->where('num', $episode)
+            ->first();
+
+        if (!$media) {
+            return response('Media not found', 404);
+        }
+
+        $resolutions = explode(',', $media['resolutions']);
+        $target_resolution = array_pop($resolutions); // выбираем наименьшее доступное разрешение
+
+        $file = parse_url($media['path']);
+
+        $file['host'] = $this->cdn_host_by_video_id($video['id'] );
+        if (!$file['host']) {
+            $file['host'] = "cdn0.testme.wiki"; // fallback если не удалось найти хост
+        }
+
+        $date = date('YmdH', strtotime("+1 hours"));
+        $folder = $file['path'];
+
+        $susuritiKey = $this->keyWin;
+        $hash = md5($folder.'--'.$date.'-'.$susuritiKey);
+        $file_url = "{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$target_resolution}.mp4";
+        $file_name = $video["ru_name"];
+        if ($media["season"] != 0) { 
+            $file_name .= "_S{$media['season']}";
+        }
+        if ($media["num"] != 0) { 
+            $file_name .= "_E{$media['num']}";
+        }
+        $file_name .= "_{$target_resolution}p";
+        $file_name .= ".mp4";
+        $file_name = preg_replace(
+            '/[^0-9A-Za-zА-Яа-яЁё\s\.\-_]+/u',
+            '',
+            $file_name
+        );
+        return response("{$file_url}?filename={$file_name}", 200);
+        // return response()->download($file_url);
+        // return redirect()->away($file_url); // 302 редирект на CDN
     }
 
 
