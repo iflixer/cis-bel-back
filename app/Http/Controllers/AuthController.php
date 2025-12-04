@@ -77,8 +77,9 @@ class AuthController extends Controller
         ])->id;
         LinkRight::create(['id_user' => $userId, 'id_rights' => 1])->id;
 
-        $response['data'] = ['bearer_token' => $bearer_token, 'refresh_token' => $refresh_token, 'time_token' => $time_token, 'right' => $right->name, 'name' => $right->ru_name]; // 
-        
+        $tawkHash = hash_hmac('sha256', $email, env('TAWK_API_KEY', ''));
+        $response['data'] = ['bearer_token' => $bearer_token, 'refresh_token' => $refresh_token, 'time_token' => $time_token, 'right' => $right->name, 'name' => $login, 'email' => $email, 'tawkHash' => $tawkHash];
+
 
         return response()->json($response);
     }
@@ -209,7 +210,8 @@ class AuthController extends Controller
             'time_token' => $time_token
         ]);
 
-        $response['data'] = ['bearer_token' => $bearer_token, 'refresh_token' => $refresh_token, 'time_token' => $time_token, 'right' => $right->name, 'name' => $right->ru_name];
+        $tawkHash = hash_hmac('sha256', $userDB->email, env('TAWK_API_KEY', ''));
+        $response['data'] = ['bearer_token' => $bearer_token, 'refresh_token' => $refresh_token, 'time_token' => $time_token, 'right' => $right->name, 'name' => $userDB->login, 'email' => $userDB->email, 'tawkHash' => $tawkHash];
 
 
         return response()->json($response);
@@ -241,7 +243,8 @@ class AuthController extends Controller
             'time_token' => $time_token
         ]);
         
-        $response['data'] = ['bearer_token' => $bearer_token, 'time_token' => $time_token, 'right' => $right->name, 'name' => $right->ru_name];
+        $tawkHash = hash_hmac('sha256', $userDB->email, env('TAWK_API_KEY', ''));
+        $response['data'] = ['bearer_token' => $bearer_token, 'time_token' => $time_token, 'right' => $right->name, 'name' => $userDB->login, 'email' => $userDB->email, 'tawkHash' => $tawkHash];
 
 
         return response()->json($response);
