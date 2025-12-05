@@ -45,6 +45,7 @@ class ApiController extends Controller
     // protected $adress = 'https://api.kholobok.biz/show/';
     protected $cdnhub_api_domain;
     protected $cdnhub_player_domain;
+    protected $cdnhub_img_resizer_domain;
     protected $usesApi = "App\Http\Controllers\api\\";
 
     public function __construct(Request $request){
@@ -54,6 +55,7 @@ class ApiController extends Controller
         $this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
 		$this->cdnhub_api_domain = Seting::where('name', 'cdnhub_api_domain')->first()->toArray()['value'];
 		$this->cdnhub_player_domain = Seting::where('name', 'cdnhub_player_domain')->first()->toArray()['value'];
+		$this->cdnhub_img_resizer_domain = Seting::where('name', 'cdnhub_img_resizer_domain')->first()->toArray()['value'];
     }
 
 
@@ -456,7 +458,8 @@ class ApiController extends Controller
 
         $videoSearchService = new \App\Services\VideoSearchService(
             $this->cdnhub_api_domain,
-            $this->cdnhub_player_domain
+            $this->cdnhub_player_domain,
+            $this->cdnhub_img_resizer_domain
         );
 
         return $videoSearchService->search($searchParams);
@@ -535,12 +538,18 @@ class ApiController extends Controller
 
     protected function updates()
     {
-        $result = \Cache::get('updates');
+        $result = null;
+        $force_rebuild = $this->request->input('force_rebuild');
+
+        if (empty($force_rebuild)) {
+            $result = \Cache::get('updates');
+        }
 
         if ($result === null) {
             $videoUpdateService = new \App\Services\VideoUpdateService(
                 $this->cdnhub_api_domain,
-                $this->cdnhub_player_domain
+                $this->cdnhub_player_domain,
+                $this->cdnhub_img_resizer_domain
             );
 
             $result = $videoUpdateService->getUpdates();
@@ -872,7 +881,7 @@ class ApiController extends Controller
 
 
     private function makeInternalImageURL($type, $id, $url) {
-        return Image::makeInternalImageURL($this->cdnhub_api_domain, $type, $id, $url);
+        return Image::makeInternalImageURL($this->cdnhub_img_resizer_domain, $type, $id, $url);
     }
 
 
