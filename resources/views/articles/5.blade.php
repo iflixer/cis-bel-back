@@ -144,7 +144,7 @@
 <br>
 
 <h3 class="doch3">Архив с модулем</h3>
-<p><a href="/api/dle-plugins/flixcdn-dle-plugin-v3.4.1.zip">flixcdn-dle-plugin-v3.4.1.zip</a> &middot; <a
+<p><a href="/api/dle-plugins/flixcdn-dle-plugin-v3.5.zip">flixcdn-dle-plugin-v3.5.zip</a> &middot; <a
             href="/articles/15">История
         обновлений модуля</a></p>
 <div class="spoiled">

@@ -38,6 +38,7 @@ class ShowController extends Controller{
     protected $loginVDB;
     protected $passVDB;
     protected $cdnhub_api_domain;
+    protected $cdnhub_img_resizer_domain;
 
     protected $cloudflare_captcha_secret;
     protected $cloudflare_captcha_public;
@@ -52,6 +53,7 @@ class ShowController extends Controller{
         $this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
         $this->keyWin = Seting::where('name', 'keyWin')->first()->toArray()['value'];
         $this->cdnhub_api_domain = Seting::where('name', 'cdnhub_api_domain')->first()->toArray()['value'];
+        $this->cdnhub_api_domacdnhub_img_resizer_domainin = Seting::where('name', 'cdnhub_img_resizer_domain')->first()->toArray()['value'];
         $this->cloudflare_captcha_public = Seting::where('name', 'cloudflare_captcha_public')->first()->toArray()['value'];
         $this->cloudflare_captcha_secret = Seting::where('name', 'cloudflare_captcha_secret')->first()->toArray()['value'];
     }
@@ -107,7 +109,7 @@ class ShowController extends Controller{
 
         $data['video'] = $video;
 
-        $data['cover_url'] = Image::makeInternalImageURL($this->cdnhub_api_domain, 'videos', $video->id, $video->backdrop);
+        $data['cover_url'] = Image::makeInternalImageURL($this->cdnhub_img_resizer_domain, 'videos', $video->id, $video->backdrop);
 
         // tgc
         if ($this->request->input('tgc'))

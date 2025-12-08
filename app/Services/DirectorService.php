@@ -12,9 +12,12 @@ class DirectorService
 {
     private $cdnApiDomain;
 
-    public function __construct(string $cdnApiDomain)
+    private $cdnhub_img_resizer_domain;
+
+    public function __construct(string $cdnApiDomain, string $cdnhub_img_resizer_domain)
     {
         $this->cdnApiDomain = $cdnApiDomain;
+        $this->cdnhub_img_resizer_domain = $cdnhub_img_resizer_domain;
     }
 
     public function getPaginatedDirectors(int $page = 1, int $limit = 50): array
@@ -71,7 +74,7 @@ class DirectorService
         }
 
         return Image::makeInternalImageURL(
-            $this->cdnApiDomain,
+            $this->cdnhub_img_resizer_domain,
             'directors',
             $directorId,
             $posterUrl

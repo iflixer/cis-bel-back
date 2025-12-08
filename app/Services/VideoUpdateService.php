@@ -17,10 +17,13 @@ class VideoUpdateService
     private $cdnApiDomain;
     private $cdnPlayerDomain;
 
-    public function __construct(string $cdnApiDomain, string $cdnPlayerDomain)
+    private $cdnhub_img_resizer_domain;
+
+    public function __construct(string $cdnApiDomain, string $cdnPlayerDomain, string $cdnhub_img_resizer_domain)
     {
         $this->cdnApiDomain = $cdnApiDomain;
         $this->cdnPlayerDomain = $cdnPlayerDomain;
+        $this->cdnhub_img_resizer_domain = $cdnhub_img_resizer_domain;
     }
 
     public function getUpdates(): array
@@ -419,7 +422,7 @@ class VideoUpdateService
 
         $data['content']['quality'] = explode(' ', $video['quality'])[0];
 
-        $data['content']['iframe_url'] = "https://cdn0.{$this->cdnPlayerDomain}/show/{$video['id']}";
+        $data['content']['iframe_url'] = "https://{$this->cdnPlayerDomain}/show/{$video['id']}";
 
         if (!empty($genres)) {
             $data['content']['genres'] = $genres;
@@ -493,7 +496,7 @@ class VideoUpdateService
         }
 
         return Image::makeInternalImageURL(
-            $this->cdnApiDomain,
+            $this->cdnhub_img_resizer_domain,
             $type,
             $id,
             $imagePath

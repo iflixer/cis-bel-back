@@ -17,11 +17,13 @@ use DB;
 class VideoSearchService
 {
     private $cdnApiDomain;
+    private $cdnhub_img_resizer_domain;
     private $cdnPlayerDomain;
 
-    public function __construct(string $cdnApiDomain, string $cdnPlayerDomain)
+    public function __construct(string $cdnApiDomain, string $cdnPlayerDomain, string $cdnhub_img_resizer_domain)
     {
         $this->cdnApiDomain = $cdnApiDomain;
+        $this->cdnhub_img_resizer_domain = $cdnhub_img_resizer_domain;
         $this->cdnPlayerDomain = $cdnPlayerDomain;
     }
 
@@ -354,7 +356,7 @@ class VideoSearchService
         $videos[$key]['type'] = $contentType['type'];
 
         $videos[$key]['quality'] = explode(' ', $video['quality'])[0];
-        $videos[$key]['iframe_url'] = "https://cdn0.{$this->cdnPlayerDomain}/show/{$video['id']}";
+        $videos[$key]['iframe_url'] = "https://{$this->cdnPlayerDomain}/show/{$video['id']}";
         $videos[$key]['poster'] = $this->makeInternalImageURL('videos', $video['id'], $video['poster']);
         $videos[$key]['backdrop'] = $this->makeInternalImageURL('videos', $video['id'], $video['backdrop']);
 
@@ -433,7 +435,7 @@ class VideoSearchService
     private function makeInternalImageURL(string $type, int $id, ?string $url): string
     {
         return Image::makeInternalImageURL(
-            $this->cdnApiDomain,
+            $this->cdnhub_img_resizer_domain,
             $type,
             $id,
             $url

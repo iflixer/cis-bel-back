@@ -30,6 +30,8 @@ use App\Services\KinoPoiskService;
 use App\Services\ThetvdbService;
 use App\Services\OpenaiService;
 
+use App\Helpers\Image;
+
 use Mail;
 use DB;
 
@@ -59,6 +61,7 @@ class CronjobController extends Controller
 	protected $usesApi = "App\Http\Controllers\api\\";
 
 	protected $cdnhub_api_domain;
+	protected $cdnhub_img_resizer_domain;
 
 	protected $r2Service;
 
@@ -77,6 +80,7 @@ class CronjobController extends Controller
         $this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
         $this->keyWin = Seting::where('name', 'keyWin')->first()->toArray()['value'];
         $this->cdnhub_api_domain = Seting::where('name', 'cdnhub_api_domain')->first()->toArray()['value'];
+        $this->cdnhub_img_resizer_domain = Seting::where('name', 'cdnhub_img_resizer_domain')->first()->toArray()['value'];
 		$this->r2Service = new R2Service();
 	}
 
@@ -353,7 +357,8 @@ class CronjobController extends Controller
 									$ok = false;
 								}
 								if ($ok) {
-									$video->img = "https://sss.{$this->cdnhub_api_domain}/videos/{$video->id}/{$fname}";
+									$video->img = "https://{$this->cdnhub_img_resizer_domain}/videos/{$video->id}/{$fname}";
+									//Image::makeInternalImageURL($this->cdnhub_img_resizer_domain, 'videos', $video->id, $fname);
 								}
 							}
 						}
