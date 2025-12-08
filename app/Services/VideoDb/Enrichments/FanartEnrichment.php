@@ -34,6 +34,9 @@ class FanartEnrichment extends AbstractEnrichmentStrategy
 
     public function enrich(Video $video)
     {
-        return $this->service->updateVideoWithFanartData($video);
+        $this->service->updateVideoWithFanartData($video);
+        $video->saveOrFail();
+
+        return $video;
     }
 }

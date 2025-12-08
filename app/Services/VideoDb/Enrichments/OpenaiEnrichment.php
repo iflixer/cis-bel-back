@@ -34,6 +34,10 @@ class OpenaiEnrichment extends AbstractEnrichmentStrategy
 
     public function enrich(Video $video)
     {
-        return $this->service->updateVideoWithOpenaiData($video);
+        $this->service->updateVideoWithOpenaiData($video);
+        $video->saveOrFail();
+
+        return $video;
+
     }
 }

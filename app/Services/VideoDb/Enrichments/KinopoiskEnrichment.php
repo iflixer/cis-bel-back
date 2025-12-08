@@ -34,6 +34,9 @@ class KinopoiskEnrichment extends AbstractEnrichmentStrategy
 
     public function enrich(Video $video)
     {
-        return $this->service->updateVideoWithKinoPoiskData($video);
+        $this->service->updateVideoWithKinoPoiskData($video);
+        $video->saveOrFail();
+
+        return $video;
     }
 }

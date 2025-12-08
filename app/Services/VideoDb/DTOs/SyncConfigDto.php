@@ -2,7 +2,9 @@
 
 namespace App\Services\VideoDb\DTOs;
 
-class SyncConfigDto
+use App\Services\VideoDb\Contracts\ProcessingConfigInterface;
+
+class SyncConfigDto implements ProcessingConfigInterface
 {
     public $limit;
     public $offset;
@@ -43,5 +45,15 @@ class SyncConfigDto
             'sort_direction' => $this->sortDirection,
             'max_records' => $this->maxRecords,
         ];
+    }
+
+    public function getForceImport()
+    {
+        return (bool) $this->forceImport;
+    }
+
+    public function getEnrichFlags()
+    {
+        return $this->enrichFlags ?: [];
     }
 }

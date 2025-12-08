@@ -34,6 +34,9 @@ class ThetvdbEnrichment extends AbstractEnrichmentStrategy
 
     public function enrich(Video $video)
     {
-        return $this->service->updateVideoWithThetvdbIdByImdbId($video);
+        $this->service->updateVideoWithThetvdbIdByImdbId($video);
+        $video->saveOrFail();
+
+        return $video;
     }
 }

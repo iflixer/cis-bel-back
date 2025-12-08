@@ -106,6 +106,10 @@ Route::post('/videodb/sync', ['middleware' => [], 'uses' => 'VideoDbSyncControll
 Route::get('/videodb/sync/progress', ['middleware' => [], 'uses' => 'VideoDbSyncController@progress']);
 Route::post('/videodb/sync/reset', ['middleware' => [], 'uses' => 'VideoDbSyncController@reset']);
 
+// VideoTouch - manual single video sync (admin only)
+Route::get('/videotouch/search', ['middleware' => ['videoTouchMiddleware'], 'uses' => 'VideoTouchController@search']);
+Route::post('/videotouch/sync', ['middleware' => ['videoTouchMiddleware'], 'uses' => 'VideoTouchController@sync']);
+
 // payout calculation
 Route::post('/payouts/daily-payout', ['middleware' => [], 'uses' => 'PayoutController@triggerDailyPayout']);
 Route::post('/payouts/daily-event-stats', ['middleware' => [], 'uses' => 'PayoutController@triggerDailyEventStats']);

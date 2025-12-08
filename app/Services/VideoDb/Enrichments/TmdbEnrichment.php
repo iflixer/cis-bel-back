@@ -34,6 +34,9 @@ class TmdbEnrichment extends AbstractEnrichmentStrategy
 
     public function enrich(Video $video)
     {
-        return $this->service->updateVideoWithTmdbData($video);
+        $this->service->updateVideoWithTmdbData($video);
+        $video->saveOrFail();
+
+        return $video;
     }
 }
