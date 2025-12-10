@@ -227,7 +227,7 @@
 @endphp
 {{-- END Sharing block --}}
 
-<div id="selectors" class="video_selectors" style="display: flex;">
+<div id="selectors" class="video_selectors" style="display: block;">
     @if ($type === 'serial')
         <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_seasons']) || isset($_GET['no_control_episodes'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
 				<select name="season" id="season-number" data-select="1">
@@ -306,10 +306,9 @@
             padding: 5px 10px;
             text-overflow: ellipsis;
             white-space: nowrap;
-            min-width: 20%;
-            max-width: 25%;
             color: #fff;
-            flex: 1;
+            flex: 1 1 17%;
+            max-width: 18%;
         }
 
         .extransbtn:hover,
@@ -507,9 +506,33 @@
             thisepiurl.searchParams.set('autoplay', 1);
             window.location.href = thisepiurl;
         });
+
     </script>
 @endif
 {{-- END External episodes block --}}
+
+
+{{-- UNFOLDED SEASONS --}}
+@if ($type === 'serial' && isset($_GET['unfseason']) && $_GET['unfseason'] == '1')
+<style>
+#selectors{display:block}
+#season-number+.nice-select{background-color: transparent;width:calc(100vw - 45px);border:0;padding:0;box-shadow: none !important}
+#season-number+.nice-select.open{box-shadow: none !important}
+#season-number+.nice-select:after{display:none}
+#season-number+.nice-select .current{display:none}
+#season-number+.nice-select ul.list{display:flex;opacity:1;position:relative;left:unset;top:unset;flex-direction: row;flex-wrap: wrap;background-color: transparent;margin:0;padding:0;box-shadow:none}
+#season-number+.nice-select ul.list li{display:flex;min-width:fit-content;max-width:10%;margin:2px;background-color: #172322;padding:0 8px;line-height: 25px; min-height: 26px;justify-content: center;flex: 1 1 8%;}
+#season-number+.nice-select ul.list li.option.selected{background-color: #5d5d5d;}
+#season-number+.nice-select ul.list li:hover{background-color: #444242;}
+.video_selectors #season-number+.nice-select ul.list li.option.clicked{
+    background: #00a0b0 !important;
+    cursor: wait !important;
+}
+
+</style>
+@endif
+{{-- END UNFOLDED SEASONS --}}
+
 
 {{-- JSON data block --}}
     @if (isset($_GET['smart_tv']) && $_GET['smart_tv'] == '1')
@@ -904,6 +927,10 @@
                             <?php if (isset($_GET['extepi'])): ?>
                             _url_params.push('extepi=1');
                             <?php endif; ?>
+                            <?php if (isset($_GET['unfseason'])): ?>
+                            _url_params.push('unfseason=1');
+                            _url_params.push('autoplay=0');
+                            <?php endif; ?>
 
                             if (tgc) {
                                 _url_params.push('tgc=' + tgc);
@@ -916,6 +943,7 @@
                                 _url_params = '/show/' + _save.p + ((_url_params.length > 0) ? '?' + _url_params.join('&') : '');
                             } else {
                                 _url_params.push('start=' + _save.time);
+
                                 _url_params.push('autoplay=1');
 
                                 _url_params = '/show/' + _save.p + ((_url_params.length > 0) ? '?' + _url_params.join('&') : '');
@@ -1010,6 +1038,9 @@
                     }
                 });
             }, 0);
+            <?php if (isset($_GET['unfseason']) && $_GET['unfseason'] == '1'): ?>
+            $('#season-number +.nice-select').addClass('open').addClass('unfolded');
+            <?php endif; ?>
         }
 
         $('#translator-name option[value="0"]').hide();
@@ -1113,6 +1144,7 @@
                 _episodes_select.append('<option value="' + seasons_episodes[_season][i] + '"' + _selected + '>Серия ' + seasons_episodes[_season][i] + '</option>');
             }
 
+
             _episodes_select.change();
         })
 
@@ -1143,13 +1175,20 @@
                 <?php if (isset($_GET['extepi'])): ?>
             _url_params.push('extepi=1');
             <?php endif; ?>
+             <?php if (isset($_GET['unfseason'])): ?>
+            _url_params.push('unfseason=1');
+            <?php endif; ?>
 
             if (tgc) {
                 _url_params.push('tgc=' + tgc);
             }
 
             //if(forceauto){
+            <?php if (isset($_GET['unfseason']) && $_GET['unfseason'] == '1' ): ?>
+            _url_params.push('autoplay=0');
+            <?php else: ?>
             _url_params.push('autoplay=1');
+            <?php endif; ?>
             //}
 
             if (m_s == 'auto') {
@@ -1580,6 +1619,7 @@
     }
 
 
+
     @if (isset($_GET['smart_tv']) && $_GET['smart_tv'] == '1')
 
     var nowinfs = false;
@@ -1654,6 +1694,14 @@
         }
     });
     @endif
+
+    $(document).on('click', '.nice-select.unfolded li', function() {
+        $(this).addClass('clicked');
+    });
+
+    $(document).on('mouseenter', '.nice-select.unfolded', function() {
+        $(this).addClass('open');
+    });
 </script>
 
 <!--  DOWNLOAD FUNCTIONALITY  -->
