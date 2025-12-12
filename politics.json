@@ -265,8 +265,13 @@
             "prices.getMatrix": true,
             "prices.getDomainTypes": true,
             "prices.getPrice": true,
-            "prices.clearCache": true
-            
+            "prices.clearCache": true,
+
+            "blacklist.get": true,
+            "blacklist.search": true,
+            "blacklist.add": true,
+            "blacklist.remove": true
+
         }
     }
 }

@@ -677,6 +677,10 @@ class ApiController extends Controller
 
         $queryVideo = Video::select('id'); // Начало запроса
 
+        $queryVideo = $queryVideo->where(function($q) {
+            $q->whereNull('blacklisted')->orWhere('blacklisted', false);
+        });
+
         if($countries != ''){ // Выборка по странам
             $queryVideo = $queryVideo->whereIn('id', getIdsElements($countries, 'id_country') );
         }
