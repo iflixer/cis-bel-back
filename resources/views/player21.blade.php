@@ -521,7 +521,7 @@
 #season-number+.nice-select:after{display:none}
 #season-number+.nice-select .current{display:none}
 #season-number+.nice-select ul.list{display:flex;opacity:1;position:relative;left:unset;top:unset;flex-direction: row;flex-wrap: wrap;background-color: transparent;margin:0;padding:0;box-shadow:none}
-#season-number+.nice-select ul.list li{display:flex;min-width:fit-content;max-width:10%;margin:2px;background-color: #172322;padding:0 8px;line-height: 25px; min-height: 26px;justify-content: center;flex: 1 1 8%;}
+#season-number+.nice-select ul.list li{display:flex;min-width:fit-content;max-width:8%;margin:2px;background-color: #172322;padding:0 8px;line-height: 25px; min-height: 26px;justify-content: center;flex: 1 1 8%;}
 #season-number+.nice-select ul.list li.option.selected{background-color: #5d5d5d;}
 #season-number+.nice-select ul.list li:hover{background-color: #444242;}
 .video_selectors #season-number+.nice-select ul.list li.option.clicked{
@@ -1119,10 +1119,15 @@
                 _seasons_select = $('select#season-number').val(),
                 _episodes_select = $('select#episode-number').val();
             var extep = '';
-            @if (isset($_GET['extepi']) && $_GET['extepi'] === '1')
+            var unfseason = '';
+            @if (isset($_GET['extepi']) && $_GET['extepi'] == '1')
                 extep = '&extepi=1';
             @endif
-                window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&season=' + _seasons_select + '&episode=' + _episodes_select + '&extrans=1' + extep + '&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
+
+            @if (isset($_GET['unfseason']) && $_GET['unfseason'] == '1')
+                unfseason = '&unfseason=1';
+            @endif
+                window.location.href = 'https://' + window.location.host + '/show/' + p_id + '?domain=' + iframeReferer + '&season=' + _seasons_select + '&episode=' + _episodes_select + '&extrans=1' + extep + unfseason+ '&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
         });
 
 
@@ -1535,17 +1540,27 @@
     }
 
     function hideSelectors() {
-             hideTimeout = setTimeout(function () {
-            if (!$('#player').is(':hover') && !$('#selectors').is(':hover')&& !$('.share-container').is(':hover')
+        hideTimeout = setTimeout(function () {
+            let hoveringPlayer        = $('#player').length        && $('#player').is(':hover');
+            let hoveringSelectors     = $('#selectors').length     && $('#selectors').is(':hover');
+            let hoveringShare         = $('.share-container').length && $('.share-container').is(':hover');
+            @if ($type === 'serial')
+            let hoveringNextEpisode   = $('#nextepisode').length   && $('#nextepisode').is(':hover');
+            @endif
+            if (
+                !hoveringPlayer &&
+                !hoveringSelectors &&
+                !hoveringShare
                     @if ($type === 'serial')
-                    && !$('#nextepisode').is(':hover')
-                    @endif
-             ) {
-             $('#selectors, #nextepisode, #shareBlock').fadeOut('fast');
-                }
-            },200);
+                && !hoveringNextEpisode
+                @endif
+            ) {
+                $('#selectors, #nextepisode, #shareBlock').fadeOut('fast');
+            }
 
-        }
+        }, 200);
+    }
+
 
 
         $('#player').on('mousemove', showSelectors);
