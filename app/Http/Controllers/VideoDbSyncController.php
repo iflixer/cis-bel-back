@@ -11,6 +11,7 @@ use App\Services\VideoDb\Enrichments\TmdbEnrichment;
 use App\Services\VideoDb\Enrichments\ThetvdbEnrichment;
 use App\Services\VideoDb\Enrichments\FanartEnrichment;
 use App\Services\VideoDb\Enrichments\OpenaiEnrichment;
+use App\Services\VideoDb\Enrichments\KinopoiskDevEnrichment;
 use Illuminate\Http\Request;
 
 class VideoDbSyncController extends Controller
@@ -51,6 +52,7 @@ class VideoDbSyncController extends Controller
         $syncService->registerEnrichment('thetvdb', new ThetvdbEnrichment());
         $syncService->registerEnrichment('fanart', new FanartEnrichment());
         $syncService->registerEnrichment('openai', new OpenaiEnrichment());
+        $syncService->registerEnrichment('kinopoiskdev', new KinopoiskDevEnrichment());
 
         // Build config
         $resume = (bool) $request->input('resume', false);
@@ -105,6 +107,7 @@ class VideoDbSyncController extends Controller
             'thetvdb' => (bool) $request->input('enrich_thetvdb', false),
             'fanart' => (bool) $request->input('enrich_fanart', false),
             'openai' => (bool) $request->input('enrich_openai', false),
+            'kinopoiskdev' => (bool) $request->input('enrich_kinopoiskdev', false),
         ];
 
         $useJobs = (bool) $request->input('use_jobs', false);

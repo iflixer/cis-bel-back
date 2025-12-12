@@ -12,6 +12,7 @@ use App\Services\VideoDb\Enrichments\TmdbEnrichment;
 use App\Services\VideoDb\Enrichments\ThetvdbEnrichment;
 use App\Services\VideoDb\Enrichments\FanartEnrichment;
 use App\Services\VideoDb\Enrichments\OpenaiEnrichment;
+use App\Services\VideoDb\Enrichments\KinopoiskDevEnrichment;
 use Illuminate\Http\Request;
 
 class VideoTouchController extends Controller
@@ -70,6 +71,7 @@ class VideoTouchController extends Controller
                 'thetvdb' => (bool) ($enrichments['thetvdb'] ?? false),
                 'fanart' => (bool) ($enrichments['fanart'] ?? false),
                 'openai' => (bool) ($enrichments['openai'] ?? false),
+                'kinopoiskdev' => (bool) ($enrichments['kinopoiskdev'] ?? false),
             ];
         } else {
             $data['enrichments'] = [
@@ -78,6 +80,7 @@ class VideoTouchController extends Controller
                 'thetvdb' => false,
                 'fanart' => false,
                 'openai' => false,
+                'kinopoiskdev' => false,
             ];
         }
 
@@ -91,5 +94,6 @@ class VideoTouchController extends Controller
         $touchService->registerEnrichment('thetvdb', new ThetvdbEnrichment());
         $touchService->registerEnrichment('fanart', new FanartEnrichment());
         $touchService->registerEnrichment('openai', new OpenaiEnrichment());
+        $touchService->registerEnrichment('kinopoiskdev', new KinopoiskDevEnrichment());
     }
 }

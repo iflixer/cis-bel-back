@@ -12,6 +12,7 @@ use App\Services\VideoDb\Enrichments\TmdbEnrichment;
 use App\Services\VideoDb\Enrichments\ThetvdbEnrichment;
 use App\Services\VideoDb\Enrichments\FanartEnrichment;
 use App\Services\VideoDb\Enrichments\OpenaiEnrichment;
+use App\Services\VideoDb\Enrichments\KinopoiskDevEnrichment;
 
 class EnrichVideoJob extends Job implements ShouldQueue
 {
@@ -72,6 +73,8 @@ class EnrichVideoJob extends Job implements ShouldQueue
                 return new FanartEnrichment();
             case 'openai':
                 return new OpenaiEnrichment();
+            case 'kinopoiskdev':
+                return new KinopoiskDevEnrichment();
             default:
                 return null;
         }
