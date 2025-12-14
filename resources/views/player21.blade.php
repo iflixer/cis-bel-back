@@ -227,7 +227,7 @@
 @endphp
 {{-- END Sharing block --}}
 
-<div id="selectors" class="video_selectors" style="display: block;">
+<div id="selectors" class="video_selectors" style="display: flex;">
     @if ($type === 'serial')
         <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_seasons']) || isset($_GET['no_control_episodes'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
 				<select name="season" id="season-number" data-select="1">
@@ -306,9 +306,10 @@
             padding: 5px 10px;
             text-overflow: ellipsis;
             white-space: nowrap;
+            min-width: 20%;
+            max-width: 25%;
             color: #fff;
-            flex: 1 1 17%;
-            max-width: 18%;
+            flex: 1;
         }
 
         .extransbtn:hover,
@@ -506,97 +507,73 @@
             thisepiurl.searchParams.set('autoplay', 1);
             window.location.href = thisepiurl;
         });
-
     </script>
 @endif
 {{-- END External episodes block --}}
 
-
-{{-- UNFOLDED SEASONS --}}
-@if ($type === 'serial' && isset($_GET['unfseason']) && $_GET['unfseason'] == '1')
-<style>
-#selectors{display:block}
-#season-number+.nice-select{background-color: transparent;width:calc(100vw - 45px);border:0;padding:0;box-shadow: none !important}
-#season-number+.nice-select.open{box-shadow: none !important}
-#season-number+.nice-select:after{display:none}
-#season-number+.nice-select .current{display:none}
-#season-number+.nice-select ul.list{display:flex;opacity:1;position:relative;left:unset;top:unset;flex-direction: row;flex-wrap: wrap;background-color: transparent;margin:0;padding:0;box-shadow:none}
-#season-number+.nice-select ul.list li{display:flex;min-width:fit-content;max-width:8%;margin:2px;background-color: #172322;padding:0 8px;line-height: 25px; min-height: 26px;justify-content: center;flex: 1 1 8%;}
-#season-number+.nice-select ul.list li.option.selected{background-color: #5d5d5d;}
-#season-number+.nice-select ul.list li:hover{background-color: #444242;}
-.video_selectors #season-number+.nice-select ul.list li.option.clicked{
-    background: #00a0b0 !important;
-    cursor: wait !important;
-}
-
-</style>
-@endif
-{{-- END UNFOLDED SEASONS --}}
-
-
 {{-- JSON data block --}}
-    @if (isset($_GET['smart_tv']) && $_GET['smart_tv'] == '1')
+@if (isset($_GET['smart_tv']) && $_GET['smart_tv'] == '1')
+    @php
+        $transarray = [];
+        $seasonarray = [];
+        $epiarray = [];
+    @endphp
+    @if (!empty($translations))
         @php
-            $transarray = [];
-            $seasonarray = [];
-            $epiarray = [];
-        @endphp
-        @if (!empty($translations))
-            @php
-                foreach ($translations as $translation) {
-                    $transactive = 0;
+            foreach ($translations as $translation) {
+                $transactive = 0;
 
-                    if ($translate && $translate == $translation['id']) {
-                        $transactive = 1;
-                    }
+                if ($translate && $translate == $translation['id']) {
+                    $transactive = 1;
+                }
 
-                    $transarray[] = [
-                        "translation_id"   => $translation['id'],
-                        "translation_title" => $translation['title'],
-                        "is_active"        => $transactive,
-                    ];
-                }
-         @endphp
-        @endif
-        @if (!empty($seasons))
-            @php
-                    foreach ($seasons as $_season) {
-                        $seasonactive = 0;
-                            if ($season && $season == $_season) {
-                            $seasonactive = 1;
-                        }
-                            $seasonarray[] = [
-                            "season"   => $_season,
-                            "is_active" => $seasonactive,
-                        ];
-                    }
-            @endphp
-        @endif
-        @if (!empty($episodes))
-            @php
-                foreach ($episodes as $_episode) {
-                    $epiactive = 0;
-                        if ($episode && $episode == $_episode) {
-                        $epiactive = 1;
-                    }
-                        $epiarray[] = [
-                        "episode"   => $_episode,
-                        "is_active" => $epiactive,
-                    ];
-                }
-            @endphp
-        @endif
-        @php
-            $itemdata = [
-                     "type"       => $type,
-                     "translations" => $transarray,
-                     "seasons"      => $seasonarray,
-                     "series"        => $epiarray,
-                 ];
-               $jsonitemdata = json_encode($itemdata, JSON_UNESCAPED_UNICODE);
-               echo  '<script>const jsonitemdata = '.$jsonitemdata.';window.parent.postMessage({action: "itemdatalist", list: jsonitemdata}, "*")</script>';
+                $transarray[] = [
+                    "translation_id"   => $translation['id'],
+                    "translation_title" => $translation['title'],
+                    "is_active"        => $transactive,
+                ];
+            }
         @endphp
     @endif
+    @if (!empty($seasons))
+        @php
+            foreach ($seasons as $_season) {
+                $seasonactive = 0;
+                    if ($season && $season == $_season) {
+                    $seasonactive = 1;
+                }
+                    $seasonarray[] = [
+                    "season"   => $_season,
+                    "is_active" => $seasonactive,
+                ];
+            }
+        @endphp
+    @endif
+    @if (!empty($episodes))
+        @php
+            foreach ($episodes as $_episode) {
+                $epiactive = 0;
+                    if ($episode && $episode == $_episode) {
+                    $epiactive = 1;
+                }
+                    $epiarray[] = [
+                    "episode"   => $_episode,
+                    "is_active" => $epiactive,
+                ];
+            }
+        @endphp
+    @endif
+    @php
+        $itemdata = [
+                 "type"       => $type,
+                 "translations" => $transarray,
+                 "seasons"      => $seasonarray,
+                 "series"        => $epiarray,
+             ];
+           $jsonitemdata = json_encode($itemdata, JSON_UNESCAPED_UNICODE);
+           echo  '<script>const jsonitemdata = '.$jsonitemdata.';window.parent.postMessage({action: "itemdatalist", list: jsonitemdata}, "*")</script>';
+    @endphp
+@endif
 {{-- JSON data block --}}
 
 
@@ -927,10 +904,6 @@
                             <?php if (isset($_GET['extepi'])): ?>
                             _url_params.push('extepi=1');
                             <?php endif; ?>
-                            <?php if (isset($_GET['unfseason'])): ?>
-                            _url_params.push('unfseason=1');
-                            _url_params.push('autoplay=0');
-                            <?php endif; ?>
 
                             if (tgc) {
                                 _url_params.push('tgc=' + tgc);
@@ -943,7 +916,6 @@
                                 _url_params = '/show/' + _save.p + ((_url_params.length > 0) ? '?' + _url_params.join('&') : '');
                             } else {
                                 _url_params.push('start=' + _save.time);
-
                                 _url_params.push('autoplay=1');
 
                                 _url_params = '/show/' + _save.p + ((_url_params.length > 0) ? '?' + _url_params.join('&') : '');
@@ -1038,9 +1010,6 @@
                     }
                 });
             }, 0);
-            <?php if (isset($_GET['unfseason']) && $_GET['unfseason'] == '1'): ?>
-            $('#season-number +.nice-select').addClass('open').addClass('unfolded');
-            <?php endif; ?>
         }
 
         $('#translator-name option[value="0"]').hide();
@@ -1066,12 +1035,12 @@
         $('.extransbtn ').click(function () {
             $(this).addClass('clicked');
             var t = $(this).data('value');
-            window.location.href =  'https://' + window.location.host + ' + p_id + '?domain=' + iframeReferer + '&autoplay=1&extrans=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
+            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&extrans=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
         });
 
         $('#translator-name').change(function () {
             var t = $(this).find(':selected').attr('value');
-            window.location.href =  'https://' + window.location.host + '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
+            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
         });
 
         @elseif ($type === 'serial')
@@ -1119,15 +1088,10 @@
                 _seasons_select = $('select#season-number').val(),
                 _episodes_select = $('select#episode-number').val();
             var extep = '';
-            var unfseason = '';
-            @if (isset($_GET['extepi']) && $_GET['extepi'] == '1')
+            @if (isset($_GET['extepi']) && $_GET['extepi'] === '1')
                 extep = '&extepi=1';
             @endif
-
-            @if (isset($_GET['unfseason']) && $_GET['unfseason'] == '1')
-                unfseason = '&unfseason=1';
-            @endif
-                window.location.href = 'https://' + window.location.host + '/show/' + p_id + '?domain=' + iframeReferer + '&season=' + _seasons_select + '&episode=' + _episodes_select + '&extrans=1' + extep + unfseason+ '&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
+                window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&season=' + _seasons_select + '&episode=' + _episodes_select + '&extrans=1' + extep + '&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
         });
 
 
@@ -1148,7 +1112,6 @@
 
                 _episodes_select.append('<option value="' + seasons_episodes[_season][i] + '"' + _selected + '>Серия ' + seasons_episodes[_season][i] + '</option>');
             }
-
 
             _episodes_select.change();
         })
@@ -1180,20 +1143,13 @@
                 <?php if (isset($_GET['extepi'])): ?>
             _url_params.push('extepi=1');
             <?php endif; ?>
-             <?php if (isset($_GET['unfseason'])): ?>
-            _url_params.push('unfseason=1');
-            <?php endif; ?>
 
             if (tgc) {
                 _url_params.push('tgc=' + tgc);
             }
 
             //if(forceauto){
-            <?php if (isset($_GET['unfseason']) && $_GET['unfseason'] == '1' ): ?>
-            _url_params.push('autoplay=0');
-            <?php else: ?>
             _url_params.push('autoplay=1');
-            <?php endif; ?>
             //}
 
             if (m_s == 'auto') {
@@ -1541,50 +1497,40 @@
 
     function hideSelectors() {
         hideTimeout = setTimeout(function () {
-            let hoveringPlayer        = $('#player').length        && $('#player').is(':hover');
-            let hoveringSelectors     = $('#selectors').length     && $('#selectors').is(':hover');
-            let hoveringShare         = $('.share-container').length && $('.share-container').is(':hover');
-            @if ($type === 'serial')
-            let hoveringNextEpisode   = $('#nextepisode').length   && $('#nextepisode').is(':hover');
-            @endif
-            if (
-                !hoveringPlayer &&
-                !hoveringSelectors &&
-                !hoveringShare
+            if (!$('#player').is(':hover') && !$('#selectors').is(':hover')&& !$('.share-container').is(':hover')
                     @if ($type === 'serial')
-                && !hoveringNextEpisode
+                && !$('#nextepisode').is(':hover')
                 @endif
-            ) {
+         ) {
                 $('#selectors, #nextepisode, #shareBlock').fadeOut('fast');
             }
+        },200);
 
-        }, 200);
     }
 
 
+    $('#player').on('mousemove', showSelectors);
+    $('#player').on('mouseleave', hideSelectors);
+    $('pjsdiv#player_settings').on('mouseover', hideSelectors);
 
-        $('#player').on('mousemove', showSelectors);
-        $('#player').on('mouseleave', hideSelectors);
-        $('pjsdiv#player_settings').on('mouseover', hideSelectors);
 
+    // CURSOR INACTIVITY HIDE CONTROLS
+    let inactivityTimer;
 
-// CURSOR INACTIVITY HIDE CONTROLS
-        let inactivityTimer;
-
-        function onInactivity() {
-            var playing = CDNplayer.api("playing");
-            if (playing) {
-                $('#selectors,#shareBlock,#nextepisode').fadeOut('fast');
-            }
+    function onInactivity() {
+        var playing = CDNplayer.api("playing");
+        if (playing) {
+            $('#selectors,#shareBlock,#nextepisode').fadeOut('fast');
         }
+    }
 
-        function resetInactivityTimer() {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(onInactivity, 4000);
-        }
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(onInactivity, 4000);
+    }
 
-        document.addEventListener("mousemove", resetInactivityTimer);
-        resetInactivityTimer();
+    document.addEventListener("mousemove", resetInactivityTimer);
+    resetInactivityTimer();
 
 </script>
 
@@ -1634,7 +1580,6 @@
     }
 
 
-
     @if (isset($_GET['smart_tv']) && $_GET['smart_tv'] == '1')
 
     var nowinfs = false;
@@ -1647,18 +1592,18 @@
         }
 
         if (e.key === 'ArrowUp') {
-           if(!nowinfs) {
-               $('#playfs-overlay').remove();
-               window.parent.postMessage({action: "returnFocus"}, "*");
-           }
-           }
+            if(!nowinfs) {
+                $('#playfs-overlay').remove();
+                window.parent.postMessage({action: "returnFocus"}, "*");
+            }
+        }
     });
 
     function createFullscreenOverlay() {
         const overlay = document.createElement("div");
         overlay.id = "playfs-overlay";
         overlay.tabIndex = 0;
-            Object.assign(overlay.style, {
+        Object.assign(overlay.style, {
             position: "fixed",
             top: "0",
             left: "0",
@@ -1709,14 +1654,6 @@
         }
     });
     @endif
-
-    $(document).on('click', '.nice-select.unfolded li', function() {
-        $(this).addClass('clicked');
-    });
-
-    $(document).on('mouseenter', '.nice-select.unfolded', function() {
-        $(this).addClass('open');
-    });
 </script>
 
 <!--  DOWNLOAD FUNCTIONALITY  -->
@@ -1755,10 +1692,10 @@
             let s = "";
             let e = "";
             @if($season)
-            s = {{$season}};
+                s = {{$season}};
             @endif
-            @if($episode)
-            e = {{$episode}};
+                    @if($episode)
+                e = {{$episode}};
             @endif
 
             $.ajax({
