@@ -298,9 +298,22 @@
         #season-number+.nice-select ul.list li{display:flex;min-width:fit-content;max-width:8%;margin:2px;background-color: #172322;padding:0 8px;line-height: 25px; min-height: 26px;justify-content: center;flex: 1 1 8%;}
         #season-number+.nice-select ul.list li.option.selected{background-color: #5d5d5d;}
         #season-number+.nice-select ul.list li:hover{background-color: #444242;}
+        .nice-select.open.unfolded li.option.clicked,
         .video_selectors #season-number+.nice-select ul.list li.option.clicked{
-            background: #00a0b0 !important;
-            cursor: wait !important;
+            background: linear-gradient(110deg,#00a0b0,#042a2d,#00a0b0);
+            background-size: 200% 100%;
+            animation: gradientMove 2s ease-in-out infinite;}
+        @keyframes gradientMove {
+            0% {
+                background-position: 100% 50%;
+            }
+            50% {
+
+                background-position: 0% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
         }
     </style>
 @endif
@@ -1336,16 +1349,23 @@
     }
     function hideSelectors() {
         hideTimeout = setTimeout(function () {
-            if (!$('#player').is(':hover') && !$('#selectors').is(':hover')&& !$('.share-container').is(':hover')
+            let hoveringPlayer = $('#player').length && $('#player').is(':hover');
+            let hoveringSelectors = $('#selectors').length && $('#selectors').is(':hover');
+            let hoveringShare = $('.share-container').length && $('.share-container').is(':hover');
+            @if ($type === 'serial')
+            let hoveringNextEpisode   = $('#nextepisode').length   && $('#nextepisode').is(':hover');
+            @endif
+            if (!hoveringPlayer && !hoveringSelectors && !hoveringShare
                     @if ($type === 'serial')
-                && !$('#nextepisode').is(':hover')
-                @endif
-         ) {
+                    && !hoveringNextEpisode
+                    @endif
+                    )
+            {
                 $('#selectors, #nextepisode, #shareBlock').fadeOut('fast');
             }
-        },200);
-
+        }, 200);
     }
+
     $('#player').on('mousemove', showSelectors);
     $('#player').on('mouseleave', hideSelectors);
     $('pjsdiv#player_settings').on('mouseover', hideSelectors);
@@ -1437,6 +1457,10 @@
     console.log("Smart TV Mode");
     @endif
     <!--  END SMART_TV HELPERS  -->
+
+    $(document).on('click', '.nice-select li.option', function(){
+        $(this).addClass('clicked');
+    });
 </script>
 
 <!--  DOWNLOAD FUNCTIONALITY  -->
