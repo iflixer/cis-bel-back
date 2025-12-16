@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\PlayerEventStat;
+use App\PlayerPayStat;
 use App\Services\PayoutCalculationService;
 use App\Services\PlayerEventStatsService;
+use App\UserTransaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -20,7 +23,10 @@ class PayoutController extends Controller
 
     public function triggerDailyPayout(Request $request)
     {
-        $date = Carbon::yesterday()->format('Y-m-d');
+        $date = $request->input('date', Carbon::yesterday()->format('Y-m-d'));
+
+        PlayerPayStat::where('date', $date)->delete();
+        UserTransaction::where('date', $date)->where('type', 'accrual')->delete();
 
         $result = $this->payoutService->calculateDailyPayouts($date);
 
@@ -43,7 +49,9 @@ class PayoutController extends Controller
 
     public function triggerDailyEventStats(Request $request)
     {
-        $date = Carbon::yesterday()->format('Y-m-d');
+        $date = $request->input('date', Carbon::yesterday()->format('Y-m-d'));
+
+        PlayerEventStat::where('date', $date)->delete();
 
         $result = $this->eventStatsService->calculateDailyStats($date);
 
