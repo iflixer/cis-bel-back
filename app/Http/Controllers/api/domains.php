@@ -328,12 +328,13 @@ class domains extends Controller
         $query = Domain::select(
             'domains.*',
             'users.login as user_login',
+            'users.contact_telegram as user_telegram',
             'domain_types.name as domain_type_name',
             DB::raw('COALESCE(loads_stats.cnt, 0) as loads_24h')
         )
         ->leftJoin('users', 'domains.id_parent', '=', 'users.id')
         ->leftJoin('domain_types', 'domains.domain_type_id', '=', 'domain_types.id')
-        ->leftJoin(DB::raw('(SELECT domain_id, COUNT(*) as cnt FROM player_pay_log WHERE event = "load" AND created_at >= NOW() - INTERVAL 24 HOUR GROUP BY domain_id) as loads_stats'), 'domains.id', '=', 'loads_stats.domain_id');
+        ->leftJoin(DB::raw('(SELECT domain_id, SUM(counter) as cnt FROM player_event_stats WHERE event_type = "load" AND date >= CURDATE() - INTERVAL 1 DAY GROUP BY domain_id) as loads_stats'), 'domains.id', '=', 'loads_stats.domain_id');
 
         $searchUser = $this->request->input('search_user');
         if ($searchUser) {
