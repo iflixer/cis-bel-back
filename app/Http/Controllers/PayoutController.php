@@ -25,6 +25,20 @@ class PayoutController extends Controller
     {
         $date = $request->input('date', Carbon::yesterday()->format('Y-m-d'));
 
+        try {
+            $parsedDate = Carbon::createFromFormat('Y-m-d', $date);
+            if (!$parsedDate || $parsedDate->format('Y-m-d') !== $date) {
+                throw new \InvalidArgumentException();
+            }
+            $date = $parsedDate->format('Y-m-d');
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid date format. Use Y-m-d (e.g., 2025-12-15)',
+                'date' => $request->input('date')
+            ], 400);
+        }
+
         PlayerPayStat::where('date', $date)->delete();
         UserTransaction::where('date', $date)->where('type', 'accrual')->delete();
 
@@ -50,6 +64,20 @@ class PayoutController extends Controller
     public function triggerDailyEventStats(Request $request)
     {
         $date = $request->input('date', Carbon::yesterday()->format('Y-m-d'));
+
+        try {
+            $parsedDate = Carbon::createFromFormat('Y-m-d', $date);
+            if (!$parsedDate || $parsedDate->format('Y-m-d') !== $date) {
+                throw new \InvalidArgumentException();
+            }
+            $date = $parsedDate->format('Y-m-d');
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid date format. Use Y-m-d (e.g., 2025-12-15)',
+                'date' => $request->input('date')
+            ], 400);
+        }
 
         PlayerEventStat::where('date', $date)->delete();
 
