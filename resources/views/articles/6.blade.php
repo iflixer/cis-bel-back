@@ -147,24 +147,6 @@
         <td>Число</td>
         <td><code>1</code></td>
     </tr>
-    <tr>
-        <td>extrans</td>
-        <td>Внешнее меню переводов*</td>
-        <td>Число</td>
-        <td><code>1</code></td>
-    </tr>
-    <tr>
-        <td>extepi</td>
-        <td>Внешнее меню серий'*</td>
-        <td>Число</td>
-        <td><code>1</code></td>
-    </tr>
-    <tr>
-        <td>unfseason</td>
-        <td>Развернутое меню сезонов</td>
-        <td>Число</td>
-        <td><code>1</code></td>
-    </tr>
     </tbody>
 </table>
 
@@ -221,52 +203,3 @@
 </blockquote>
 
 
-<blockquote style="background-color:#f8f9fa;padding:5px 10px">
-    Отобразить внешнее меню переводов
-    <pre class="html-syntax">
-//player0.flixcdn.space/show/1?extrans=1
-</pre>
-    Отобразить внешнее меню серий
-    <pre class="html-syntax">
-//player0.flixcdn.space/show/1?extepi=1
-</pre>
-
-    Отобразить развернутое меню сезонов (вместо дроп-дауна)
-    <pre class="html-syntax">
-//player0.flixcdn.space/show/1?unfseason=1
-
-//player0.flixcdn.space/show/1?unfseason=1&extepi=1&extrans=1
-</pre>
-
-
-    *Важно! У разных фильмов/сериалов разное кол-во озвучек, соотношение сторон iframe всегда будет разным,<br>
-    для корректного отображения iframe на сайте, вам небходимо добавить Javascript код для коррекции:<br>
-
-    <pre>
-        <code>
-
-    window.addEventListener("message", (event) => {
-    var pdata = event.data;
-        if (pdata.type === "aspectRatio") {
-            var piframe = document.getElementById("player"); // ID iframe c плеером
-            var pratio = pdata.ratio;
-            piframe.style.aspectRatio = pratio;
-            piframe.style.height = piframe.offsetWidth / pratio + "px";
-        }
-    });
-       </code>
-    </pre>
-
-    <pre class="html-syntax">
-        //player0.flixcdn.space/show/1?extrans=1
-        </pre>
-    <img src="/images/module/020.png">
-         <pre class="html-syntax">
-        //player0.flixcdn.space/show/1?exepi=1
-        </pre>
-    <img src="/images/module/021.png">
-        <pre class="html-syntax">
-            //player0.flixcdn.space/show/1?unfseason=1&extepi=1&extrans=1
-        </pre>
-    <img src="/images/module/022.png">
-</blockquote>
