@@ -1405,6 +1405,24 @@
                 window.parent.postMessage({action: "returnFocus"}, "*");
             }
         }
+        if (e.key === 'ArrowDown') {
+            if(!nowinfs) {
+                $('#playfs-overlay').remove();
+                window.parent.postMessage({action: "returnFocusDown"}, "*");
+            }
+        }
+        if (e.key === 'ArrowLeft') {
+            if(!nowinfs) {
+                $('#playfs-overlay').remove();
+                window.parent.postMessage({action: "returnFocusLeft"}, "*");
+            }
+        }
+        if (e.key === 'ArrowRight') {
+            if(!nowinfs) {
+                $('#playfs-overlay').remove();
+                window.parent.postMessage({action: "returnFocusRight"}, "*");
+            }
+        }
     });
     function createFullscreenOverlay() {
         const overlay = document.createElement("div");
@@ -1416,11 +1434,10 @@
             left: "0",
             width: "100vw",
             height: "100vh",
-            background: "rgba(255,255,255,0.2)",
+            background: "transparent",
             zIndex: "999999",
             cursor: "pointer",
             content: "focus",
-
         });
         document.body.appendChild(overlay);
         overlay.focus();
