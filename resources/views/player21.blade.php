@@ -815,9 +815,13 @@
     }());
 
     $(function () {
-        if (!cdn.player.is_touch()) {
-            $('#selectors select[data-select="1"]').niceSelect();
 
+        let domobileunfold = false;
+        <?php if (isset($_GET['unfseason'])): ?>
+            domobileunfold = true;
+        <?php endif; ?>
+        if (!cdn.player.is_touch() || domobileunfold) {
+            $('#selectors select[data-select="1"]').niceSelect();
             setTimeout(function () {
                 $('.nice-select ul').each(function () {
                     var _dropdown = $(this),
@@ -1084,7 +1088,7 @@
             }
 
             if (event == "start") {
-                // console.log('PlayerjsEvents', event, info);
+                console.log('PlayerjsEvents', event);
                 $.ajax({
                     type: 'get',
                     url: '/apishow/shows.show',
@@ -1094,7 +1098,6 @@
                     success: function (response) {
                     }
                 });
-
             }
 
             if (event == "pause" || event == "end") {
