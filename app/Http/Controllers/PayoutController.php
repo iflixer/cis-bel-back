@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\PlayerEventStat;
+use App\PlayerPayStat;
 use App\Services\PayoutCalculationService;
 use App\Services\PlayerEventStatsService;
+use App\UserTransaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -20,7 +23,24 @@ class PayoutController extends Controller
 
     public function triggerDailyPayout(Request $request)
     {
-        $date = Carbon::yesterday()->format('Y-m-d');
+        $date = $request->input('date', Carbon::yesterday()->format('Y-m-d'));
+
+        try {
+            $parsedDate = Carbon::createFromFormat('Y-m-d', $date);
+            if (!$parsedDate || $parsedDate->format('Y-m-d') !== $date) {
+                throw new \InvalidArgumentException();
+            }
+            $date = $parsedDate->format('Y-m-d');
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid date format. Use Y-m-d (e.g., 2025-12-15)',
+                'date' => $request->input('date')
+            ], 400);
+        }
+
+        PlayerPayStat::where('date', $date)->delete();
+        UserTransaction::where('date', $date)->where('type', 'accrual')->delete();
 
         $result = $this->payoutService->calculateDailyPayouts($date);
 
@@ -43,7 +63,23 @@ class PayoutController extends Controller
 
     public function triggerDailyEventStats(Request $request)
     {
-        $date = Carbon::yesterday()->format('Y-m-d');
+        $date = $request->input('date', Carbon::yesterday()->format('Y-m-d'));
+
+        try {
+            $parsedDate = Carbon::createFromFormat('Y-m-d', $date);
+            if (!$parsedDate || $parsedDate->format('Y-m-d') !== $date) {
+                throw new \InvalidArgumentException();
+            }
+            $date = $parsedDate->format('Y-m-d');
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid date format. Use Y-m-d (e.g., 2025-12-15)',
+                'date' => $request->input('date')
+            ], 400);
+        }
+
+        PlayerEventStat::where('date', $date)->delete();
 
         $result = $this->eventStatsService->calculateDailyStats($date);
 

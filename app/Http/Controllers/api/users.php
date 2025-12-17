@@ -44,45 +44,53 @@ class users extends Controller{
   public function get(){
     $response = [];
     $messages = [];
-    $ids = [];
 
-    $queryTikets = User::select('id','login','status','api_key','email','name','surname')->where('id', '!=', $this->user['id']);
+    $query = User::select([
+        'users.id',
+        'users.login',
+        'users.status',
+        'users.api_key',
+        'users.email',
+        'users.name',
+        'users.surname',
+        'users.contact_telegram',
+        'rights.name as tupe',
+        \DB::raw('COALESCE(SUM(user_transactions.amount), 0) as balance_cents')
+      ])
+      ->join('link_rights', 'users.id', '=', 'link_rights.id_user')
+      ->join('rights', 'link_rights.id_rights', '=', 'rights.id')
+      ->leftJoin('user_transactions', 'users.id', '=', 'user_transactions.user_id')
+      ->where('users.id', '!=', $this->user['id'])
+      ->groupBy('users.id', 'users.login', 'users.status', 'users.api_key', 'users.email', 'users.name', 'users.surname', 'users.contact_telegram', 'rights.name');
 
-    if( $this->request->input('page') == 'users' ){
+    $page = $this->request->input('page');
 
-      
-      $idRights = LinkRight::select('id_user')->where('id_rights', 1)->get()->toArray();
-      foreach ($idRights as $value) {
-        $ids[] = $value['id_user'];
-      }
-
-      $queryTikets = $queryTikets->whereIn('id', $ids)->where('status','!=','0');
-
-    }else if($this->request->input('page') == 'kontrol'){
-
-      $idRights = LinkRight::select('id_user')->where('id_rights','!=', 1)->get()->toArray();
-      foreach ($idRights as $value) {
-        $ids[] = $value['id_user'];
-      }
-
-      $queryTikets = $queryTikets->whereIn('id', $ids)->where('status','!=','0');
-
-    }else{
-      $queryTikets = $queryTikets->where('status', '0');
+    if ($page == 'users') {
+      $query = $query->where('link_rights.id_rights', 1)->where('users.status', '!=', '0');
+    } else if ($page == 'kontrol') {
+      $query = $query->where('link_rights.id_rights', '!=', 1)->where('users.status', '!=', '0');
+    } else {
+      $query = $query->where('users.status', '0');
     }
 
-    $response = $queryTikets->get()->toArray();
+    $users = $query->get();
 
-    foreach ($response as $key => $value) {
-      $user = User::find($value['id']);
-      $balanceInCents = $user->getBalance();
-      $response[$key]['score'] = number_format($balanceInCents / 100, 2, '.', '');
-      
-      $idRight = LinkRight::where('id_user', $value['id'] )->first();
-      $right = Right::where('id', $idRight->id_rights )->first()->toArray();
-      $response[$key]['tupe'] = $right['name'];
+    foreach ($users as $user) {
+      $response[] = [
+        'id' => $user->id,
+        'login' => $user->login,
+        'status' => $user->status,
+        'api_key' => $user->api_key,
+        'email' => $user->email,
+        'name' => $user->name,
+        'surname' => $user->surname,
+        'contact_telegram' => $user->contact_telegram,
+        'tupe' => $user->tupe,
+        'score' => number_format($user->balance_cents / 100, 2, '.', '')
+      ];
     }
-    return ['data' => $response,'messages' => $messages];
+
+    return ['data' => $response, 'messages' => $messages];
   }
 
 
@@ -238,6 +246,11 @@ class users extends Controller{
       return ['data' => $response,'messages' => ['tupe'=>'error', 'message'=>'Не указанн tupe']];
     }
 
+    $contact_telegram = $this->request->input('contact_telegram');
+    if($contact_telegram == ''){
+      return ['data' => $response,'messages' => ['tupe'=>'error', 'message'=>'Не указан Telegram']];
+    }
+
     $name = $this->request->input('name');
     $endname = $this->request->input('endname');
 
@@ -253,7 +266,8 @@ class users extends Controller{
 
         'name' => $name,
         'surname' => $endname,
-        
+        'contact_telegram' => $contact_telegram,
+
         'cent' => '{"yandex":null,"qiwi":null,"card":null,"webMoney":null}',
 
         'status' => 2,
@@ -301,6 +315,11 @@ class users extends Controller{
       return ['data' => $response,'messages' => ['tupe'=>'error', 'message'=>'Не указанн domain']];
     }
 
+    $contact_telegram = $this->request->input('contact_telegram');
+    if($contact_telegram == ''){
+      return ['data' => $response,'messages' => ['tupe'=>'error', 'message'=>'Не указан Telegram']];
+    }
+
     $name = $this->request->input('name');
     $surname = $this->request->input('surname');
 
@@ -313,7 +332,8 @@ class users extends Controller{
         'login' => $login,
         'email' => $email,
         'name' => $name,
-        'surname' => $surname
+        'surname' => $surname,
+        'contact_telegram' => $contact_telegram
       ];
 
       if($password != ''){

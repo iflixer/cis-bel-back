@@ -37,9 +37,14 @@ class AuthController extends Controller
         $login = $this->request->input('login');
         $password = $this->request->input('password');
         $email = $this->request->input('email');
+        $contact_telegram = $this->request->input('contact_telegram');
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $response['messages'][] = ['type'=>'error', 'message'=>'Введён не корректный Email адрес', 'code' => 0];
+        }
+
+        if (empty($contact_telegram)) {
+            $response['messages'][] = ['type'=>'error', 'message'=>'Не указан Telegram', 'code' => 0];
         }
 
         $userDB = User::where('login', $login)->first();
@@ -73,7 +78,8 @@ class AuthController extends Controller
 
             'bearer_token' => $bearer_token,
             'refresh_token' => $refresh_token,
-            'time_token' => $time_token
+            'time_token' => $time_token,
+            'contact_telegram' => $contact_telegram
         ])->id;
         LinkRight::create(['id_user' => $userId, 'id_rights' => 1])->id;
 
