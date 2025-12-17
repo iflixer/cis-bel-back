@@ -117,6 +117,8 @@ class VideoDbSyncService
             ];
         }
 
+        $this->progressTracker->recordRunStart();
+
         try {
             $this->loadTranslationsCache();
             $this->log("Fetching batch from VideoDB API...");
@@ -193,11 +195,12 @@ class VideoDbSyncService
             $totalTime = (microtime(true) - $this->startTime) * 1000;
             $this->log("Batch completed in " . round($totalTime) . "ms");
 
+            $status = $cycleCompleted ? 'cycle_completed' : ($hasMore ? 'batch_completed' : 'sync_completed');
+            $this->progressTracker->recordSuccess($status);
             $this->progressTracker->releaseLock();
 
-
             return [
-                'status' => $cycleCompleted ? 'cycle_completed' : ($hasMore ? 'batch_completed' : 'sync_completed'),
+                'status' => $status,
                 'sort_direction' => $configDto->sortDirection,
                 'batch' => [
                     'offset' => $configDto->offset,
@@ -232,6 +235,7 @@ class VideoDbSyncService
             ];
 
         } catch (\Exception $e) {
+            $this->progressTracker->recordError($e->getMessage());
             $this->progressTracker->releaseLock();
 
             return [
