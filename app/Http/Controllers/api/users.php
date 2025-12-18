@@ -123,7 +123,9 @@ class users extends Controller{
       return ['data' => $response,'messages' => ['tupe'=>'error', 'message'=>'Не указанн id']];
     }
 
-    $response = User::select('id', 'login', 'status', 'api_key', 'score', 'cent', 'domain_id')->where('id', $id)->first()->toArray();
+    $user = User::select('id', 'login', 'status', 'api_key', 'cent', 'domain_id')->where('id', $id)->first();
+    $response = $user->toArray();
+    $response['score'] = number_format($user->getBalance() / 100, 2, '.', '');
 
     $response['operation'] = Operation::where('id_user', $id)->get()->toArray();
 

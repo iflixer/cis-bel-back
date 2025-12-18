@@ -561,7 +561,16 @@ class stats extends Controller
                 $domains = Domain::select('name', 'show', 'id_parent')->get()->toArray();
             }
 
-            $users = User::select('id', 'login', 'score')->get()->toArray();
+            $users = User::select('id', 'login')->get();
+            $usersArray = [];
+            foreach ($users as $user) {
+                $usersArray[] = [
+                    'id' => $user->id,
+                    'login' => $user->login,
+                    'score' => $user->getBalance() / 100
+                ];
+            }
+            $users = $usersArray;
         }
 
         $allview = 0;
