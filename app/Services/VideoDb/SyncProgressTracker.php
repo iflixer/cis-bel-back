@@ -162,7 +162,7 @@ class SyncProgressTracker
             'offset' => $progress['offset'],
             'total_processed' => $progress['total_processed'],
             'max_records' => $progress['max_records'],
-            'config' => $progress['config'],
+            'config' => $progress['config'] ?? null,
         ];
     }
 
