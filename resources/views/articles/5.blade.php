@@ -139,7 +139,7 @@
 <br>
 
 <h3 class="doch3">Требования</h3>
-<p><code>DLE v10.2+</code> <code>UTF-8</code></p>
+<p><code>DLE v18.1+</code> <code>UTF-8</code></p>
 
 <br>
 
