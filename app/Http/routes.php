@@ -121,6 +121,16 @@ Route::get('/sss/{type}/{id}/{md5}', ['middleware' => [], 'uses' => 'TestControl
 // get random video for Andy's tests
 Route::get('/test/random_movie', ['middleware' => [], 'uses' => 'TestController@randomMovie']);
 
+// Debug
+Route::get('/phpinfo/HOQDotsh1MEnIl', phpinfo(...));
+Route::get('/echo/HOQDotsh1MEnIl', function () {
+    return 'done';
+});
+Route::get('/sleep/HOQDotsh1MEnIl/120', function () {
+    sleep(120);
+    return 'wait 120s, done';
+});
+
 // test
 // Route::get('/test/episode/{id}', ['middleware' => [], 'uses' => 'TestController@episode'])->where('id', '[0-9]+');
 Route::get('/test/translations', ['middleware' => [], 'uses' => 'TestController@translations']);
