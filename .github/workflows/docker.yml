@@ -8,19 +8,25 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get commit and tag
         id: vars
@@ -29,45 +35,62 @@ jobs:
           echo "tag=$(git describe --tags --always)" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image PHP
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./docker/php/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/cis-bel-back-php:latest
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/cis-bel-back-php:latest
+            ghcr.io/${{ github.repository_owner }}/cis-bel-back-php:${{ steps.vars.outputs.tag }}
           build-args: |
             SOURCE_COMMIT=${{ steps.vars.outputs.commit }}
             SOURCE_TAG=${{ steps.vars.outputs.tag }}
 
       - name: Build and push Docker image NGINX
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./docker/nginx/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/cis-bel-back-nginx:latest
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/cis-bel-back-nginx:latest
+            ghcr.io/${{ github.repository_owner }}/cis-bel-back-nginx:${{ steps.vars.outputs.tag }}
           build-args: |
             SOURCE_COMMIT=${{ steps.vars.outputs.commit }}
             SOURCE_TAG=${{ steps.vars.outputs.tag }}
 
       - name: Notify Telegram
         if: success()
+        env:
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
         run: |
-          curl -s -X POST https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage \
+          MESSAGE=$(cat << 'EOF'
+          ✅ *Docker образы собраны и опубликованы, НАДО ДЕПЛОИТЬ!*
+
+          👤 Автор пуша: `${{ github.actor }}`
+          💬 Комментарий к пушу:
+          `${{ github.event.head_commit.message }}`
+
+          📦 Образы:
+          - `ghcr.io/${{ github.repository_owner }}/cis-bel-back-php:${{ steps.vars.outputs.tag }}`
+          - `ghcr.io/${{ github.repository_owner }}/cis-bel-back-nginx:${{ steps.vars.outputs.tag }}`
+
+          💾 Коммит: `${{ steps.vars.outputs.commit }}`
+          🏷️ Тег: `${{ steps.vars.outputs.tag }}`
+          EOF
+          )
+
+          curl -s -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
             -H "Content-Type: application/json" \
-            -d '{
-              "chat_id": "'"${{ secrets.TG_CHAT_ID }}"'",
-              "parse_mode": "Markdown",
-              "text": "✅ *Docker образы собраны и опубликованы, НАДО ДЕПЛОИТЬ!*\n\n📦 Образы:\n- `${{ secrets.DOCKERHUB_USERNAME }}/cis-bel-back-php:latest`\n- `${{ secrets.DOCKERHUB_USERNAME }}/cis-bel-back-nginx:latest`\n\n🧑 Коммит: `${{ steps.vars.outputs.commit }}`\n🏷️ Тег: `${{ steps.vars.outputs.tag }}`",
-              "reply_markup": {
-                "inline_keyboard": [[
-                  {
-                    "text": "🔍 Открыть GitHub Actions",
-                    "url": "'"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"'"
-                  }
-                ]]
-              }
-            }'
+            -d "$(jq -n \
+              --arg chat_id "$TG_CHAT_ID" \
+              --arg text "$MESSAGE" \
+              --arg mode "Markdown" \
+              '{chat_id: $chat_id, text: $text, parse_mode: $mode}')"
 
       - name: Notify Telegram on failure
         if: failure()
