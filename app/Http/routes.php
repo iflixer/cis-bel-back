@@ -122,7 +122,9 @@ Route::get('/sss/{type}/{id}/{md5}', ['middleware' => [], 'uses' => 'TestControl
 Route::get('/test/random_movie', ['middleware' => [], 'uses' => 'TestController@randomMovie']);
 
 // Debug
-Route::get('/phpinfo/HOQDotsh1MEnIl', phpinfo(...));
+Route::get('/phpinfo/HOQDotsh1MEnIl', function () {
+    phpinfo();
+});
 Route::get('/echo/HOQDotsh1MEnIl', function () {
     return 'done';
 });
