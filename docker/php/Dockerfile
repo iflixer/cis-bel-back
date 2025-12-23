@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install -y \
     unzip \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
-    libmcrypt-dev \
     libgd-dev \
     nodejs \
     npm \
@@ -37,13 +36,6 @@ RUN apt-get update && apt-get install -y \
     bzip2 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# RUN cd /tmp && \
-#     wget -O phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2 && \
-#     tar -xjf phantomjs.tar.bz2 && \
-#     mv phantomjs-2.1.1-linux-x86_64/bin/phantomjs /usr/local/bin/ && \
-#     chmod +x /usr/local/bin/phantomjs && \
-#     rm -rf /tmp/phantomjs*
-
 RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
 
 COPY --chown=www-data:www-data . /var/www/html
@@ -52,6 +44,17 @@ COPY ./docker/php/php.ini /usr/local/etc/php/php.ini
 RUN sed -i 's/^;*catch_workers_output.*/catch_workers_output = yes/' /usr/local/etc/php-fpm.d/www.conf \
  && echo "php_admin_value[error_log] = /proc/self/fd/2" >> /usr/local/etc/php-fpm.d/www.conf \
  && echo "php_admin_flag[log_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf
+
+ # php-fpm tuning for Laravel
+RUN sed -i 's/^pm = .*/pm = dynamic/' /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i 's/^pm.max_children = .*/pm.max_children = 20/' /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i 's/^pm.start_servers = .*/pm.start_servers = 4/' /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i 's/^pm.min_spare_servers = .*/pm.min_spare_servers = 4/' /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i 's/^pm.max_spare_servers = .*/pm.max_spare_servers = 8/' /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i 's/^;*pm.max_requests = .*/pm.max_requests = 500/' /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i 's/^;*request_terminate_timeout.*/request_terminate_timeout = 60s/' /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i 's/^;*request_slowlog_timeout.*/request_slowlog_timeout = 5s/' /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i 's|^;*slowlog = .*|slowlog = /proc/self/fd/2|' /usr/local/etc/php-fpm.d/www.conf
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
