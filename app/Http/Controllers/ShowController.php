@@ -87,6 +87,10 @@ class ShowController extends Controller{
             abort(404);
         }
 
+        if ($video->blacklisted) {
+            abort(404);
+        }
+
         if ($video->lock) {
             if ($video->lock == 'FULL') {
                 abort(423);

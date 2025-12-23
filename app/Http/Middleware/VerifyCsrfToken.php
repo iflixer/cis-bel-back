@@ -19,6 +19,7 @@ class VerifyCsrfToken extends BaseVerifier
         'cdn/*',
         'payouts/*',
         'videodb/*',
+        'videotouch/*',
         'download/*',
     ];
 }

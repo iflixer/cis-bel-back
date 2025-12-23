@@ -5,8 +5,9 @@
         margin-bottom: 5px;
         margin-top: 5px;
         border: 1px solid #dddddd;
-        border-collapse: collapse; 
+        border-collapse: collapse;
     }
+
     .table th {
         font-weight: bold;
         padding: 8px;
@@ -14,6 +15,7 @@
         border: 1px solid #dddddd;
         text-align: left;
     }
+
     .table td {
         border: 1px solid #dddddd;
         padding: 8px;
@@ -39,26 +41,26 @@
 <h3>Параметры</h3>
 <table class="table">
     <thead>
-        <tr>
-            <th>Название</th>
-            <th>Описание</th>
-            <th>Тип</th>
-            <th>Доступные значения</th>
-        </tr>
+    <tr>
+        <th>Название</th>
+        <th>Описание</th>
+        <th>Тип</th>
+        <th>Доступные значения</th>
+    </tr>
     </thead>
     <tbody>
-        <tr>
-            <td><span style="color:#0d6efd">{resource}</span></td>
-            <td>Тип ресурса по идентификатору которого будет поиск плеера</td>
-            <td>Строка</td>
-            <td><code>kinopoisk</code>, <code>imdb</code></td>
-        </tr>
-        <tr>
-            <td><span style="color:#198754">{id}</span></td>
-            <td>Идентификатор ресурса по которому будет поиск плеера</td>
-            <td>Строка</td>
-            <td><code>1</code> - <code>999999999</code>, <code>tt1</code> - <code>tt999999999</code></td>
-        </tr>
+    <tr>
+        <td><span style="color:#0d6efd">{resource}</span></td>
+        <td>Тип ресурса по идентификатору которого будет поиск плеера</td>
+        <td>Строка</td>
+        <td><code>kinopoisk</code>, <code>imdb</code></td>
+    </tr>
+    <tr>
+        <td><span style="color:#198754">{id}</span></td>
+        <td>Идентификатор ресурса по которому будет поиск плеера</td>
+        <td>Строка</td>
+        <td><code>1</code> - <code>999999999</code>, <code>tt1</code> - <code>tt999999999</code></td>
+    </tr>
     </tbody>
 </table>
 
@@ -83,80 +85,68 @@
 <h3>Доступные GET параметры</h3>
 <table class="table">
     <thead>
-        <tr>
-            <th>Название</th>
-            <th>Описание</th>
-            <th>Тип</th>
-            <th>Доступные значения</th>
-        </tr>
+    <tr>
+        <th>Название</th>
+        <th>Описание</th>
+        <th>Тип</th>
+        <th>Доступные значения</th>
+    </tr>
     </thead>
     <tbody>
-        <tr>
-            <td>translation</td>
-            <td>Идентификатор перевода</td>
-            <td>Число</td>
-            <td><code>1</code> - <code>999999999</code></td>
-        </tr>
-        <tr>
-            <td>season</td>
-            <td>Номер сезона</td>
-            <td>Число</td>
-            <td><code>1</code> - <code>999999999</code></td>
-        </tr>
-        <tr>
-            <td>episode</td>
-            <td>Номер серии</td>
-            <td>Число</td>
-            <td><code>1</code> - <code>999999999</code></td>
-        </tr>
-        <tr>
-            <td>last</td>
-            <td>Последний из доступных эпизодов</td>
-            <td>Число</td>
-            <td><code>1</code></td>
-        </tr>
-        <tr>
-            <td>no_controls</td>
-            <td>Скрыть все элементы управления</td>
-            <td>Число</td>
-            <td><code>1</code></td>
-        </tr>
-        <tr>
-            <td>no_control_translations</td>
-            <td>Скрыть селектор выбора переводов</td>
-            <td>Число</td>
-            <td><code>1</code></td>
-        </tr>
-        <tr>
-            <td>no_control_seasons</td>
-            <td>Скрыть селектор выбора сезонов</td>
-            <td>Число</td>
-            <td><code>1</code></td>
-        </tr>
-        <tr>
-            <td>no_control_episodes</td>
-            <td>Скрыть селектор выбора сезонов и серий</td>
-            <td>Число</td>
-            <td><code>1</code></td>
-        </tr>
-        <tr>
-            <td>no_sharing</td>
-            <td>Скрыть иконку\блок шейринга в соц-сетях</td>
-            <td>Число</td>
-            <td><code>1</code></td>
-        </tr>
-        <tr>
-            <td>extrans</td>
-            <td>Внешнее меню переводов*</td>
-            <td>Число</td>
-            <td><code>1</code></td>
-        </tr>
-        <tr>
-            <td>extepi</td>
-            <td>Внешнее меню серий'*</td>
-            <td>Число</td>
-            <td><code>1</code></td>
-        </tr>
+    <tr>
+        <td>translation</td>
+        <td>Идентификатор перевода</td>
+        <td>Число</td>
+        <td><code>1</code> - <code>999999999</code></td>
+    </tr>
+    <tr>
+        <td>season</td>
+        <td>Номер сезона</td>
+        <td>Число</td>
+        <td><code>1</code> - <code>999999999</code></td>
+    </tr>
+    <tr>
+        <td>episode</td>
+        <td>Номер серии</td>
+        <td>Число</td>
+        <td><code>1</code> - <code>999999999</code></td>
+    </tr>
+    <tr>
+        <td>last</td>
+        <td>Последний из доступных эпизодов</td>
+        <td>Число</td>
+        <td><code>1</code></td>
+    </tr>
+    <tr>
+        <td>no_controls</td>
+        <td>Скрыть все элементы управления</td>
+        <td>Число</td>
+        <td><code>1</code></td>
+    </tr>
+    <tr>
+        <td>no_control_translations</td>
+        <td>Скрыть селектор выбора переводов</td>
+        <td>Число</td>
+        <td><code>1</code></td>
+    </tr>
+    <tr>
+        <td>no_control_seasons</td>
+        <td>Скрыть селектор выбора сезонов</td>
+        <td>Число</td>
+        <td><code>1</code></td>
+    </tr>
+    <tr>
+        <td>no_control_episodes</td>
+        <td>Скрыть селектор выбора сезонов и серий</td>
+        <td>Число</td>
+        <td><code>1</code></td>
+    </tr>
+    <tr>
+        <td>no_sharing</td>
+        <td>Скрыть иконку\блок шейринга в соц-сетях</td>
+        <td>Число</td>
+        <td><code>1</code></td>
+    </tr>
     </tbody>
 </table>
 
@@ -211,30 +201,5 @@
 //player0.flixcdn.space/show/1?translation=516&season=2&episode=21&no_control_episodes=1
 </pre>
 </blockquote>
-<blockquote style="background-color:#f8f9fa;padding:5px 10px">
-    Отобразить внешнее меню переводов
-    <pre class="html-syntax">
-//player0.flixcdn.space/show/1?extrans=1
-</pre>
-Отобразить внешнее меню серий
-    <pre class="html-syntax">
-//player0.flixcdn.space/show/1?extepi=1
-</pre>
-    *Важно! У разных фильмов/сериалов разное кол-во озвучек, соотношение сторон iframe всегда будет разным,<br>
-    для корректного отображения iframe на сайте, вам небходимо добавить Javascript код для коррекции:<br>
 
-    <pre><code>
 
-    window.addEventListener("message", (event) => {
-    var pdata = event.data;
-        if (pdata.type === "aspectRatio") {
-            var piframe = document.getElementById("player"); // ID iframe c плеером
-            var pratio = pdata.ratio;
-            piframe.style.aspectRatio = pratio;
-            piframe.style.height = piframe.offsetWidth / pratio + "px";
-        }
-    });
-    </code></pre>
-    <img src="/images/module/020.png">
-    <img src="/images/module/021.png">
-</blockquote>

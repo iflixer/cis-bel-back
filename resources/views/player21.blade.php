@@ -26,26 +26,6 @@
             transition: opacity 0.5s ease;
             z-index: 9999;
         }
-
-        .small-loader {
-            display: inline-block;
-            margin-left: 10px;
-            width: 10px;
-            height: 10px;
-            border: 3px solid #fff;
-            border-top: 3px solid transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
     </style>
 
     <!-- Google tag (gtag.js) -->
@@ -229,7 +209,7 @@
 
 <div id="selectors" class="video_selectors" style="display: flex;">
     @if ($type === 'serial')
-        <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_seasons']) || isset($_GET['no_control_episodes'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
+        <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_seasons'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
 				<select name="season" id="season-number" data-select="1">
 					@foreach ($seasons as $_season)
                         <option value="{{ $_season }}" @if ($season && $season == $_season) selected="selected"
@@ -238,7 +218,7 @@
 				</select>
 			</span>
 
-        <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_episodes'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
+        <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_episodes']) || isset($_GET['extepi']) ) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
 				<select name="episode" id="episode-number" data-select="1">
 					@foreach ($episodes as $_episode)
                         <option value="{{ $_episode }}" @if ($episode && $episode == $_episode) selected="selected"
@@ -249,11 +229,10 @@
 
     @endif
 
-
-    @if ($translations)
-        @if (isset($_GET['extrans']) && $_GET['extrans'] === '1')
-            <div style="display: none !important">@endif
-                <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_translations'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
+        @if ($translations)
+            @if (isset($_GET['extrans']) && $_GET['extrans'] === '1')
+                <div style="display: none !important">@endif
+                    <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_translations']) || isset($_GET['extrans'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
 			<select name="translator" id="translator-name" data-select="1">
 				@foreach ($translations as $translation)
                     <option value="{{ $translation['id'] }}"
@@ -262,75 +241,13 @@
                 @endforeach
 			</select>
 		</span>
-                @if (isset($_GET['extrans']) && $_GET['extrans'] === '1')</div>
+                    @if (isset($_GET['extrans']) && $_GET['extrans'] === '1')</div>
+            @endif
         @endif
-    @endif
-
 
 </div>
 
-{{-- External translations block --}}
-@if (isset($_GET['extrans']) && $_GET['extrans'] === '1')
-    <div id="transexternal" style="display:flex">
-        <div class="fwtitle">Озвучки:</div>
 
-        @foreach ($translations as $translation)
-            <div class="extransbtn @if($translate && $translate == $translation['id']) selected @endif"
-                 data-value="{{ $translation['id'] }}">{{ $translation['title'] }}</div>
-        @endforeach
-    </div>
-    <style>
-        #transexternal {
-            background-color: rgb(21, 21, 21);
-            color: #fff;
-            display: flex;
-            align-items: flex-start;
-            justify-content: flex-start;
-            flex-wrap: wrap;
-            padding: 6px;
-        }
-
-        .fwtitle {
-            min-width: 100%;
-            padding: 6px;
-            font-weight: 600
-        }
-
-        .extransbtn {
-            background: #2d2d2d;
-            cursor: default;
-            font-size: 14px;
-            margin-right: 3px;
-            margin-top: 3px;
-            overflow: hidden;
-            padding: 5px 10px;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            min-width: 20%;
-            max-width: 25%;
-            color: #fff;
-            flex: 1;
-        }
-
-        .extransbtn:hover,
-        .extransbtn.selected {
-            background: #5d5d5d;
-        }
-
-        .extransbtn.clicked {
-            background: #00a0b0 !important;
-            cursor: wait;
-        }
-    </style>
-    <script>
-        var extrans = document.getElementById('transexternal');
-        var exheight = extrans.clientHeight;
-        var selpos = exheight + 7;
-        document.getElementById('selectors').style.top = selpos + 'px';
-        document.getElementById('shareBlock').style.top = selpos + 'px';
-    </script>
-@endif
-{{-- END External translations block --}}
 
 
 
@@ -360,220 +277,122 @@
                         eselect.dispatchEvent(eevent);
                     }
                 });
-
             }
             @endif
         });
     </script>
-    <style>
-        #nextepisode {
-            color: #999;
-            position: absolute;
-            width: auto;
-            padding: 0 6px;
-            height: 24px;
-            border-radius: 4px;
-            border: 1px solid #999;
-            right: 10px;
-            bottom: 60px;
-            z-index: 1;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center
-        }
-
-        #nextepisode svg {
-            margin-left: 6px;
-        }
-
-        #nextepisode:hover {
-            color: #fff;
-            border: 1px solid #fff;
-        }
-
-        #nextepisode:hover svg path {
-            fill: #fff !important;
-        }
-    </style>
 @endif
 
 
 <div id="player" class="player"></div>
 
-{{-- External episodes block --}}
-@if ($type === 'serial' && isset($_GET['extepi']) && $_GET['extepi'] == '1')
-    <div id="epiexternal" style="display:flex">
-
-        @foreach ($episodes as $_episode)
-            <div class="exepibtn @if ($episode && $episode == $_episode) selected @endif"
-                 data-value="{{ $_episode }}">Серия {{ $_episode }}</div>
-        @endforeach
-    </div>
+{{-- UNFOLDED SEASONS --}}
+@if ($type === 'serial' && isset($_GET['unfseason']) && $_GET['unfseason'] == '1')
     <style>
-        span:has(#episode-number) {
-            display: none !important
-        }
-
-        #epiexternal {
-            background-color: rgb(21, 21, 21);
-            color: #fff;
-            display: flex;
-            align-items: flex-start;
-            justify-content: flex-start;
-            flex-wrap: wrap;
-            padding: 6px;
-            margin-bottom: 6px;
-        }
-
-        .exepibtn {
-            background: #2d2d2d;
-            cursor: default;
-            font-size: 14px;
-            margin-right: 3px;
-            margin-top: 3px;
-            overflow: hidden;
-            padding: 5px 10px;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            color: #fff;
-        }
-
-        @media (min-width: 1360px) {
-            .exepibtn {
-                width: calc(10% - 23px);
+        #selectors{flex-wrap: wrap}
+        #season-number+.nice-select{background-color: transparent;width:calc(100vw - 45px);border:0;padding:0;box-shadow: none !important}
+        #season-number+.nice-select.open{box-shadow: none !important}
+        #season-number+.nice-select:after{display:none}
+        #season-number+.nice-select .current{display:none}
+        #season-number+.nice-select ul.list{display:flex;opacity:1;position:relative;left:unset;top:unset;flex-direction: row;flex-wrap: wrap;background-color: transparent;margin:0;padding:0;box-shadow:none}
+        #season-number+.nice-select ul.list li{display:flex;min-width:fit-content;max-width:8%;margin:2px;background-color: #172322;padding:0 8px;line-height: 25px; min-height: 26px;justify-content: center;flex: 1 1 8%;}
+        #season-number+.nice-select ul.list li.option.selected{background-color: #5d5d5d;}
+        #season-number+.nice-select ul.list li:hover{background-color: #444242;}
+        .nice-select.open.unfolded li.option.clicked,
+        .video_selectors #season-number+.nice-select ul.list li.option.clicked{
+            background: linear-gradient(110deg,#00a0b0,#042a2d,#00a0b0);
+            background-size: 200% 100%;
+            animation: gradientMove 2s ease-in-out infinite;}
+        @keyframes gradientMove {
+            0% {
+                background-position: 100% 50%;
             }
-        }
+            50% {
 
-        @media (max-width: 1359px) {
-            .exepibtn {
-                width: calc(12.5% - 23px);
+                background-position: 0% 50%;
             }
-        }
-
-        @media (max-width: 800px) {
-            .exepibtn {
-                width: calc(20% - 23px);
+            100% {
+                background-position: 0% 50%;
             }
-        }
-
-        @media (max-width: 480px) {
-            .exepibtn {
-                width: calc(25% - 23px);
-            }
-        }
-
-        @media (max-width: 359px) {
-            .exepibtn {
-                width: calc(33.333% - 23px);
-            }
-        }
-
-        .exepibtn:hover,
-        .exepibtn.selected {
-            background: #5d5d5d;
-        }
-
-        .exepibtn.clicked {
-            background: #00a0b0 !important;
-            cursor: wait;
         }
     </style>
-    <script>
-        var exepi = document.getElementById('epiexternal');
-        var exepiheight = exepi.clientHeight;
-
-
-        let saveobserver = new MutationObserver((mutations) => {
-            for (var mutation of mutations) {
-                for (var node of mutation.addedNodes) {
-                    if (node.id === 'save-holder') {
-                        node.style.transform = 'translateY(-' + exepiheight + 'px)';
-                        ;
-                        saveobserver.disconnect();
-                    }
-                }
-            }
-        });
-        saveobserver.observe(document.body, {childList: true, subtree: true});
-
-        $('.exepibtn ').click(function () {
-            $(this).addClass('clicked');
-            let newepi = $(this).data('value');
-            let cseason = $('select#season-number').val();
-            let thisepiurl = new URL(window.location);
-            thisepiurl.searchParams.set('episode', newepi);
-            thisepiurl.searchParams.set('season', cseason);
-            thisepiurl.searchParams.set('autoplay', 1);
-            window.location.href = thisepiurl;
-        });
-    </script>
 @endif
-{{-- END External episodes block --}}
+{{-- END UNFOLDED SEASONS --}}
+
+{{-- External selectors block --}}
+@if (isset($_GET['extrans']) || isset($_GET['extepi']))
+    <style>
+        #selectors{flex-wrap: wrap;}
+        @if ($type === 'serial' && isset($_GET['extepi']))
+        #episode-number + .nice-select{display: none !important;}
+        @endif
+    </style>
+@endif
+{{-- END External selectors block --}}
 
 {{-- JSON data block --}}
-    @if (isset($_GET['smart_tv']) && $_GET['smart_tv'] == '1')
+@if (isset($_GET['smart_tv']) || isset($_GET['extrans']) || isset($_GET['extepi']))
+    @php
+        $transarray = [];
+        $seasonarray = [];
+        $epiarray = [];
+    @endphp
+    @if (!empty($translations))
         @php
-            $transarray = [];
-            $seasonarray = [];
-            $epiarray = [];
-        @endphp
-        @if (!empty($translations))
-            @php
-                foreach ($translations as $translation) {
-                    $transactive = 0;
+            foreach ($translations as $translation) {
+                $transactive = 0;
 
-                    if ($translate && $translate == $translation['id']) {
-                        $transactive = 1;
-                    }
+                if ($translate && $translate == $translation['id']) {
+                    $transactive = 1;
+                }
 
-                    $transarray[] = [
-                        "translation_id"   => $translation['id'],
-                        "translation_title" => $translation['title'],
-                        "is_active"        => $transactive,
-                    ];
-                }
-         @endphp
-        @endif
-        @if (!empty($seasons))
-            @php
-                    foreach ($seasons as $_season) {
-                        $seasonactive = 0;
-                            if ($season && $season == $_season) {
-                            $seasonactive = 1;
-                        }
-                            $seasonarray[] = [
-                            "season"   => $_season,
-                            "is_active" => $seasonactive,
-                        ];
-                    }
-            @endphp
-        @endif
-        @if (!empty($episodes))
-            @php
-                foreach ($episodes as $_episode) {
-                    $epiactive = 0;
-                        if ($episode && $episode == $_episode) {
-                        $epiactive = 1;
-                    }
-                        $epiarray[] = [
-                        "episode"   => $_episode,
-                        "is_active" => $epiactive,
-                    ];
-                }
-            @endphp
-        @endif
-        @php
-            $itemdata = [
-                     "type"       => $type,
-                     "translations" => $transarray,
-                     "seasons"      => $seasonarray,
-                     "series"        => $epiarray,
-                 ];
-               $jsonitemdata = json_encode($itemdata, JSON_UNESCAPED_UNICODE);
-               echo  '<script>const jsonitemdata = '.$jsonitemdata.';window.parent.postMessage({action: "itemdatalist", list: jsonitemdata}, "*")</script>';
+                $transarray[] = [
+                    "translation_id"   => $translation['id'],
+                    "translation_title" => $translation['title'],
+                    "is_active"        => $transactive,
+                ];
+            }
         @endphp
     @endif
+    @if (!empty($seasons))
+        @php
+            foreach ($seasons as $_season) {
+                $seasonactive = 0;
+                    if ($season && $season == $_season) {
+                    $seasonactive = 1;
+                }
+                    $seasonarray[] = [
+                    "season"   => $_season,
+                    "is_active" => $seasonactive,
+                ];
+            }
+        @endphp
+    @endif
+    @if (!empty($episodes))
+        @php
+            foreach ($episodes as $_episode) {
+                $epiactive = 0;
+                    if ($episode && $episode == $_episode) {
+                    $epiactive = 1;
+                }
+                    $epiarray[] = [
+                    "episode"   => $_episode,
+                    "is_active" => $epiactive,
+                ];
+            }
+        @endphp
+    @endif
+    @php
+        $itemdata = [
+                 "type"       => $type,
+                 "translations" => $transarray,
+                 "seasons"      => $seasonarray,
+                 "series"        => $epiarray,
+             ];
+           $jsonitemdata = json_encode($itemdata, JSON_UNESCAPED_UNICODE);
+           echo  '<script>const jsonitemdata = '.$jsonitemdata.';window.parent.postMessage({action: "itemdatalist", list: jsonitemdata}, "*")</script>';
+    @endphp
+@endif
 {{-- JSON data block --}}
 
 
@@ -904,6 +723,10 @@
                             <?php if (isset($_GET['extepi'])): ?>
                             _url_params.push('extepi=1');
                             <?php endif; ?>
+                            <?php if (isset($_GET['unfseason'])): ?>
+                            _url_params.push('unfseason=1');
+                            _url_params.push('autoplay=0');
+                            <?php endif; ?>
 
                             if (tgc) {
                                 _url_params.push('tgc=' + tgc);
@@ -916,6 +739,7 @@
                                 _url_params = '/show/' + _save.p + ((_url_params.length > 0) ? '?' + _url_params.join('&') : '');
                             } else {
                                 _url_params.push('start=' + _save.time);
+
                                 _url_params.push('autoplay=1');
 
                                 _url_params = '/show/' + _save.p + ((_url_params.length > 0) ? '?' + _url_params.join('&') : '');
@@ -991,9 +815,13 @@
     }());
 
     $(function () {
-        if (!cdn.player.is_touch()) {
-            $('#selectors select[data-select="1"]').niceSelect();
 
+        let domobileunfold = false;
+        <?php if (isset($_GET['unfseason'])): ?>
+            domobileunfold = true;
+        <?php endif; ?>
+        if (!cdn.player.is_touch() || domobileunfold) {
+            $('#selectors select[data-select="1"]').niceSelect();
             setTimeout(function () {
                 $('.nice-select ul').each(function () {
                     var _dropdown = $(this),
@@ -1010,6 +838,10 @@
                     }
                 });
             }, 0);
+
+            <?php if (isset($_GET['unfseason']) && $_GET['unfseason'] == '1'): ?>
+            $('#season-number +.nice-select').addClass('open').addClass('unfolded');
+            <?php endif; ?>
         }
 
         $('#translator-name option[value="0"]').hide();
@@ -1032,11 +864,6 @@
             m_s = 'auto',
             m_s_set = 1;
 
-        $('.extransbtn ').click(function () {
-            $(this).addClass('clicked');
-            var t = $(this).data('value');
-            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&extrans=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
-        });
 
         $('#translator-name').change(function () {
             var t = $(this).find(':selected').attr('value');
@@ -1082,19 +909,6 @@
             _episodes_select.change();
         });
 
-        $('.extransbtn ').click(function () {
-            $(this).addClass('clicked');
-            var t = $(this).data('value'),
-                _seasons_select = $('select#season-number').val(),
-                _episodes_select = $('select#episode-number').val();
-            var extep = '';
-            @if (isset($_GET['extepi']) && $_GET['extepi'] === '1')
-                extep = '&extepi=1';
-            @endif
-                window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&season=' + _seasons_select + '&episode=' + _episodes_select + '&extrans=1' + extep + '&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
-        });
-
-
         var translations_episodes = <?php echo json_encode($translations_episodes); ?>;
         var seasons_episodes = <?php echo json_encode($seasons_episodes); ?>;
 
@@ -1137,21 +951,26 @@
                 <?php if (isset($_GET['no_control_episodes'])): ?>
             _url_params.push('no_control_episodes=1');
             <?php endif; ?>
-                <?php if (isset($_GET['extrans'])): ?>
+            <?php if (isset($_GET['extrans'])): ?>
             _url_params.push('extrans=1');
             <?php endif; ?>
-                <?php if (isset($_GET['extepi'])): ?>
+            <?php if (isset($_GET['extepi'])): ?>
             _url_params.push('extepi=1');
+            <?php endif; ?>
+            <?php if (isset($_GET['unfseason'])): ?>
+            _url_params.push('unfseason=1');
             <?php endif; ?>
 
             if (tgc) {
                 _url_params.push('tgc=' + tgc);
             }
-
             //if(forceauto){
+            <?php if (isset($_GET['unfseason']) && $_GET['unfseason'] == '1' ): ?>
+            _url_params.push('autoplay=0');
+            <?php else: ?>
             _url_params.push('autoplay=1');
+            <?php endif; ?>
             //}
-
             if (m_s == 'auto') {
                 window.location.href = '?season=' + _season + '&episode=' + _episode + ((_url_params.length > 0) ? '&' + _url_params.join('&') : '');
             } else if (m_s_set == 1) {
@@ -1159,7 +978,6 @@
             } else {
                 window.location.href = '/show/' + p_id + '?translation=' + _translate + '&season=' + _season + (_episode ? '&episode=' + _episode : '') + ((_url_params.length > 0) ? '&' + _url_params.join('&') : '');
             }
-
         });
         @endif
     });
@@ -1270,7 +1088,7 @@
             }
 
             if (event == "start") {
-                // console.log('PlayerjsEvents', event, info);
+                console.log('PlayerjsEvents', event);
                 $.ajax({
                     type: 'get',
                     url: '/apishow/shows.show',
@@ -1280,7 +1098,6 @@
                     success: function (response) {
                     }
                 });
-
             }
 
             if (event == "pause" || event == "end") {
@@ -1486,51 +1303,7 @@
             console.error('Error handling player event:', e);
         }
     }
-    let hideTimeout;
 
-    function showSelectors() {
-        if (!$('#selectors').is(':visible')) {
-            $('#selectors,#nextepisode,#shareBlock').fadeIn('fast');
-        }
-        clearTimeout(hideTimeout); // prevent hiding if quickly moving between elements
-    }
-
-    function hideSelectors() {
-             hideTimeout = setTimeout(function () {
-            if (!$('#player').is(':hover') && !$('#selectors').is(':hover')&& !$('.share-container').is(':hover')
-                    @if ($type === 'serial')
-                    && !$('#nextepisode').is(':hover')
-                    @endif
-             ) {
-             $('#selectors, #nextepisode, #shareBlock').fadeOut('fast');
-                }
-            },200);
-
-        }
-
-
-        $('#player').on('mousemove', showSelectors);
-        $('#player').on('mouseleave', hideSelectors);
-        $('pjsdiv#player_settings').on('mouseover', hideSelectors);
-
-
-// CURSOR INACTIVITY HIDE CONTROLS
-        let inactivityTimer;
-
-        function onInactivity() {
-            var playing = CDNplayer.api("playing");
-            if (playing) {
-                $('#selectors,#shareBlock,#nextepisode').fadeOut('fast');
-            }
-        }
-
-        function resetInactivityTimer() {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(onInactivity, 4000);
-        }
-
-        document.addEventListener("mousemove", resetInactivityTimer);
-        resetInactivityTimer();
 
 </script>
 
@@ -1538,22 +1311,11 @@
 <div id="nomedia-message">Озвучка недоступна → поиск доступной
     <div class="small-loader"></div>
 </div>
-<script>
-    window.addEventListener("load", sendAspectRatio);
-    let resizeTimerT;
-    window.addEventListener("resize", () => {
-        clearTimeout(resizeTimerT);
-        resizeTimerT = setTimeout(() => {
-            sendAspectRatio();
-        }, 10);
-    });
-    function sendAspectRatio() {
-        const width = document.body.scrollWidth;
-        const height = document.body.scrollHeight;
-        const ratio = width / height;
-        window.parent.postMessage({type: "aspectRatio", ratio}, "*");
-    }
 
+
+<script>
+
+    <!--  TRANSLATION NOT FOUND - ROLLBACK  -->
     function showPopupAndChangeTranslation() {
         const popup = document.getElementById('nomedia-message');
         const select = document.querySelector('#translator-name');
@@ -1578,10 +1340,56 @@
             }, 500);
         }, 2500);
     }
+    <!--  END TRANSLATION ROLLBACK  -->
 
+    <!--  SELECTORS SHOW / HIDE  -->
+    let hideTimeout;
+    function showSelectors() {
+        if (!$('#selectors').is(':visible')) {
+            $('#selectors,#nextepisode,#shareBlock').fadeIn('fast');
+        }
+        clearTimeout(hideTimeout); // prevent hiding if quickly moving between elements
+    }
+    function hideSelectors() {
+        hideTimeout = setTimeout(function () {
+            let hoveringPlayer = $('#player').length && $('#player').is(':hover');
+            let hoveringSelectors = $('#selectors').length && $('#selectors').is(':hover');
+            let hoveringShare = $('.share-container').length && $('.share-container').is(':hover');
+            @if ($type === 'serial')
+            let hoveringNextEpisode   = $('#nextepisode').length   && $('#nextepisode').is(':hover');
+            @endif
+            if (!hoveringPlayer && !hoveringSelectors && !hoveringShare
+                    @if ($type === 'serial')
+                    && !hoveringNextEpisode
+                    @endif
+                    )
+            {
+                $('#selectors, #nextepisode, #shareBlock').fadeOut('fast');
+            }
+        }, 200);
+    }
 
+    $('#player').on('mousemove', showSelectors);
+    $('#player').on('mouseleave', hideSelectors);
+    $('pjsdiv#player_settings').on('mouseover', hideSelectors);
+    // CURSOR INACTIVITY HIDE CONTROLS
+    let inactivityTimer;
+    function onInactivity() {
+        var playing = CDNplayer.api("playing");
+        if (playing) {
+            $('#selectors,#shareBlock,#nextepisode').fadeOut('fast');
+        }
+    }
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(onInactivity, 4000);
+    }
+    document.addEventListener("mousemove", resetInactivityTimer);
+    resetInactivityTimer();
+    <!--  END SELECTORS SHOW / HIDE  -->
+
+    <!--  SMART_TV HELPERS  -->
     @if (isset($_GET['smart_tv']) && $_GET['smart_tv'] == '1')
-
     var nowinfs = false;
     document.addEventListener("keydown", e => {
         if(nowinfs) {
@@ -1592,28 +1400,44 @@
         }
 
         if (e.key === 'ArrowUp') {
-           if(!nowinfs) {
-               $('#playfs-overlay').remove();
-               window.parent.postMessage({action: "returnFocus"}, "*");
-           }
-           }
+            if(!nowinfs) {
+                $('#playfs-overlay').remove();
+                window.parent.postMessage({action: "returnFocus"}, "*");
+            }
+        }
+        if (e.key === 'ArrowDown') {
+            if(!nowinfs) {
+                $('#playfs-overlay').remove();
+                window.parent.postMessage({action: "returnFocusDown"}, "*");
+            }
+        }
+        if (e.key === 'ArrowLeft') {
+            if(!nowinfs) {
+                $('#playfs-overlay').remove();
+                window.parent.postMessage({action: "returnFocusLeft"}, "*");
+            }
+        }
+        if (e.key === 'ArrowRight') {
+            if(!nowinfs) {
+                $('#playfs-overlay').remove();
+                window.parent.postMessage({action: "returnFocusRight"}, "*");
+            }
+        }
     });
-
     function createFullscreenOverlay() {
         const overlay = document.createElement("div");
         overlay.id = "playfs-overlay";
         overlay.tabIndex = 0;
-            Object.assign(overlay.style, {
+        Object.assign(overlay.style, {
             position: "fixed",
             top: "0",
             left: "0",
             width: "100vw",
             height: "100vh",
-            background: "rgba(255,255,255,0.2)",
+            background: "transparent",
             zIndex: "999999",
             cursor: "pointer",
             content: "focus",
-
         });
         document.body.appendChild(overlay);
         overlay.focus();
@@ -1639,9 +1463,6 @@
         CDNplayer.api("play");
         $('#playfs-overlay').remove();
     }
-
-
-    console.log("Smart TV Mode");
     $("#selectors,#shareBlock,#save-holder").remove();
     window.addEventListener("message", (event) => {
         if (event.data && event.data.action === "dofsplay") {
@@ -1653,7 +1474,13 @@
             createFullscreenOverlay();
         }
     });
+    console.log("Smart TV Mode");
     @endif
+    <!--  END SMART_TV HELPERS  -->
+
+    $(document).on('click', '.nice-select li.option', function(){
+        $(this).addClass('clicked');
+    });
 </script>
 
 <!--  DOWNLOAD FUNCTIONALITY  -->
@@ -1692,10 +1519,10 @@
             let s = "";
             let e = "";
             @if($season)
-            s = {{$season}};
+                s = {{$season}};
             @endif
-            @if($episode)
-            e = {{$episode}};
+                    @if($episode)
+                e = {{$episode}};
             @endif
 
             $.ajax({

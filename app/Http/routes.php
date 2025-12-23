@@ -105,6 +105,11 @@ Route::get('/cronjob/import_empty_posters_tmdb', ['middleware' => [], 'uses' => 
 Route::post('/videodb/sync', ['middleware' => [], 'uses' => 'VideoDbSyncController@sync']);
 Route::get('/videodb/sync/progress', ['middleware' => [], 'uses' => 'VideoDbSyncController@progress']);
 Route::post('/videodb/sync/reset', ['middleware' => [], 'uses' => 'VideoDbSyncController@reset']);
+Route::get('/videodb/sync/health', ['middleware' => [], 'uses' => 'VideoDbSyncController@health']);
+
+// VideoTouch - manual single video sync (admin only)
+Route::get('/videotouch/search', ['middleware' => ['videoTouchMiddleware'], 'uses' => 'VideoTouchController@search']);
+Route::post('/videotouch/sync', ['middleware' => ['videoTouchMiddleware'], 'uses' => 'VideoTouchController@sync']);
 
 // payout calculation
 Route::post('/payouts/daily-payout', ['middleware' => [], 'uses' => 'PayoutController@triggerDailyPayout']);

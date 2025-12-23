@@ -29,6 +29,10 @@ class VideoDbApiClient
             $queryParams['content_object'] = $params['vdb_id'];
         }
 
+        if (!empty($params['content_type'])) {
+            $queryParams['content_type'] = $params['content_type'];
+        }
+
         if (!empty($params['extra_params'])) {
             parse_str($params['extra_params'], $extraParams);
             $queryParams = array_merge($queryParams, $extraParams);
@@ -39,6 +43,82 @@ class VideoDbApiClient
         $response = $this->makeRequest('GET', $url);
 
         return $response;
+    }
+
+    public function searchContent($contentType, array $params)
+    {
+        $endpoint = $this->getEndpointForContentType($contentType);
+
+        $queryParams = [];
+        if (!empty($params['imdb_id'])) {
+            $queryParams['imdb_id'] = $params['imdb_id'];
+        }
+        if (!empty($params['kinopoisk_id'])) {
+            $queryParams['kinopoisk_id'] = $params['kinopoisk_id'];
+        }
+
+        $url = $this->baseUrl . '/' . $endpoint . '/?' . http_build_query($queryParams);
+
+        return $this->makeRequest('GET', $url);
+    }
+
+    public function getContentById($contentType, $vdbId)
+    {
+        $endpoint = $this->getEndpointForContentType($contentType);
+
+        $url = $this->baseUrl . '/' . $endpoint . '/' . $vdbId . '/';
+
+        return $this->makeRequest('GET', $url);
+    }
+
+    protected function getEndpointForContentType($contentType)
+    {
+        $mapping = [
+            'movie' => 'movies',
+            'tvseries' => 'tv-series',
+            'anime-tv-series' => 'anime-tv-series',
+            'show-tv-series' => 'show-tv-series',
+        ];
+
+        if (!isset($mapping[$contentType])) {
+            throw new VideoDbApiException("Unknown content type: {$contentType}");
+        }
+
+        return $mapping[$contentType];
+    }
+
+    public function fetchSeriesSeasons($contentType, $seriesId)
+    {
+        $endpointMap = [
+            'tvseries' => 'tv-series/seasons',
+            'anime-tv-series' => 'anime-tv-series/seasons',
+            'show-tv-series' => 'show-tv-series/seasons',
+        ];
+
+        if (!isset($endpointMap[$contentType])) {
+            throw new VideoDbApiException("Cannot fetch seasons for content type: {$contentType}");
+        }
+
+        $endpoint = $endpointMap[$contentType];
+        $url = $this->baseUrl . '/' . $endpoint . '/?' . http_build_query(['tv_series' => $seriesId]);
+
+        return $this->makeRequest('GET', $url);
+    }
+
+    public function getMediaContentType($contentType)
+    {
+        $mapping = [
+            'movie' => 'movie',
+            'tvseries' => 'episode',
+            'anime-tv-series' => 'animeepisode',
+            'show-tv-series' => 'showepisode',
+        ];
+
+        if (!isset($mapping[$contentType])) {
+            throw new VideoDbApiException("Unknown content type: {$contentType}");
+        }
+
+        return $mapping[$contentType];
     }
 
     protected function makeRequest($method, $url, $data = null)

@@ -3,25 +3,25 @@
 namespace App\Services\VideoDb\Enrichments;
 
 use App\Video;
-use App\Services\ThetvdbService;
+use App\Services\KinopoiskDevService;
 
-class ThetvdbEnrichment extends AbstractEnrichmentStrategy
+class KinopoiskDevEnrichment extends AbstractEnrichmentStrategy
 {
     protected $service;
 
     public function __construct()
     {
-        $this->service = new ThetvdbService();
+        $this->service = new KinopoiskDevService();
     }
 
     public function getName()
     {
-        return 'TheTVDB';
+        return 'KinopoiskDev';
     }
 
     public function shouldEnrich(Video $video, $forceImport = false)
     {
-        if (!$this->hasRequiredField($video, 'imdb')) {
+        if (!$this->hasRequiredField($video, 'kinopoisk')) {
             return false;
         }
 
@@ -29,12 +29,12 @@ class ThetvdbEnrichment extends AbstractEnrichmentStrategy
             return true;
         }
 
-        return empty($video->thetvdb);
+        return !$this->isAlreadyEnriched($video, 'update_kinopoisk_dev');
     }
 
     public function enrich(Video $video)
     {
-        $this->service->updateVideoWithThetvdbIdByImdbId($video);
+        $this->service->updateVideoWithKinopoiskDevData($video);
         $video->saveOrFail();
 
         return $video;

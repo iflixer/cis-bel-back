@@ -3,6 +3,7 @@
 namespace App\Services\VideoDb;
 
 use App\Services\VideoDb\Contracts\EnrichmentStrategyInterface;
+use App\Services\VideoDb\Contracts\ProcessingConfigInterface;
 use App\Services\VideoDb\DTOs\SyncConfigDto;
 use App\Jobs\VideoDb\EnrichVideoJob;
 use App\Video;
@@ -32,9 +33,11 @@ class VideoDbSyncService
         'ru_name',
         'kinopoisk',
         'imdb',
-        'quality',
         'year',
         'description',
+        'seasons',
+        'premiere_world',
+        'premiere_ru',
     ];
 
     public function __construct(VideoDbApiClient $apiClient, SyncProgressTracker $progressTracker)
@@ -52,7 +55,7 @@ class VideoDbSyncService
             ->toArray();
     }
 
-    protected function loadTranslationsCache()
+    public function loadTranslationsCache()
     {
         $this->translationsCache = Translation::all()->keyBy('id_VDB');
         $this->log("Loaded " . $this->translationsCache->count() . " translations into cache");
@@ -113,6 +116,8 @@ class VideoDbSyncService
                 'lock_info' => $lockInfo,
             ];
         }
+
+        $this->progressTracker->recordRunStart();
 
         try {
             $this->loadTranslationsCache();
@@ -190,11 +195,12 @@ class VideoDbSyncService
             $totalTime = (microtime(true) - $this->startTime) * 1000;
             $this->log("Batch completed in " . round($totalTime) . "ms");
 
+            $status = $cycleCompleted ? 'cycle_completed' : ($hasMore ? 'batch_completed' : 'sync_completed');
+            $this->progressTracker->recordSuccess($status);
             $this->progressTracker->releaseLock();
 
-
             return [
-                'status' => $cycleCompleted ? 'cycle_completed' : ($hasMore ? 'batch_completed' : 'sync_completed'),
+                'status' => $status,
                 'sort_direction' => $configDto->sortDirection,
                 'batch' => [
                     'offset' => $configDto->offset,
@@ -229,6 +235,7 @@ class VideoDbSyncService
             ];
 
         } catch (\Exception $e) {
+            $this->progressTracker->recordError($e->getMessage());
             $this->progressTracker->releaseLock();
 
             return [
@@ -240,11 +247,13 @@ class VideoDbSyncService
         }
     }
 
-    protected function processMedia($media, SyncConfigDto $config)
+    public function processMedia($media, ProcessingConfigInterface $config, $skipEnrichments = false)
     {
         $isNew = false;
         $wasUpdated = false;
+        $fileIsNew = false;
         $enrichmentsQueued = 0;
+        $video = null;
 
         $resolutions = $this->extractResolutions($media->qualities);
 
@@ -256,29 +265,41 @@ class VideoDbSyncService
             $result = $this->processMovie($media, $translation, $resolutions, $config);
             $isNew = $result['is_new'];
             $wasUpdated = $result['was_updated'];
+            $fileIsNew = $result['file_is_new'];
             $video = $result['video'];
         } elseif (in_array($contentType, ['episode', 'animeepisode', 'showepisode'])) {
             $result = $this->processEpisode($media, $translation, $resolutions, $config);
             $isNew = $result['is_new'];
             $wasUpdated = $result['was_updated'];
+            $fileIsNew = $result['file_is_new'];
             $video = $result['video'];
         } else {
             $this->log("Unknown content type: {$contentType}");
-            return ['is_new' => false, 'was_updated' => false, 'enrichments_queued' => 0];
+            return [
+                'is_new' => false,
+                'was_updated' => false,
+                'file_is_new' => false,
+                'video_id' => null,
+                'video' => null,
+                'enrichments_queued' => 0,
+            ];
         }
 
-        if ($video) {
+        if ($video && !$skipEnrichments) {
             $enrichmentsQueued = $this->handleEnrichments($video, $config);
         }
 
         return [
             'is_new' => $isNew,
             'was_updated' => $wasUpdated,
+            'file_is_new' => $fileIsNew,
+            'video_id' => $video ? $video->id : null,
+            'video' => $video,
             'enrichments_queued' => $enrichmentsQueued,
         ];
     }
 
-    protected function processMovie($media, $translation, $resolutions, SyncConfigDto $config)
+    protected function processMovie($media, $translation, $resolutions, ProcessingConfigInterface $config)
     {
         $contentObj = $media->content_object;
         $contentType = $contentObj->content_type;
@@ -293,6 +314,9 @@ class VideoDbSyncService
             'name' => $contentObj->orig_title,
             'ru_name' => $contentObj->ru_title,
             'kinopoisk' => $contentObj->kinopoisk_id ?? null,
+            'imdb' => $contentObj->imdb_id ?? null,
+            'premiere_world' => $contentObj->released ?? null,
+            'premiere_ru' => $contentObj->ru_released ?? null,
             'quality' => "{$media->source_quality} {$media->max_quality}",
         ];
 
@@ -312,6 +336,7 @@ class VideoDbSyncService
                 $this->timeOperation('updates', function() use ($video, $newData) {
                     $video->fill($newData);
                     $video->updated_at = date('Y-m-d H:i:s');
+                    $video->last_vdb_update = date('Y-m-d H:i:s');
                     $video->save();
                 });
                 $wasUpdated = true;
@@ -327,6 +352,7 @@ class VideoDbSyncService
             ->where('sids', 'VDB')
             ->first();
 
+        $fileIsNew = false;
         if (empty($file)) {
             $file = $this->timeOperation('inserts', function() use ($media, $video, $contentObj, $translation, $resolutions) {
                 return File::create([
@@ -344,17 +370,18 @@ class VideoDbSyncService
                 ]);
             });
 
-            $wasUpdated = true;
+            $fileIsNew = true;
             $this->log("Created file: {$file->id} (VDB: {$media->id})");
+            $this->touchVideoTimestamps($video);
         }
 
         $this->processScreenshots($media, $file, $video, $config);
-        $this->processSubtitles($media, $file);
+        $this->processSubtitles($media, $file, $video);
 
-        return ['video' => $video, 'is_new' => $isNew, 'was_updated' => $wasUpdated];
+        return ['video' => $video, 'is_new' => $isNew, 'was_updated' => $wasUpdated, 'file_is_new' => $fileIsNew];
     }
 
-    protected function processEpisode($media, $translation, $resolutions, SyncConfigDto $config)
+    protected function processEpisode($media, $translation, $resolutions, ProcessingConfigInterface $config)
     {
         $contentObj = $media->content_object;
         $tvSeriesId = $contentObj->tv_series->id;
@@ -369,7 +396,10 @@ class VideoDbSyncService
             'tupe' => $contentType,
             'name' => $contentObj->tv_series->orig_title,
             'ru_name' => $contentObj->tv_series->ru_title,
-            'kinopoisk' => $contentObj->kinopoisk_id ?? null,
+            'kinopoisk' => $contentObj->tv_series->kinopoisk_id ?? null,
+            'imdb' => $contentObj->tv_series->imdb_id ?? null,
+            'seasons' => $contentObj->tv_series->season_count ?? null,
+            'premiere_world' => $contentObj->tv_series->start_date ?? null,
             'quality' => "{$media->source_quality} {$media->max_quality}",
         ];
 
@@ -389,6 +419,7 @@ class VideoDbSyncService
                 $this->timeOperation('updates', function() use ($video, $newData) {
                     $video->fill($newData);
                     $video->updated_at = date('Y-m-d H:i:s');
+                    $video->last_vdb_update = date('Y-m-d H:i:s');
                     $video->saveOrFail();
                 });
                 $wasUpdated = true;
@@ -400,6 +431,7 @@ class VideoDbSyncService
             ->where('sids', 'VDB')
             ->first();
 
+        $fileIsNew = false;
         if (empty($file)) {
             $file = $this->timeOperation('inserts', function() use ($media, $video, $contentObj, $translation, $resolutions) {
                 return File::create([
@@ -417,13 +449,14 @@ class VideoDbSyncService
                 ]);
             });
 
-            $wasUpdated = true;
+            $fileIsNew = true;
+            $this->touchVideoTimestamps($video);
         }
 
         $this->processScreenshots($media, $file, $video, $config);
-        $this->processSubtitles($media, $file);
+        $this->processSubtitles($media, $file, $video);
 
-        return ['video' => $video, 'is_new' => $isNew, 'was_updated' => $wasUpdated];
+        return ['video' => $video, 'is_new' => $isNew, 'was_updated' => $wasUpdated, 'file_is_new' => $fileIsNew];
     }
 
     protected function shouldUpdateVideo(Video $video, array $newData)
@@ -441,6 +474,14 @@ class VideoDbSyncService
         }
 
         return false;
+    }
+
+    protected function touchVideoTimestamps(Video $video)
+    {
+        $now = date('Y-m-d H:i:s');
+        $video->updated_at = $now;
+        $video->last_vdb_update = $now;
+        $video->save();
     }
 
     protected function cleanupOrphanedFiles(Video $video, array $vdbFileIds)
@@ -465,12 +506,13 @@ class VideoDbSyncService
 
         if ($removedCount > 0) {
             $this->log("  Cleaned up {$removedCount} orphaned file(s)");
+            $this->touchVideoTimestamps($video);
         }
     }
 
-    protected function processScreenshots($media, $file, $video, SyncConfigDto $config)
+    protected function processScreenshots($media, $file, $video, ProcessingConfigInterface $config)
     {
-        if (!$config->forceImport) {
+        if (!$config->getForceImport()) {
             $ssCount = Screenshot::where('id_file', $file->id)->count();
             if ($ssCount > 0) {
                 return;
@@ -497,11 +539,11 @@ class VideoDbSyncService
 
         if (empty($video->backdrop) && !empty($firstScreenshot)) {
             $video->backdrop = $firstScreenshot;
-            $video->save();
+            $this->touchVideoTimestamps($video);
         }
     }
 
-    protected function processSubtitles($media, $file)
+    protected function processSubtitles($media, $file, Video $video)
     {
         if (empty($media->subtitles)) {
             return;
@@ -521,14 +563,19 @@ class VideoDbSyncService
                 ]
             );
         }
+
+        $this->touchVideoTimestamps($video);
     }
 
-    protected function handleEnrichments(Video $video, SyncConfigDto $config)
+    protected function handleEnrichments(Video $video, ProcessingConfigInterface $config)
     {
         $queued = 0;
 
-        if ($config->useJobs) {
-            foreach ($config->enrichFlags as $key => $enabled) {
+        // Check if config supports async jobs (only SyncConfigDto has this)
+        $useJobs = ($config instanceof SyncConfigDto) && $config->useJobs;
+
+        if ($useJobs) {
+            foreach ($config->getEnrichFlags() as $key => $enabled) {
                 if ($enabled && isset($this->enrichmentStrategies[$key])) {
                     Queue::push(new EnrichVideoJob($video->id, $key));
                     $queued++;
@@ -538,14 +585,14 @@ class VideoDbSyncService
             return $queued;
         }
 
-        foreach ($config->enrichFlags as $key => $enabled) {
+        foreach ($config->getEnrichFlags() as $key => $enabled) {
             if ($enabled && isset($this->enrichmentStrategies[$key])) {
                 try {
                     $strategy = $this->enrichmentStrategies[$key];
-                    if ($strategy->shouldEnrich($video, $config->forceImport)) {
+                    if ($strategy->shouldEnrich($video, $config->getForceImport())) {
                         $this->timeOperation('enrichments', function() use ($strategy, $video) {
                             $strategy->enrich($video);
-                            $video->save();
+                            $this->touchVideoTimestamps($video);
                         });
                         $queued++;
                         $this->log("Enrichment {$key} applied to video {$video->id}");

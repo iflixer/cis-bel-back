@@ -24,7 +24,8 @@ class User extends Authenticatable
         'surname',
         'cent',
         'score',
-        'domain_id'
+        'domain_id',
+        'contact_telegram'
     ];
 
     /**

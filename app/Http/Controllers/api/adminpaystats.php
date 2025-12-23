@@ -469,17 +469,16 @@ class adminpaystats extends Controller
 
     private function getUsersList()
     {
-        $users = User::select('id', 'login', 'score')
+        $users = User::select('id', 'login')
             ->orderBy('login', 'asc')
-            ->get()
-            ->toArray();
+            ->get();
 
         $usersList = [];
         foreach ($users as $user) {
             $usersList[] = [
-                'id' => $user['id'],
-                'login' => $user['login'],
-                'score' => $user['score']
+                'id' => $user->id,
+                'login' => $user->login,
+                'score' => $user->getBalance() / 100
             ];
         }
 

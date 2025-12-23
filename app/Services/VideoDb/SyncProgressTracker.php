@@ -10,6 +10,7 @@ class SyncProgressTracker
     const REDIS_LOCK_KEY_TEMPLATE = 'videodb:sync:%s:lock';
     const LOCK_TTL = 120;
     const PROGRESS_TTL = 86400;
+    const HEALTH_TTL = 604800;
 
     protected $sortDirection;
     protected $progressKey;
@@ -161,7 +162,70 @@ class SyncProgressTracker
             'offset' => $progress['offset'],
             'total_processed' => $progress['total_processed'],
             'max_records' => $progress['max_records'],
-            'config' => $progress['config'],
+            'config' => $progress['config'] ?? null,
+        ];
+    }
+
+    public function recordRunStart()
+    {
+        $now = time();
+        $totalRuns = (int)Redis::hget($this->progressKey, 'total_runs') + 1;
+
+        Redis::hmset($this->progressKey, [
+            'last_run_started_at' => $now,
+            'total_runs' => $totalRuns,
+        ]);
+        Redis::expire($this->progressKey, self::HEALTH_TTL);
+    }
+
+    public function recordSuccess($status)
+    {
+        $now = time();
+        Redis::hmset($this->progressKey, [
+            'last_run_completed_at' => $now,
+            'last_success_at' => $now,
+            'last_status' => $status,
+            'consecutive_errors' => 0,
+        ]);
+        Redis::expire($this->progressKey, self::HEALTH_TTL);
+    }
+
+    public function recordError($errorMessage)
+    {
+        $now = time();
+        $consecutiveErrors = (int)Redis::hget($this->progressKey, 'consecutive_errors') + 1;
+        $totalErrors = (int)Redis::hget($this->progressKey, 'total_errors') + 1;
+
+        Redis::hmset($this->progressKey, [
+            'last_run_completed_at' => $now,
+            'last_error_at' => $now,
+            'last_error_message' => substr($errorMessage, 0, 500),
+            'last_status' => 'error',
+            'consecutive_errors' => $consecutiveErrors,
+            'total_errors' => $totalErrors,
+        ]);
+        Redis::expire($this->progressKey, self::HEALTH_TTL);
+    }
+
+    public function getHealthStatus()
+    {
+        if (!Redis::exists($this->progressKey)) {
+            return null;
+        }
+
+        $data = Redis::hgetall($this->progressKey);
+
+        return [
+            'sort_direction' => $this->sortDirection,
+            'last_run_started_at' => isset($data['last_run_started_at']) ? (int)$data['last_run_started_at'] : null,
+            'last_run_completed_at' => isset($data['last_run_completed_at']) ? (int)$data['last_run_completed_at'] : null,
+            'last_success_at' => isset($data['last_success_at']) ? (int)$data['last_success_at'] : null,
+            'last_error_at' => isset($data['last_error_at']) ? (int)$data['last_error_at'] : null,
+            'last_error_message' => $data['last_error_message'] ?? null,
+            'last_status' => $data['last_status'] ?? null,
+            'consecutive_errors' => (int)($data['consecutive_errors'] ?? 0),
+            'total_runs' => (int)($data['total_runs'] ?? 0),
+            'total_errors' => (int)($data['total_errors'] ?? 0),
         ];
     }
 }

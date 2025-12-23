@@ -11,6 +11,7 @@ use App\Services\VideoDb\Enrichments\TmdbEnrichment;
 use App\Services\VideoDb\Enrichments\ThetvdbEnrichment;
 use App\Services\VideoDb\Enrichments\FanartEnrichment;
 use App\Services\VideoDb\Enrichments\OpenaiEnrichment;
+use App\Services\VideoDb\Enrichments\KinopoiskDevEnrichment;
 use Illuminate\Http\Request;
 
 class VideoDbSyncController extends Controller
@@ -51,6 +52,7 @@ class VideoDbSyncController extends Controller
         $syncService->registerEnrichment('thetvdb', new ThetvdbEnrichment());
         $syncService->registerEnrichment('fanart', new FanartEnrichment());
         $syncService->registerEnrichment('openai', new OpenaiEnrichment());
+        $syncService->registerEnrichment('kinopoiskdev', new KinopoiskDevEnrichment());
 
         // Build config
         $resume = (bool) $request->input('resume', false);
@@ -105,6 +107,7 @@ class VideoDbSyncController extends Controller
             'thetvdb' => (bool) $request->input('enrich_thetvdb', false),
             'fanart' => (bool) $request->input('enrich_fanart', false),
             'openai' => (bool) $request->input('enrich_openai', false),
+            'kinopoiskdev' => (bool) $request->input('enrich_kinopoiskdev', false),
         ];
 
         $useJobs = (bool) $request->input('use_jobs', false);
@@ -208,5 +211,86 @@ class VideoDbSyncController extends Controller
         $result['message'] = 'Lock and progress cleared successfully. You can now start a new sync.';
 
         return response()->json($result);
+    }
+
+    public function health(Request $request)
+    {
+        $sortDirection = $request->input('sort');
+        if ($sortDirection) {
+            if (!in_array($sortDirection, ['created', '-accepted'])) {
+                return response()->json(['error' => 'Invalid sort direction'], 400);
+            }
+            $result = $this->getDirectionHealth($sortDirection);
+            $httpCode = $result['status'] === 'ok' ? 200 : 500;
+            return response()->json($result, $httpCode);
+        }
+
+        $results = [];
+        $overallStatus = 'ok';
+        $httpCode = 200;
+
+        foreach (['created', '-accepted'] as $direction) {
+            $result = $this->getDirectionHealth($direction);
+            $results[$direction] = $result;
+
+            if ($result['status'] !== 'ok') {
+                $overallStatus = 'error';
+                $httpCode = 500;
+            }
+        }
+
+        return response()->json([
+            'status' => $overallStatus,
+            'directions' => $results,
+            'checked_at' => time(),
+        ], $httpCode);
+    }
+
+    protected function getDirectionHealth($sortDirection)
+    {
+        $progressTracker = new SyncProgressTracker($sortDirection);
+        $healthData = $progressTracker->getHealthStatus();
+        $lockInfo = $progressTracker->isLocked();
+
+        $maxSuccessAge = 600;
+        $maxConsecutiveErrors = 3;
+        $staleLockSeconds = 180;
+
+        $now = time();
+
+        if (!$healthData || !isset($healthData['last_success_at'])) {
+            return [
+                'status' => 'error',
+                'message' => 'No sync history found',
+                'health_data' => $healthData,
+            ];
+        }
+
+        $successAge = $now - $healthData['last_success_at'];
+        $consecutiveErrors = $healthData['consecutive_errors'];
+        $lockAge = $lockInfo ? ($now - (int)$lockInfo['locked_at']) : 0;
+        $staleLock = $lockInfo && $lockAge > $staleLockSeconds;
+
+        if ($successAge > $maxSuccessAge || $consecutiveErrors >= $maxConsecutiveErrors || $staleLock) {
+            $issues = [];
+            if ($successAge > $maxSuccessAge) $issues[] = "No success in {$successAge}s";
+            if ($consecutiveErrors >= $maxConsecutiveErrors) $issues[] = "{$consecutiveErrors} consecutive errors";
+            if ($staleLock) $issues[] = "Stale lock ({$lockAge}s)";
+
+            return [
+                'status' => 'error',
+                'message' => implode('; ', $issues),
+                'seconds_since_success' => $successAge,
+                'consecutive_errors' => $consecutiveErrors,
+                'health_data' => $healthData,
+                'lock_info' => $lockInfo,
+            ];
+        }
+
+        return [
+            'status' => 'ok',
+            'seconds_since_success' => $successAge,
+            'health_data' => $healthData,
+        ];
     }
 }
