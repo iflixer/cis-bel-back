@@ -134,6 +134,28 @@ server {
         log_not_found off;
     }
 
+    # --- php-fpm ping ---
+    location = /fpm-ping/HOQDotsh1MEnIl {
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root/index.php;
+        fastcgi_param SCRIPT_NAME /fpm-ping/HOQDotsh1MEnIl;
+        fastcgi_pass php:9000;
+        access_log off;
+    }
+
+    # --- php-fpm status ---
+    location = /fpm-status/HOQDotsh1MEnIl {
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root/index.php;
+        fastcgi_param SCRIPT_NAME /fpm-status/HOQDotsh1MEnIl;
+        fastcgi_pass php:9000;
+
+        # безопасность
+        # allow 127.0.0.1;
+        # allow 172.18.0.0/16;
+        # deny all;
+    }
+
     error_log /dev/stderr;
     access_log /dev/stdout;
 }
