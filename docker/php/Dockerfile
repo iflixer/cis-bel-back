@@ -57,7 +57,8 @@ RUN sed -i 's/^pm = .*/pm = dynamic/' /usr/local/etc/php-fpm.d/www.conf \
  && sed -i 's|^;*pm.status_path = .*|pm.status_path = /fpm-status/HOQDotsh1MEnIl|' /usr/local/etc/php-fpm.d/www.conf \
  && sed -i 's|^;*ping.path = .*|ping.path = /fpm-ping/HOQDotsh1MEnIl|' /usr/local/etc/php-fpm.d/www.conf \
  && sed -i 's|^;*ping.response = .*|ping.response = pong|' /usr/local/etc/php-fpm.d/www.conf \
- && sed -i 's|^;*slowlog = .*|slowlog = /proc/self/fd/2|' /usr/local/etc/php-fpm.d/www.conf 
+ && sed -i 's|^;*slowlog = .*|slowlog = /proc/self/fd/2|' /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i 's|^;*access.format = .*|access.format = "%R %u %t \"%m %r\" %s %{mili}dms %{kilo}Mkb %{REQUEST_URI}e %{QUERY_STRING}e"|' /usr/local/etc/php-fpm.d/www.conf
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
