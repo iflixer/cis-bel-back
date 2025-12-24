@@ -17,6 +17,7 @@
 !/storage/logs/.gitkeep
 
 .env
+.env.docker
 
 .idea/
 .vscode/
