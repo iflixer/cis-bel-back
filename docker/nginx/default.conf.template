@@ -1,6 +1,6 @@
 resolver 1.1.1.1 8.8.8.8 valid=300s ipv6=off;
 
-
+# default.conf.template
 server {
     listen 80;
     listen [::]:80;

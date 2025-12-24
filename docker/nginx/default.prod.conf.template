@@ -7,6 +7,7 @@ map $request_uri $embed_path {
     ~^/show/tmdb/([0-9]+)$           /embed/tmdb/$1;
 }
 
+# default.prod.conf.template
 server {
     listen 80;
     listen [::]:80;
