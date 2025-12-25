@@ -41,23 +41,36 @@ server {
         fastcgi_hide_header Set-Cookie;
     }
 
+    # location ~ \.php$ {
+    #     # try_files $uri =404;
+    #     fastcgi_split_path_info ^(.+\.php)(/.+)$;
+    #     fastcgi_pass ${BACKEND_ADDRESS};
+    #     fastcgi_index index.php;
+    #     include fastcgi_params;
+    #     fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    #     fastcgi_param PATH_INFO $fastcgi_path_info;
+
+    #     # перехватываем ошибки от бекенда
+    #     # fastcgi_intercept_errors on;
+    #     # error_page 404 = @notfound;
+    #     # error_page 502 = @error502;
+
+    #     fastcgi_read_timeout 3600;
+    #     fastcgi_send_timeout 30;
+    #     fastcgi_connect_timeout 30;
+    # }
+    # запретить любые другие php-файлы
     location ~ \.php$ {
-        try_files $uri =404;
-        fastcgi_split_path_info ^(.+\.php)(/.+)$;
-        fastcgi_pass ${BACKEND_ADDRESS};
-        fastcgi_index index.php;
+        return 404;
+    }
+
+    # разрешить только фронт-контроллер
+    location = /index.php {
         include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_pass ${BACKEND_ADDRESS};
+        fastcgi_param SCRIPT_FILENAME $document_root/index.php;
         fastcgi_param PATH_INFO $fastcgi_path_info;
-
-        # перехватываем ошибки от бекенда
-        # fastcgi_intercept_errors on;
-        # error_page 404 = @notfound;
-        # error_page 502 = @error502;
-
         fastcgi_read_timeout 3600;
-        fastcgi_send_timeout 30;
-        fastcgi_connect_timeout 30;
     }
 
     # Кастомная обработка 404
