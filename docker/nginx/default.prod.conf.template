@@ -10,7 +10,6 @@ map $request_uri $embed_path {
 # default.prod.conf.template
 server {
     listen 80;
-    listen [::]:80;
     server_name _;
     root /var/www/html/public;
     index index.php index.html index.htm;
@@ -134,6 +133,12 @@ server {
         access_log off;
         log_not_found off;
     }
+
+    location /test123 {
+        default_type text/plain;
+        return 200 "Hello world from Nginx!";
+    }
+
 
     # --- php-fpm ping ---
     location = /fpm-ping/HOQDotsh1MEnIl {
