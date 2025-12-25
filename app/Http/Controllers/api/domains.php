@@ -325,16 +325,18 @@ class domains extends Controller
         $response = [];
         $messages = [];
 
-        $loads24h = $this->getCached24hLoads();
+        $statsSubquery = DB::raw('(SELECT domain_id, SUM(counter) as cnt FROM player_event_stats WHERE event_type = "load" AND date >= CURDATE() - INTERVAL 1 DAY GROUP BY domain_id) as stats');
 
         $query = Domain::select(
             'domains.*',
             'users.login as user_login',
             'users.contact_telegram as user_telegram',
-            'domain_types.name as domain_type_name'
+            'domain_types.name as domain_type_name',
+            DB::raw('COALESCE(stats.cnt, 0) as loads_24h')
         )
         ->leftJoin('users', 'domains.id_parent', '=', 'users.id')
-        ->leftJoin('domain_types', 'domains.domain_type_id', '=', 'domain_types.id');
+        ->leftJoin('domain_types', 'domains.domain_type_id', '=', 'domain_types.id')
+        ->leftJoin($statsSubquery, 'domains.id', '=', 'stats.domain_id');
 
         $searchUser = $this->request->input('search_user');
         if ($searchUser) {
@@ -349,7 +351,6 @@ class domains extends Controller
         $count = $query->count();
         $orderBy = $this->request->input('order_by', 'id');
         $orderDirection = $this->request->input('order_direction', 'DESC');
-        $sortByLoads = ($orderBy === 'loads_24h');
 
         $limit = $this->request->input('limit', 20);
         $offset = $this->request->input('offset', 0);
@@ -358,49 +359,20 @@ class domains extends Controller
             $limit = 200;
         }
 
-        if ($sortByLoads) {
-            $columnMap = [
-                'id' => 'domains.id',
-                'name' => 'domains.name',
-                'user_login' => 'users.login',
-                'domain_type_name' => 'domain_types.name',
-                'status' => 'domains.status'
-            ];
-            $query->orderBy('domains.id', 'DESC');
+        $columnMap = [
+            'id' => 'domains.id',
+            'name' => 'domains.name',
+            'user_login' => 'users.login',
+            'domain_type_name' => 'domain_types.name',
+            'status' => 'domains.status',
+            'loads_24h' => 'loads_24h'
+        ];
 
-            $allItems = $query->get()->toArray();
+        $sortColumn = isset($columnMap[$orderBy]) ? $columnMap[$orderBy] : 'domains.id';
+        $query->orderBy($sortColumn, $orderDirection);
 
-            foreach ($allItems as &$item) {
-                $item['loads_24h'] = isset($loads24h[$item['id']]) ? $loads24h[$item['id']] : 0;
-            }
-            unset($item);
-
-            usort($allItems, function($a, $b) use ($orderDirection) {
-                $cmp = $a['loads_24h'] - $b['loads_24h'];
-                return strtoupper($orderDirection) === 'DESC' ? -$cmp : $cmp;
-            });
-
-            $items = array_slice($allItems, $offset, $limit);
-        } else {
-            $columnMap = [
-                'id' => 'domains.id',
-                'name' => 'domains.name',
-                'user_login' => 'users.login',
-                'domain_type_name' => 'domain_types.name',
-                'status' => 'domains.status'
-            ];
-
-            $sortColumn = isset($columnMap[$orderBy]) ? $columnMap[$orderBy] : 'domains.id';
-            $query->orderBy($sortColumn, $orderDirection);
-
-            $query->offset($offset)->limit($limit);
-            $items = $query->get()->toArray();
-
-            foreach ($items as &$item) {
-                $item['loads_24h'] = isset($loads24h[$item['id']]) ? $loads24h[$item['id']] : 0;
-            }
-            unset($item);
-        }
+        $query->offset($offset)->limit($limit);
+        $items = $query->get()->toArray();
 
         $response = [
             'count' => $count,
@@ -448,32 +420,6 @@ class domains extends Controller
         $messages[] = ['tupe'=>'success', 'message'=>'Тип домена успешно обновлен'];
 
         return ['data' => $response, 'messages' => $messages];
-    }
-
-    private function getCached24hLoads()
-    {
-        $cacheKey = 'domains_24h_loads';
-        $cacheTTL = 3600;
-
-        $loadsData = \Cache::get($cacheKey);
-
-        if ($loadsData === null) {
-            $stats = DB::table('player_event_stats')
-                ->select('domain_id', DB::raw('SUM(counter) as cnt'))
-                ->where('event_type', 'load')
-                ->where('date', '>=', DB::raw('CURDATE() - INTERVAL 1 DAY'))
-                ->groupBy('domain_id')
-                ->get();
-
-            $loadsData = [];
-            foreach ($stats as $stat) {
-                $loadsData[$stat['domain_id']] = (int) $stat['cnt'];
-            }
-
-            \Cache::put($cacheKey, $loadsData, $cacheTTL);
-        }
-
-        return $loadsData;
     }
 
 }
