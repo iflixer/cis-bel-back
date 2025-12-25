@@ -24,7 +24,7 @@ server {
         try_files $uri $uri/ /index.php?$query_string;
     }
 
-    # specific locatin for storage images
+    # specific location for storage images
     location ^~ /sss/ {
         fastcgi_pass   ${BACKEND_ADDRESS};
         fastcgi_index  index.php;
@@ -41,24 +41,6 @@ server {
         fastcgi_hide_header Set-Cookie;
     }
 
-    # location ~ \.php$ {
-    #     # try_files $uri =404;
-    #     fastcgi_split_path_info ^(.+\.php)(/.+)$;
-    #     fastcgi_pass ${BACKEND_ADDRESS};
-    #     fastcgi_index index.php;
-    #     include fastcgi_params;
-    #     fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-    #     fastcgi_param PATH_INFO $fastcgi_path_info;
-
-    #     # перехватываем ошибки от бекенда
-    #     # fastcgi_intercept_errors on;
-    #     # error_page 404 = @notfound;
-    #     # error_page 502 = @error502;
-
-    #     fastcgi_read_timeout 3600;
-    #     fastcgi_send_timeout 30;
-    #     fastcgi_connect_timeout 30;
-    # }
     # запретить любые другие php-файлы
     location ~ \.php$ {
         return 404;
@@ -72,34 +54,6 @@ server {
         fastcgi_param PATH_INFO $fastcgi_path_info;
         fastcgi_read_timeout 3600;
     }
-
-    # Кастомная обработка 404
-    location @notfound {
-        default_type text/html;
-        charset utf-8;
-        if ($embed_path != "") {
-            return 200 "<!doctype html><html lang=\"ru\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><style>html,body{margin:0;padding:0;font-family:system-ui,Arial,sans-serif;background:#0b0b0b;color:#fff}.wrap{max-width:1200px;margin:0 auto;padding:0}iframe{width:100%;height:auto;aspect-ratio:16/9;border:0;background:#000}</style><title>Плеер</title></head><body><div class=\"wrap\"><iframe id=\"player2\" src=\"https://api.domem.ws${embed_path}\" allow=\"autoplay *; fullscreen\" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe></div></body></html>";
-        }
-        return 404;
-    }
-
-    # Кастомная обработка 502
-    location @error502 {
-        default_type text/html;
-        charset utf-8;
-        if ($embed_path != "") {
-            return 200 "<!doctype html><html lang=\"ru\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><style>html,body{margin:0;padding:0;font-family:system-ui,Arial,sans-serif;background:#0b0b0b;color:#fff}.wrap{max-width:1200px;margin:0 auto;padding:0}iframe{width:100%;height:auto;aspect-ratio:16/9;border:0;background:#000}</style><title>Плеер</title></head><body><div class=\"wrap\"><iframe id=\"player2\" src=\"https://api.domem.ws${embed_path}\" allow=\"autoplay *; fullscreen\" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe></div></body></html>";
-        }
-        # Иначе — обычная 404 без кастома
-        return 502;
-    }
-
-    # fallback для плеера
-    # location = /collapse.html {
-    #     internal;
-    #     add_header X-Proxy-loc "player" always;
-    #     add_header Cache-Control "no-store" always;
-    # }
 
     location ~* \.(jpg|jpeg|png|gif|ico|css|js|pdf|txt|tar|woff|svg|ttf|eot|woff2)$ {
         expires 1y;
