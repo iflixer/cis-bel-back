@@ -140,7 +140,7 @@ server {
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $document_root/index.php;
         fastcgi_param SCRIPT_NAME /fpm-ping/HOQDotsh1MEnIl;
-        fastcgi_pass php:9000;
+        fastcgi_pass ${BACKEND_ADDRESS};
         access_log off;
     }
 
@@ -149,7 +149,7 @@ server {
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $document_root/index.php;
         fastcgi_param SCRIPT_NAME /fpm-status/HOQDotsh1MEnIl;
-        fastcgi_pass php:9000;
+        fastcgi_pass ${BACKEND_ADDRESS};
 
         # безопасность
         # allow 127.0.0.1;
