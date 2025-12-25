@@ -10,7 +10,6 @@ map $request_uri $embed_path {
 # default.prod.conf.template
 server {
     listen 80;
-    listen [::]:80;
     server_name _;
     root /var/www/html/public;
     index index.php index.html index.htm;
@@ -42,23 +41,36 @@ server {
         fastcgi_hide_header Set-Cookie;
     }
 
+    # location ~ \.php$ {
+    #     # try_files $uri =404;
+    #     fastcgi_split_path_info ^(.+\.php)(/.+)$;
+    #     fastcgi_pass ${BACKEND_ADDRESS};
+    #     fastcgi_index index.php;
+    #     include fastcgi_params;
+    #     fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    #     fastcgi_param PATH_INFO $fastcgi_path_info;
+
+    #     # перехватываем ошибки от бекенда
+    #     # fastcgi_intercept_errors on;
+    #     # error_page 404 = @notfound;
+    #     # error_page 502 = @error502;
+
+    #     fastcgi_read_timeout 3600;
+    #     fastcgi_send_timeout 30;
+    #     fastcgi_connect_timeout 30;
+    # }
+    # запретить любые другие php-файлы
     location ~ \.php$ {
-        try_files $uri =404;
-        fastcgi_split_path_info ^(.+\.php)(/.+)$;
-        fastcgi_pass ${BACKEND_ADDRESS};
-        fastcgi_index index.php;
+        return 404;
+    }
+
+    # разрешить только фронт-контроллер
+    location = /index.php {
         include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_pass ${BACKEND_ADDRESS};
+        fastcgi_param SCRIPT_FILENAME $document_root/index.php;
         fastcgi_param PATH_INFO $fastcgi_path_info;
-
-        # перехватываем ошибки от бекенда
-        # fastcgi_intercept_errors on;
-        # error_page 404 = @notfound;
-        # error_page 502 = @error502;
-
         fastcgi_read_timeout 3600;
-        fastcgi_send_timeout 30;
-        fastcgi_connect_timeout 30;
     }
 
     # Кастомная обработка 404
@@ -135,12 +147,18 @@ server {
         log_not_found off;
     }
 
+    location /test123 {
+        default_type text/plain;
+        return 200 "Hello world from Nginx!";
+    }
+
+
     # --- php-fpm ping ---
     location = /fpm-ping/HOQDotsh1MEnIl {
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $document_root/index.php;
         fastcgi_param SCRIPT_NAME /fpm-ping/HOQDotsh1MEnIl;
-        fastcgi_pass php:9000;
+        fastcgi_pass ${BACKEND_ADDRESS};
         access_log off;
     }
 
@@ -149,7 +167,7 @@ server {
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $document_root/index.php;
         fastcgi_param SCRIPT_NAME /fpm-status/HOQDotsh1MEnIl;
-        fastcgi_pass php:9000;
+        fastcgi_pass ${BACKEND_ADDRESS};
 
         # безопасность
         # allow 127.0.0.1;
