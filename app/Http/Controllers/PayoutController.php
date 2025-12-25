@@ -6,19 +6,26 @@ use App\PlayerEventStat;
 use App\PlayerPayStat;
 use App\Services\PayoutCalculationService;
 use App\Services\PlayerEventStatsService;
+use App\Services\TelegramNotificationService;
 use App\UserTransaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PayoutController extends Controller
 {
     private PayoutCalculationService $payoutService;
     private PlayerEventStatsService $eventStatsService;
+    private TelegramNotificationService $telegramService;
 
-    public function __construct(PayoutCalculationService $payoutService, PlayerEventStatsService $eventStatsService)
-    {
+    public function __construct(
+        PayoutCalculationService $payoutService,
+        PlayerEventStatsService $eventStatsService,
+        TelegramNotificationService $telegramService
+    ) {
         $this->payoutService = $payoutService;
         $this->eventStatsService = $eventStatsService;
+        $this->telegramService = $telegramService;
     }
 
     public function triggerDailyPayout(Request $request)
@@ -45,6 +52,8 @@ class PayoutController extends Controller
         $result = $this->payoutService->calculateDailyPayouts($date);
 
         if ($result['success']) {
+            $this->sendPayoutNotification($date);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Payout calculation completed successfully',
@@ -58,6 +67,23 @@ class PayoutController extends Controller
                 'date' => $date,
                 'error' => $result['error']
             ], 500);
+        }
+    }
+
+    private function sendPayoutNotification(string $date): void
+    {
+        try {
+            $stats = PlayerPayStat::where('date', $date)
+                ->selectRaw('SUM(counter) as total_views')
+                ->selectRaw('SUM(counter * watch_price) as total_accruals')
+                ->first();
+
+            $this->telegramService->sendPayoutSummary($date, [
+                'total_views' => $stats->total_views ?? 0,
+                'total_accruals' => $stats->total_accruals ?? 0,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Failed to send payout Telegram notification: " . $e->getMessage());
         }
     }
 
@@ -84,6 +110,8 @@ class PayoutController extends Controller
         $result = $this->eventStatsService->calculateDailyStats($date);
 
         if ($result['success']) {
+            $this->sendEventStatsNotification($date, $result['processed_count'] ?? 0);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Player event stats calculation completed successfully',
@@ -97,6 +125,15 @@ class PayoutController extends Controller
                 'date' => $date,
                 'error' => $result['error']
             ], 500);
+        }
+    }
+
+    private function sendEventStatsNotification(string $date, int $processedCount): void
+    {
+        try {
+            $this->telegramService->sendEventStatsSummary($date, $processedCount);
+        } catch (\Exception $e) {
+            Log::error("Failed to send event stats Telegram notification: " . $e->getMessage());
         }
     }
 }
