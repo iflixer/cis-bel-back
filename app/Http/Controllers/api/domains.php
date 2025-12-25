@@ -467,7 +467,7 @@ class domains extends Controller
 
             $loadsData = [];
             foreach ($stats as $stat) {
-                $loadsData[$stat->domain_id] = (int) $stat->cnt;
+                $loadsData[$stat['domain_id']] = (int) $stat['cnt'];
             }
 
             \Cache::put($cacheKey, $loadsData, $cacheTTL);
