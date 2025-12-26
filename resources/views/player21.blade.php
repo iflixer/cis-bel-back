@@ -136,6 +136,11 @@
             page_referrer: document.referrer
         });
     </script> --}}
+
+    <script>
+        const unapproved_domain = {{ $unapproved_domain }};
+
+    </script>
 </head>
 <body style="background-color: #000000">
 
