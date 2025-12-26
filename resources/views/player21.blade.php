@@ -26,6 +26,84 @@
             transition: opacity 0.5s ease;
             z-index: 9999;
         }
+        #testfs-overlay,
+        #testfs-overlay-fs{
+        width:100vw;
+            height:calc(100vh - 96px);
+            position: fixed;
+            z-index:99;
+            cursor: not-allowed;
+            top:50px;
+            left:0;
+            background-color: rgba(5, 142, 241, 0.5);
+      }
+
+        #testfs-overlay::after,
+        #testfs-overlay-fs::after {
+            content: "Domain not approved • Домен не подтвержден";
+            position: fixed;
+            top: -50vh;
+            left: -50vw;
+            width: 200vw;
+            height: 200vh;
+            z-index: 2147483647;
+            pointer-events: none;
+            display: grid;
+            place-items: center;
+            font: 700 18px/1.2 Arial, sans-serif;
+            white-space: nowrap;
+            color: rgba(255,255,255,1);
+            transform: rotate(-30deg);
+            transform-origin: center;
+            text-shadow:
+                    0 0 0 rgba(255,255,255,0.22),
+                        /* X rings */
+                    480px 0 0 rgba(255,255,255,0.22),
+                    -480px 0 0 rgba(255,255,255,0.22),
+                    960px 0 0 rgba(255,255,255,0.22),
+                    -960px 0 0 rgba(255,255,255,0.22),
+                    1440px 0 0 rgba(255,255,255,0.22),
+                    -1440px 0 0 rgba(255,255,255,0.22),
+                    1920px 0 0 rgba(255,255,255,0.22),
+                    -1920px 0 0 rgba(255,255,255,0.22),
+                        /* Y rings */
+                    0 240px 0 rgba(255,255,255,0.22),
+                    0 -240px 0 rgba(255,255,255,0.22),
+                    0 480px 0 rgba(255,255,255,0.22),
+                    0 -480px 0 rgba(255,255,255,0.22),
+                    0 720px 0 rgba(255,255,255,0.22),
+                    0 -720px 0 rgba(255,255,255,0.22),
+                    0 960px 0 rgba(255,255,255,0.22),
+                    0 -960px 0 rgba(255,255,255,0.22),
+                        /* corners (combinations) */
+                    480px 240px 0 rgba(255,255,255,0.22),
+                    -480px 240px 0 rgba(255,255,255,0.22),
+                    480px -240px 0 rgba(255,255,255,0.22),
+                    -480px -240px 0 rgba(255,255,255,0.22),
+
+                    960px 480px 0 rgba(255,255,255,0.22),
+                    -960px 480px 0 rgba(255,255,255,0.22),
+                    960px -480px 0 rgba(255,255,255,0.22),
+                    -960px -480px 0 rgba(255,255,255,0.22),
+
+                    1440px 720px 0 rgba(255,255,255,0.22),
+                    -1440px 720px 0 rgba(255,255,255,0.22),
+                    1440px -720px 0 rgba(255,255,255,0.22),
+                    -1440px -720px 0 rgba(255,255,255,0.22),
+
+                    1920px 960px 0 rgba(255,255,255,0.22),
+                    -1920px 960px 0 rgba(255,255,255,0.22),
+                    1920px -960px 0 rgba(255,255,255,0.22),
+                    -1920px -960px 0 rgba(255,255,255,0.22);
+        }
+
+
+
+        #testfs-overlay {
+        }
+        #testfs-overlay-fs {
+            display: none;
+         }
     </style>
 
     <!-- Google tag (gtag.js) -->
@@ -58,6 +136,11 @@
             page_referrer: document.referrer
         });
     </script> --}}
+
+    <script>
+        const unapproved_domain = {{ $unapproved_domain }};
+
+    </script>
 </head>
 <body style="background-color: #000000">
 
@@ -1481,6 +1564,71 @@
     $(document).on('click', '.nice-select li.option', function(){
         $(this).addClass('clicked');
     });
+
+
+
+    <!--  DOMAIN OVERLAY  -->
+    function getFsEl() {
+        return document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement ||
+            null;
+    }
+    function ensureOverlays() {
+        if (!unapproved_domain) return;
+        if (!document.getElementById("testfs-overlay")) {
+            document.body.insertAdjacentHTML(
+                "beforeend",
+                `<div id="testfs-overlay"></div>
+       <div id="testfs-overlay-fs" style="display:none"></div>`
+            );
+        }
+    }
+    function moveOverlaysTo(host) {
+        const a = document.getElementById("testfs-overlay");
+        const b = document.getElementById("testfs-overlay-fs");
+        if (!a || !b) return;
+        const cs = window.getComputedStyle(host);
+        if (cs.position === "static") host.style.position = "relative";
+        host.classList.add("fs-hosted");
+        host.appendChild(a);
+        host.appendChild(b);
+    }
+    function moveOverlaysBackToBody(prevHost) {
+        const a = document.getElementById("testfs-overlay");
+        const b = document.getElementById("testfs-overlay-fs");
+        if (!a || !b) return;
+        if (prevHost) prevHost.classList.remove("fs-hosted");
+        document.body.appendChild(a);
+        document.body.appendChild(b);
+    }
+    let lastFsHost = null;
+    function updateOverlayForFullscreen() {
+        if (!unapproved_domain) return;
+        const fsHost = getFsEl();
+        const extra = document.getElementById("testfs-overlay-fs");
+        if (!extra) return;
+        if (fsHost) {
+            // entering fullscreen
+            lastFsHost = fsHost;
+            moveOverlaysTo(fsHost);
+            extra.style.display = "block";
+        } else {
+            // exiting fullscreen
+            extra.style.display = "none";
+            moveOverlaysBackToBody(lastFsHost);
+            lastFsHost = null;
+        }
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+        ensureOverlays();
+        updateOverlayForFullscreen();
+    });
+    ["fullscreenchange","webkitfullscreenchange","mozfullscreenchange","MSFullscreenChange"]
+        .forEach(ev => document.addEventListener(ev, updateOverlayForFullscreen));
+    <!--  END DOMAIN OVERLAY  -->
+
 </script>
 
 <!--  DOWNLOAD FUNCTIONALITY  -->

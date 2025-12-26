@@ -67,6 +67,8 @@ class ShowController extends Controller{
         $data['version'] = '1.0.2';
         $data['cloudflare_captcha_public'] = $this->cloudflare_captcha_public;
 
+        $data['unapproved_domain'] = $this->request->domain_approved ? 'false' : 'true';
+
         if ($type && $id) {
             $video = Video::where($type, $id)->first();
             if (!$video) {
@@ -198,7 +200,7 @@ class ShowController extends Controller{
 
         // get view for player
         $player_view = 'player';
-        if ($domain->player_view) {
+        if ($domain && $domain->player_view) {
             $player_view = $domain->player_view;
         } else {
             $player_view_global = Seting::where('name', 'player_view')->first()->toArray()['value'];
@@ -581,6 +583,7 @@ class ShowController extends Controller{
     }
 
     private function do_stat($domain) {
+        if (empty($domain)) return;
         // TODO: здесь race condition
         $dateNow = date("Y-m-d");
         $stats = [];
