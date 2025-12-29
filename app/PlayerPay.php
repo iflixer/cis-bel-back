@@ -20,6 +20,7 @@ class PlayerPay extends Model
      */
     public static function save_event(string $event_name,  $domain, int $file_id)
     {
+        if (empty($file_id)) return;
         if (!in_array($event_name, self::$event_names)) {
             return;
         }

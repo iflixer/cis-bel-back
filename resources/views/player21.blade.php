@@ -318,7 +318,8 @@
                     <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_translations']) || isset($_GET['extrans'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
 			<select name="translator" id="translator-name" data-select="1">
 				@foreach ($translations as $translation)
-                    <option value="{{ $translation['id'] }}"
+                    <option value="{{ $translation['id'] }}" 
+                            @if (!empty($translation['episodes_qty'])) data-episodes_qty="{{ $translation['episodes_qty'] }}" @endif
                             @if ($translate && $translate == $translation['id']) selected="selected"
                             readonly="readonly"@endif>{{ $translation['title'] }}</option>
                 @endforeach
@@ -578,7 +579,7 @@
             var _key = "save-" + getCDNplayerCUID(),
                 _value = {
                     p: {{ $id }},
-                    t: {{ $translate }},
+                    t: '{{ $translate }}',
                     d: 0,
                     tn: '{{ $translateTitle }}',
                     s: {{ $season ?: 'null' }},
