@@ -30,7 +30,7 @@ class KinopoiskDevService
         }
 
         $start_time = microtime(true);
-        $url = 'https://api.kinopoisk.dev/v1.4/movie/' . $kinopoiskId;
+        $url = 'https://api.poiskkino.dev/v1.4/movie/' . $kinopoiskId;
 
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
