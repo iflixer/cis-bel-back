@@ -104,6 +104,28 @@
         #testfs-overlay-fs {
             display: none;
          }
+        .epiqtybadge {
+            border-radius:4px;
+            background-color:rgba(61, 147, 211, 0.4);
+            color:#fff;
+            padding:2px 4px;
+            font-size:12px;
+            position:absolute;
+            right:4px;
+            top:6px;
+            height: calc(100% - 14px);
+            display: flex;align-items: center;
+            justify-content: center;
+        }
+        .epiqtybadge.rela {
+            margin-left:4px;
+            display: inline;
+            position:relative;
+            right:unset;
+            top:unset;
+        }
+        .sertrans .nice-select .option{position: relative;padding-right:46px;}
+        .sertrans .nice-select .current.wbadge{padding-right:46px;}
     </style>
 
     <!-- Google tag (gtag.js) -->
@@ -315,7 +337,7 @@
         @if ($translations)
             @if (isset($_GET['extrans']) && $_GET['extrans'] === '1')
                 <div style="display: none !important">@endif
-                    <span<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_translations']) || isset($_GET['extrans'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
+                    <span @if ($type === 'serial') class="sertrans" @endif<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_translations']) || isset($_GET['extrans'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
 			<select name="translator" id="translator-name" data-select="1">
 				@foreach ($translations as $translation)
                     <option value="{{ $translation['id'] }}" 
@@ -434,6 +456,7 @@
                     "translation_id"   => $translation['id'],
                     "translation_title" => $translation['title'],
                     "is_active"        => $transactive,
+                    "e_qty"        => $translation['episodes_qty'],
                 ];
             }
         @endphp
@@ -474,6 +497,7 @@
                  "series"        => $epiarray,
              ];
            $jsonitemdata = json_encode($itemdata, JSON_UNESCAPED_UNICODE);
+
            echo  '<script>const jsonitemdata = '.$jsonitemdata.';window.parent.postMessage({action: "itemdatalist", list: jsonitemdata}, "*")</script>';
     @endphp
 @endif
@@ -922,6 +946,14 @@
                     }
                 });
             }, 0);
+            let curqty = $('#translator-name option[selected="selected"]').data('episodes_qty');
+            $('.sertrans .nice-select .option').each(function(){
+                let optval = $(this).data("value");
+                let thisqty = $('#translator-name option[value="'+optval+'"]').data('episodes_qty');
+                $(this).append('<span class="epiqtybadge">'+thisqty+'</span>');
+            });
+            $('.sertrans .nice-select .current').append('<span class="epiqtybadge rela">'+curqty+'</span>').addClass('wbadge');
+
 
             <?php if (isset($_GET['unfseason']) && $_GET['unfseason'] == '1'): ?>
             $('#season-number +.nice-select').addClass('open').addClass('unfolded');
