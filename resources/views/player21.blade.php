@@ -447,6 +447,10 @@
         @php
             foreach ($translations as $translation) {
                 $transactive = 0;
+                $tranqty = "";
+                 if (!empty($translation['episodes_qty'])){
+                    $tranqty = $translation['episodes_qty'];
+                 }
 
                 if ($translate && $translate == $translation['id']) {
                     $transactive = 1;
@@ -456,7 +460,8 @@
                     "translation_id"   => $translation['id'],
                     "translation_title" => $translation['title'],
                     "is_active"        => $transactive,
-                    "e_qty"        => $translation['episodes_qty'],
+                    "e_qty"        => $tranqty,
+
                 ];
             }
         @endphp
