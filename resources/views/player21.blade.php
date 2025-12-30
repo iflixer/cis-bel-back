@@ -125,7 +125,7 @@
             top:unset;
         }
         .sertrans .nice-select .option{position: relative;padding-right:46px;}
-        .sertrans .nice-select .current.wbadge{padding-right:46px;}
+
     </style>
 
     <!-- Google tag (gtag.js) -->
