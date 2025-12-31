@@ -53,7 +53,7 @@ class ShowController extends Controller{
         $this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
         $this->keyWin = Seting::where('name', 'keyWin')->first()->toArray()['value'];
         $this->cdnhub_api_domain = Seting::where('name', 'cdnhub_api_domain')->first()->toArray()['value'];
-        $this->cdnhub_api_domacdnhub_img_resizer_domainin = Seting::where('name', 'cdnhub_img_resizer_domain')->first()->toArray()['value'];
+        $this->cdnhub_img_resizer_domain = Seting::where('name', 'cdnhub_img_resizer_domain')->first()->toArray()['value'];
         $this->cloudflare_captcha_public = Seting::where('name', 'cloudflare_captcha_public')->first()->toArray()['value'];
         $this->cloudflare_captcha_secret = Seting::where('name', 'cloudflare_captcha_secret')->first()->toArray()['value'];
     }
@@ -222,10 +222,16 @@ class ShowController extends Controller{
         $domain_name = $ref_host ?? $this->request->input('domain');
 
         $domain = Domain::get_main_info($domain_name);
-        PlayerPay::save_event('load', $domain, $data['media']['id']);
+        PlayerPay::save_event('load', $domain, $data['media']['id'] ?? 0);
         // Debug::dump_queries(0);
         // die();
 
+        if (!empty($_REQUEST['debug_data_back']) && $_REQUEST['debug_data_back'] == 1) {
+            echo '<pre>';
+            $d = json_encode($data);
+            var_dump(json_decode($d, true));
+            die();
+        }
 
         header("X-Player-Build-Duration: " . (microtime(true) - $start_time));
         return view($player_view, $data);
@@ -234,7 +240,14 @@ class ShowController extends Controller{
     private function inject_media(array &$data, $translate, $season, $episode): string {
         $video = $data['video'];
         $id = $video['id'];
+        $data['files'] = [];
+        $data['translate'] = $translate;
+        $data['translateTitle'] = '';
+        $data['season'] = $season;
+        $data['episode'] = $episode;
+        $data['media'] = [];
         if (in_array($video['tupe'], ['movie', 'anime', 'cartoon'])) {
+            $data['is_serial'] = false;
             
             // files
 
@@ -245,6 +258,8 @@ class ShowController extends Controller{
                 ->get()
                 ->toArray();
 
+            if (empty($files)) return "";
+
             $data['files'] = $files;
 
             // найти самый наполненный перевод
@@ -253,6 +268,8 @@ class ShowController extends Controller{
                 $tid = $file['translation_id'];
                 $translations_stat[$tid] = ($translations_stat[$tid] ?? 0) + 1;
             }
+
+
             $maxFilledTranslationId = array_search(max($translations_stat), $translations_stat);
             $maxFilledFile = null;
             foreach ($files as $file) {
@@ -279,6 +296,7 @@ class ShowController extends Controller{
             $translateTitle = $media['t_tag'] ?: $media['t_title'];
 
         } else { // serial
+            $data['is_serial'] = true;
             
             // files
             $files = File::select('files.*', 'translations.title as t_title', 'translations.tag as t_tag')
@@ -289,6 +307,8 @@ class ShowController extends Controller{
                 ->orderBy('num', 'asc')
                 ->get()
                 ->toArray();
+
+            if (empty($files)) return "";
 
             // найти самый наполненный перевод
             $translations_stat = [];
@@ -437,7 +457,17 @@ class ShowController extends Controller{
                     'id'      => $id,
                     'title'   => $file['t_tag'] ?: $file['t_title'],
                 ];
+                if ($data['is_serial']) {
+                    $translations[$id]['episodes_qty'] = 1;
+                }
+            } else {
+                if ($data['is_serial']) {
+                    $translations[$id]['episodes_qty']++;
+                }
             }
+        }
+        if ($data['is_serial']) {
+            usort($translations, fn($a, $b) => ($b['episodes_qty'] ?? 0) <=> ($a['episodes_qty'] ?? 0));
         }
         $data['translations'] = $translations;
         return "";
@@ -448,6 +478,12 @@ class ShowController extends Controller{
         $video = $data['video'];
         $media = $data['media'];
         $force_cdn = $data['force_cdn'];
+        $data['file'] = '';
+
+        if (empty($media['resolutions'])) {
+            return '';
+        }
+
         $resolutions = explode(',', $media['resolutions']);
         sort($resolutions);
 
