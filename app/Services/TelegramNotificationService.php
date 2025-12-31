@@ -83,11 +83,23 @@ class TelegramNotificationService
         return $this->sendMessage($message);
     }
 
-    public function sendEventStatsSummary(string $date, int $processedCount): bool
+    public function sendEventStatsSummary(string $date, int $processedCount, array $geoStats = []): bool
     {
         $message = "<b>Daily Event Stats Summary</b>\n";
         $message .= "Date: {$date}\n";
         $message .= "Processed Groups: " . number_format($processedCount);
+
+        if (!empty($geoStats)) {
+            $totalEvents = array_sum(array_column($geoStats, 'total_events'));
+            $message .= "\nTotal Events: " . number_format($totalEvents);
+            $message .= "\n\n<b>Events by Region:</b>";
+
+            foreach ($geoStats as $stat) {
+                $name = $stat['name'];
+                $events = number_format($stat['total_events']);
+                $message .= "\n- {$name}: {$events}";
+            }
+        }
 
         return $this->sendMessage($message);
     }

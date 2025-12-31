@@ -131,7 +131,23 @@ class PayoutController extends Controller
     private function sendEventStatsNotification(string $date, int $processedCount): void
     {
         try {
-            $this->telegramService->sendEventStatsSummary($date, $processedCount);
+            $geoStats = \DB::table('player_event_stats as pes')
+                ->leftJoin('geo_groups as g', 'pes.geo_group_id', '=', 'g.id')
+                ->where('pes.date', $date)
+                ->select('g.name')
+                ->selectRaw('SUM(pes.counter) as total_events')
+                ->groupBy('pes.geo_group_id', 'g.name')
+                ->orderByDesc('total_events')
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'name' => $row->name ?? 'Unknown',
+                        'total_events' => (int) $row->total_events,
+                    ];
+                })
+                ->toArray();
+
+            $this->telegramService->sendEventStatsSummary($date, $processedCount, $geoStats);
         } catch (\Exception $e) {
             Log::error("Failed to send event stats Telegram notification: " . $e->getMessage());
         }
