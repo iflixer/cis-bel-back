@@ -523,27 +523,12 @@
     }
     <?php } ?>
 
-    var tgc = '{{ $tgc }}';
-
     var cdn = cdn || {};
 
     var onpercdone = false;
     window.abc = false;
 
-    iframeReferer = '<?php
-
-                     if (isset($_GET['domain']) && $_GET['domain'] && preg_match("#^[a-z0-9-_.]+$#i", $_GET['domain'])) {
-                         echo $_GET['domain'];
-                     } elseif (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']) {
-                         $url = parse_url($_SERVER['HTTP_REFERER']);
-                         if ($url['host'] && preg_match("#^[a-z0-9-_.]+$#i", $url['host'])) {
-                             echo $url['host'];
-                         } else {
-                             echo 'futemaxlive.com';
-                         }
-                     }
-
-                     ?>';
+    iframeReferer = '{{ $domain }}';
 
     @if ($type === 'serial' && isset($_GET['last']) && $_GET['last'] === '1')
     let ssel = document.getElementById("season-number");
@@ -841,10 +826,6 @@
                             _url_params.push('autoplay=0');
                             <?php endif; ?>
 
-                            if (tgc) {
-                                _url_params.push('tgc=' + tgc);
-                            }
-
                             if (_save.t === 0 && _save.tn === null) {
                                 if (_save.time)
                                     _url_params.push('start=' + _save.time);
@@ -988,7 +969,7 @@
 
         $('#translator-name').change(function () {
             var t = $(this).find(':selected').attr('value');
-            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&translation=' + t + (tgc ? '&tgc=' + tgc : '');
+            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&translation=' + t;
         });
 
         @elseif ($type === 'serial')
@@ -1082,9 +1063,6 @@
             _url_params.push('unfseason=1');
             <?php endif; ?>
 
-            if (tgc) {
-                _url_params.push('tgc=' + tgc);
-            }
             //if(forceauto){
             <?php if (isset($_GET['unfseason']) && $_GET['unfseason'] == '1' ): ?>
             _url_params.push('autoplay=0');
@@ -1149,7 +1127,7 @@
                 $.ajax({
                     type: 'get',
                     url: '/apishow/shows.impression',
-                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}' + (tgc ? '&tgc=' + tgc : ''),
+                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}',
                     dataType: "html",
                     cache: false,
                     success: function (response) {
@@ -1167,7 +1145,7 @@
                 $.ajax({
                     type: 'get',
                     url: '/apishow/shows.showsAd',
-                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}' + (tgc ? '&tgc=' + tgc : ''),
+                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}',
                     dataType: "html",
                     cache: false,
                     success: function (response) {
@@ -1213,7 +1191,7 @@
                 $.ajax({
                     type: 'get',
                     url: '/apishow/shows.show',
-                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}' + (tgc ? '&tgc=' + tgc : ''),
+                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}',
                     dataType: "html",
                     cache: false,
                     success: function (response) {
@@ -1255,7 +1233,7 @@
                         $.ajax({
                             type: 'get',
                             url: '/apishow/shows.percent',
-                            data: 'percent=p1&domain=' + cdn.player.getVBR() + '&file_id={{ $id }}' + (tgc ? '&tgc=' + tgc : ''),
+                            data: 'percent=p1&domain=' + cdn.player.getVBR() + '&file_id={{ $id }}',
                             dataType: "html",
                             cache: false,
                             success: function (response) {
@@ -1312,7 +1290,7 @@
                 $.ajax({
                     type: 'get',
                     url: '/apishow/shows.loaderror',
-                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}' + (tgc ? '&tgc=' + tgc : ''),
+                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}',
                     dataType: "html",
                     cache: false,
                     success: function (response) {
@@ -1331,7 +1309,7 @@
                 $.ajax({
                     type: 'get',
                     url: '/apishow/shows.percent',
-                    data: 'percent=' + p + '&domain=' + cdn.player.getVBR() + '&file_id={{ $id }}' + (tgc ? '&tgc=' + tgc : ''),
+                    data: 'percent=' + p + '&domain=' + cdn.player.getVBR() + '&file_id={{ $id }}',
                     dataType: "html",
                     cache: false,
                     success: function (response) {

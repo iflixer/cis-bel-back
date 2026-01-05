@@ -42,6 +42,10 @@ class ShowController extends Controller{
 
     protected $cloudflare_captcha_secret;
     protected $cloudflare_captcha_public;
+    protected $tg_share_domain;
+    protected $cdn_domain;
+    protected $cdnhub_player_domain;
+    protected $cdnhub_public_domain;
 
 
     public function __construct(Request $request){
@@ -56,6 +60,9 @@ class ShowController extends Controller{
         $this->cdnhub_img_resizer_domain = Seting::where('name', 'cdnhub_img_resizer_domain')->first()->toArray()['value'];
         $this->cloudflare_captcha_public = Seting::where('name', 'cloudflare_captcha_public')->first()->toArray()['value'];
         $this->cloudflare_captcha_secret = Seting::where('name', 'cloudflare_captcha_secret')->first()->toArray()['value'];
+        $this->tg_share_domain = Seting::where('name', 'tg_share_domain')->first()->toArray()['value'];
+        $this->cdnhub_player_domain = Seting::where('name', 'cdnhub_player_domain')->first()->toArray()['value'];
+        $this->cdnhub_public_domain = Seting::where('name', 'cdnhub_public_domain')->first()->toArray()['value'];
     }
 
     public function player($type = null, $id = 0)
@@ -118,14 +125,14 @@ class ShowController extends Controller{
         $data['cover_url'] = Image::makeInternalImageURL($this->cdnhub_img_resizer_domain, 'videos', $video->id, $video->backdrop);
 
         // tgc
-        if ($this->request->input('tgc'))
-            $tgc = $this->request->input('tgc');
-        else
-            $tgc = null;
-        if ($tgc)
-            $this->request->domain = "@{$tgc}";
+        // if ($this->request->input('tgc'))
+        //     $tgc = $this->request->input('tgc');
+        // else
+        //     $tgc = null;
+        // if ($tgc)
+        //     $this->request->domain = "@{$tgc}";
 
-        $data['tgc'] = $tgc;
+        // $data['tgc'] = $tgc;
 
         $data['id'] = $video['id'];
 
@@ -192,6 +199,11 @@ class ShowController extends Controller{
         $this->inject_ads($data);
 
         $domain = Domain::where('name', $this->request->domain)->first();
+
+        $data['domain'] = '';
+        if (!empty($domain)) {
+            $data['domain'] = $domain->name;
+        }
 
         // update stat for domain
         $this->do_stat($domain);
@@ -504,7 +516,7 @@ class ShowController extends Controller{
 
             $file['host'] = $this->cdn_host_by_video_id($video['id'], $force_cdn);
             if (!$file['host']) {
-                $file['host'] = "cdn0.testme.wiki"; // fallback если не удалось найти хост
+                $file['host'] = "cdn0.{$this->cdn_domain}"; // fallback если не удалось найти хост
             }
 
             $date = date('YmdH', strtotime("+1 days"));
@@ -659,7 +671,7 @@ class ShowController extends Controller{
     private function cdn_host_by_video_id(int $video_id, int $force_cdn = null): ?string {
         if ($force_cdn) {
             header("X-Player-cdn-method: force");
-            return "cdn{$force_cdn}.testme.wiki";
+            return "cdn{$force_cdn}.{$this->cdn_domain}";
         }
 
         // есть связка видеоид-сдн?
@@ -720,15 +732,17 @@ class ShowController extends Controller{
         else
             $tgc = null;
 
-        if (!$tgc) {
-            abort(404);
-        }
+        $tgc = str_replace('@', '', $tgc);
+
+        // if (!$tgc) {
+        //     abort(404);
+        // }
 
         $domain = Domain::select()->where('name', "@{$tgc}")->where('status', 1)->first();
-
-        if (!$domain) {
-            abort(404);
-        }
+        
+        // if (!$domain) {
+        //     abort(404);
+        // }
 
         $video = Video::where('id', $id)->first();
 
@@ -738,35 +752,37 @@ class ShowController extends Controller{
 
         $views = 0;
 
-        $show = Show::select()->where('id_domain', $domain->id)->where('id_video', $id)->first();
-
-        if ($show) {
-            $views = $show->shows;
-
-            Show::where('id_domain', $domain->id)->where('id_video', $id)->update([
-                'shows' => $show->shows + 1
-            ]);
-        } else {
-            Show::create([
-                'id_domain' => $domain->id,
-                'id_video' => $id,
-                'id_ad' => 0,
-                'shows' => 1
-            ]);
+        if (!empty($domain)) {
+            $show = Show::select()->where('id_domain', $domain->id)->where('id_video', $id)->first();
+            if ($show) {
+                $views = $show->shows;
+                Show::where('id_domain', $domain->id)->where('id_video', $id)->update([
+                    'shows' => $show->shows + 1
+                ]);
+            } else {
+                Show::create([
+                    'id_domain' => $domain->id,
+                    'id_video' => $id,
+                    'id_ad' => 0,
+                    'shows' => 1
+                ]);
+            }
         }
 
-        $serverDomain = 'tg.futemaxlive.com';
+        $tgShareDomain = $this->tg_share_domain;
 
         return view('share', [
             'id' => $id,
-            'tgc' => $tgc,
+            'tgc' => "@{$tgc}",
             'domain' => $domain,
-            'serverDomain' => $serverDomain,
+            'playerDomain' => $this->cdnhub_player_domain,
+            'tgShareDomain' => $tgShareDomain,
+            'cdnPublicDomain' => $this->cdnhub_public_domain,
             'video' => $video,
             'views' => $views,
-            'share' => rawurlencode("https://{$serverDomain}/share/{$id}?tgc={$tgc}"),
+            'share' => rawurlencode("https://{$tgShareDomain}/share/{$id}?tgc={$tgc}"),
             'title' => rawurlencode($video->ru_name . ($video->year ? ' (' . $video->year . ')' : '') . ' смотреть в HD онлайн'),
-            'image' => rawurlencode("https://{$serverDomain}/share/share.jpg")
+            'image' => rawurlencode("https://{$tgShareDomain}/share/share.jpg")
         ]);
     }
 
@@ -828,7 +844,7 @@ class ShowController extends Controller{
 
         $file['host'] = $this->cdn_host_by_video_id($video['id'] );
         if (!$file['host']) {
-            $file['host'] = "cdn0.testme.wiki"; // fallback если не удалось найти хост
+            $file['host'] = "cdn0.{$this->cdn_domain}"; // fallback если не удалось найти хост
         }
 
         $date = date('YmdH', strtotime("+1 hours"));
