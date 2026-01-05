@@ -1166,4 +1166,21 @@ class TestController extends Controller
 		}, 5); // повторить до 5 раз при конфликте
 	}
 
+	// imageReplace - replaces an image for video with given in post request
+	public function imageReplace(){
+		die('sdf');
+		$hubPostId = $this->request->input('hubPostId');
+		$imageName = $this->request->input('imageName');
+
+		$video = Video::where('id', $hubPostId)->first()->toArray();
+
+		if (!$video) {
+			echo 'fail: not found video';
+			exit;
+		}
+
+		return $video;
+        
+    }
+
 }

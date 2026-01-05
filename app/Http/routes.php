@@ -89,14 +89,15 @@ Route::group(['prefix' => '/oauth' ], function () {
 
 
 
-// api парсера
+// api парсера 
 Route::get('/parse', ['middleware'=>[], 'uses'=>'ApiController@parse']);
 
 
 // metrics
 Route::get('/metrics', ['middleware'=>[], 'uses'=>'TestController@metrics']);
 
-
+// image replace
+Route::post('/image-replace', ['middleware'=>[], 'uses'=>'TestController@imageReplace']);
 
 
 Route::get('/cronjob/videodb', ['middleware' => [], 'uses' => 'CronjobController@videodb']);
