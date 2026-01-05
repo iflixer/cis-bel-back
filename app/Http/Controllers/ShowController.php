@@ -32,6 +32,7 @@ use Cookie;
 use Illuminate\Support\Arr;
 
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use function is_array;
 
 class ShowController extends Controller{
 
@@ -725,6 +726,60 @@ class ShowController extends Controller{
                 ]);
         }
     }
+
+    // static page for telegram apps - all the params should be passed as #fragment
+    public function tgApp()
+    {
+        // fex ?startapp= 3oNVU5/wENs5ACw62VpltoUW0+nPB4iWEg9I23vRO1E=
+        // startapp - зашифрованный JSON с id видео и tgc канала и в будущем другими параметрами
+        // $encoded = bin2hex(
+        //     openssl_encrypt('{"id":1,"tgc":"@test"}', 'AES-128-ECB', "pray_for_ukraine", OPENSSL_RAW_DATA)
+        // );
+        // var_dump($encoded);
+        // die();
+
+        $startapp = $this->request->input('startapp');
+
+
+        if (!is_string($startapp) || $startapp === '' || (strlen($startapp) % 2) !== 0 || !ctype_xdigit($startapp)) {
+            // неправильный hex
+            abort(404);
+        }
+
+        $startapp = openssl_decrypt(
+            hex2bin($startapp), 'AES-128-ECB', "pray_for_ukraine", OPENSSL_RAW_DATA
+        );
+        // var_dump($startapp);
+        // die();
+        $startapp = json_decode($startapp, true);
+
+        if (!is_array($startapp) || !isset($startapp['tgc']) || !isset($startapp['id'])) {
+            // неправильный JSON
+            abort(404);
+        }
+
+        $tgc = str_replace('@', '', $startapp['tgc']);
+        $domain = Domain::select()->where('name', "@{$tgc}")->where('status', 1)->first();
+        $video = Video::where('id', $startapp['id'])->first();
+        if (!$video) {
+            abort(404);
+        }
+        $tgShareDomain = $this->tg_share_domain;
+
+        return view('share', [
+            'id' => $startapp['id'],
+            'tgc' => "@{$tgc}",
+            'domain' => $domain,
+            'playerDomain' => $this->cdnhub_player_domain,
+            'tgShareDomain' => $tgShareDomain,
+            'cdnPublicDomain' => $this->cdnhub_public_domain,
+            'video' => $video,
+            'views' => 0,
+            'share' => rawurlencode("https://{$tgShareDomain}/share/{$startapp['id']}?tgc={$tgc}"),
+            'title' => rawurlencode($video->ru_name . ($video->year ? ' (' . $video->year . ')' : '') . ' смотреть в HD онлайн'),
+            'image' => rawurlencode("https://{$tgShareDomain}/share/share.jpg")
+        ]);
+    }
     public function share($id)
     {
         if ($this->request->input('tgc'))
@@ -733,19 +788,8 @@ class ShowController extends Controller{
             $tgc = null;
 
         $tgc = str_replace('@', '', $tgc);
-
-        // if (!$tgc) {
-        //     abort(404);
-        // }
-
         $domain = Domain::select()->where('name', "@{$tgc}")->where('status', 1)->first();
-        
-        // if (!$domain) {
-        //     abort(404);
-        // }
-
         $video = Video::where('id', $id)->first();
-
         if (!$video) {
             abort(404);
         }
