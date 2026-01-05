@@ -739,6 +739,9 @@ class ShowController extends Controller{
         // die();
 
         $startapp = $this->request->input('startapp');
+        if (empty($startapp)) {
+            $startapp = $this->request->input('tgWebAppStartParam');
+        }
 
 
         if (!is_string($startapp) || $startapp === '' || (strlen($startapp) % 2) !== 0 || !ctype_xdigit($startapp)) {
