@@ -59,6 +59,10 @@ class tikets extends Controller
             $status = $this->request->input('status');
             $queryTikets = $queryTikets->where('status', $status);
         }
+        if( null !== $this->request->input('id_user') ){
+            $id_user = $this->request->input('id_user');
+            $queryTikets = $queryTikets->where('id_user', $id_user);
+        }
         if($this->user['name'] == 'client'){
             $queryTikets = $queryTikets->where('id_user', $this->user['id']);
         }
@@ -302,6 +306,30 @@ class tikets extends Controller
         return ['data' => $response,'messages' => $messages];
     }
 
+
+    public function getUsers(){
+        $response = [];
+        $messages = [];
+
+        if ($this->user['name'] == 'client' || $this->user['name'] == 'redactor') {
+            return ['data' => $response, 'messages' => $messages];
+        }
+
+        $users = User::select('id', 'login', 'name', 'surname')
+            ->orderBy('login', 'asc')
+            ->get()
+            ->toArray();
+
+        foreach ($users as $user) {
+            $displayName = trim($user['name'] . ' ' . $user['surname']);
+            $response[] = [
+                'id' => $user['id'],
+                'label' => $displayName ?: $user['login']
+            ];
+        }
+
+        return ['data' => $response, 'messages' => $messages];
+    }
 
 
 }

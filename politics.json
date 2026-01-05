@@ -130,6 +130,7 @@
             "tikets.addCent":true,
             "tikets.getNew":true,
             "tikets.read":true,
+            "tikets.getUsers":true,
 
             "domains.add":true,
             "domains.delete":true,
@@ -192,6 +193,7 @@
             "tikets.addCent":true,
             "tikets.getNew":true,
             "tikets.read":true,
+            "tikets.getUsers":true,
 
             "domains.add": true,
             "domains.delete": true,
