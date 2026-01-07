@@ -51,6 +51,8 @@ class TestController extends Controller
 	protected $passVDB; 
 	protected $cdnhub_api_domain;
     protected $cdnhub_player_domain;
+	protected $r2Service;
+	protected $cdnhub_img_resizer_domain;
 
 	public function __construct(Request $request)
 	{
@@ -59,6 +61,8 @@ class TestController extends Controller
 		$this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
 		$this->cdnhub_api_domain = Seting::where('name', 'cdnhub_api_domain')->first()->toArray()['value'];
 		$this->cdnhub_player_domain = Seting::where('name', 'cdnhub_player_domain')->first()->toArray()['value'];
+        $this->cdnhub_img_resizer_domain = Seting::where('name', 'cdnhub_img_resizer_domain')->first()->toArray()['value'];
+		$this->r2Service = new R2Service();
 	}
 
 	public function api($url)
@@ -1166,20 +1170,82 @@ class TestController extends Controller
 		}, 5); // повторить до 5 раз при конфликте
 	}
 
-	// imageReplace - replaces an image for video with given in post request
+	// imageReplace - replaces an image for video with given 
 	public function imageReplace(){
-		die('sdf');
-		$hubPostId = $this->request->input('hubPostId');
-		$imageName = $this->request->input('imageName');
+		$videoId = $this->request->input('hubVideoId'); // fex 123
+		$imageName = $this->request->input('imageName'); // fex "66ed137e40448fb091011f7d4060017b"
 
-		$video = Video::where('id', $hubPostId)->first()->toArray();
-
+		$video = Video::where('id', $videoId)->first()->toArray();
 		if (!$video) {
 			echo 'fail: not found video';
 			exit;
 		}
 
-		return $video;
+		$file = $this->request->file('file');
+		$bytes = file_get_contents($file->getRealPath());
+
+		// сначала надо сохранить новый оригинал изображения в хранилище R2
+		$new_image_orig_url = '';
+		$fname = md5($bytes);
+		try {
+			$storage_file_name_orig = "cdnhub/sss/videos/{$videoId}/orig_{$fname}";
+			$this->r2Service->uploadFileToStorage($storage_file_name_orig, 'image/webp', $bytes);
+		} catch (Throwable $e) {
+			echo 'ERROR saving to R2: '.$e->getMessage();
+			exit;
+		}
+		$new_image_orig_url = "https://{$this->cdnhub_img_resizer_domain}/videos/{$videoId}/orig_{$fname}";
+
+
+		// теперь надо понять куда сохранять новый URL изображения в БД
+		// для видео мы храним урлы в полях img и backdrop на оригиналы изображений
+		// чтобы понять какое из этих полей нужно заменить, мы сравниваем хеши
+		// с переданным imageName (который является md5-хешема оригинального URL изображения)
+		// нам нужно заменить одно из этих полей на новое значение
+
+		$image_type = '';
+		if ($imageName == md5($video['img'])) {
+			// заменяем img
+			Video::where('id', $videoId)->update([
+				'img' => $new_image_orig_url
+			]);
+			$image_type = 'poster';
+		} elseif ($imageName == md5($video['backdrop'])) {
+			// заменяем backdrop
+			Video::where('id', $videoId)->update([
+				'backdrop' => $new_image_orig_url
+			]);
+			$image_type = 'backdrop';
+		} else {
+			echo 'fail: imageName does not match any image for video';
+			exit;
+		}
+
+		// var_dump($videoId);
+		// var_dump($imageName);
+		// var_dump($video['img']);
+		// var_dump(md5($video['img']));
+		// var_dump($video['backdrop']);
+		// var_dump(md5($video['backdrop']));
+
+		$new_image_hash = md5($new_image_orig_url);
+		$new_image_url = "https://{$this->cdnhub_img_resizer_domain}/videos/{$videoId}/{$new_image_hash}";
+		// сохраним также и дубликат оригинала под новым хешем
+		try {
+			$storage_file_name_orig = "cdnhub/sss/videos/{$videoId}/{$new_image_hash}";
+			$this->r2Service->uploadFileToStorage($storage_file_name_orig, 'image/webp', $bytes);
+		} catch (Throwable $e) {
+			echo 'ERROR saving to R2: '.$e->getMessage();
+			exit;
+		}
+		$resp = [
+			'videoId'=> $video['id'],
+			'image_url'=> $new_image_url,
+			'imageName'=> $imageName,
+			'image_type'=> $image_type
+		];
+
+		return json_encode($resp);
         
     }
 

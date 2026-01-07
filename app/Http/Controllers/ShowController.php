@@ -730,8 +730,9 @@ class ShowController extends Controller{
     // static page for telegram apps - all the params should be passed as #fragment
     public function tgApp()
     {
-        // fex ?startapp= 3oNVU5/wENs5ACw62VpltoUW0+nPB4iWEg9I23vRO1E=
-        // startapp - зашифрованный JSON с id видео и tgc канала и в будущем другими параметрами
+        // https://t.me/flix_test_bot/applink1?startapp=de8355539ff010db39002c3ad95a65b68516d3e9cf078896120f48db7bd13b51
+        // 
+        // startapp - слабо зашифрованный JSON с id видео и tgc канала и в будущем другими параметрами
         // $encoded = bin2hex(
         //     openssl_encrypt('{"id":1,"tgc":"@test"}', 'AES-128-ECB', "pray_for_ukraine", OPENSSL_RAW_DATA)
         // );
@@ -739,12 +740,12 @@ class ShowController extends Controller{
         // die();
 
         $startapp = $this->request->input('startapp');
-        if (empty($startapp)) {
+        if (empty($startapp)) { // not sure we need this, but just in case
             $startapp = $this->request->input('tgWebAppStartParam');
         }
 
 
-        if (!is_string($startapp) || $startapp === '' || (strlen($startapp) % 2) !== 0 || !ctype_xdigit($startapp)) {
+        if (!\is_string($startapp) || $startapp === '' || (strlen($startapp) % 2) !== 0 || !ctype_xdigit($startapp)) {
             // неправильный hex
             abort(404);
         }
