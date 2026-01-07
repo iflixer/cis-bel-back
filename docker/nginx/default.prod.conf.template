@@ -1,4 +1,6 @@
 
+client_max_body_size 10m;
+
 # Собираем путь для фоллбека
 map $request_uri $embed_path {
     default "";

@@ -54,6 +54,7 @@ Route::match(['get','post'],'/api/public/directors', ['middleware'=>[], 'uses'=>
 Route::get('/show/{id}', ['middleware'=>['showMiddleware'], 'uses'=>'ShowController@player'])->where('id', '[0-9]+');
 Route::get('/show/{type}/{id}', ['middleware'=>['showMiddleware'], 'uses'=>'ShowController@player'])->where('id', 'kinopoisk|imdb')->where('id', '[a-z0-9]+');
 Route::get('/share/{id}', ['uses'=>'ShowController@share'])->where('id', '[0-9]+');
+Route::get('/tgapp', ['uses'=>'ShowController@tgApp']);
 Route::post('/download/{id}', ['middleware' => [], 'uses'=>'ShowController@download'])->where('id', '[0-9]+');
 // для васта
 Route::get('/share/{id}', ['uses'=>'ShowController@share'])->where('id', '[0-9]+');
