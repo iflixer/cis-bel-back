@@ -29,15 +29,21 @@ class PlayerEventStatsService
                 ];
             }
 
+            $processedCount = 0;
             foreach ($logEntries as $entry) {
-                $this->processGroupedEntries($date, $entry);
+                try {
+                    $this->processGroupedEntries($date, $entry);
+                    $processedCount++;
+                } catch (\Exception $e) {
+                    Log::warning("Skipped event stat entry for domain_id={$entry->domain_id}: " . $e->getMessage());
+                }
             }
 
             Log::info("Player event stats calculation completed for date: {$date}");
 
             return [
                 'success' => true,
-                'processed_count' => count($logEntries),
+                'processed_count' => $processedCount,
                 'errors' => $errors
             ];
 
