@@ -308,6 +308,18 @@ class VideoDbSyncService
             ->where('tupe', $contentType)
             ->first();
 
+        if (empty($video) && $contentType === 'movie') {
+            $existingCartoon = Video::where('id_VDB', $contentObj->id)
+                ->where('tupe', 'cartoon')
+                ->first();
+
+            if ($existingCartoon) {
+                $this->log("Skipping movie import - already exists as cartoon: {$existingCartoon->id} (VDB: {$contentObj->id})");
+                $video = $existingCartoon;
+                $contentType = 'cartoon';
+            }
+        }
+
         $newData = [
             'id_VDB' => $contentObj->id,
             'tupe' => $contentType,

@@ -35,7 +35,7 @@ class PlayerEventStatsService
                     $this->processGroupedEntries($date, $entry);
                     $processedCount++;
                 } catch (\Exception $e) {
-                    Log::warning("Skipped event stat entry for domain_id={$entry->domain_id}: " . $e->getMessage());
+                    Log::warning("Skipped event stat entry for domain_id={$entry['domain_id']}: " . $e->getMessage());
                 }
             }
 
