@@ -308,6 +308,18 @@ class VideoDbSyncService
             ->where('tupe', $contentType)
             ->first();
 
+        if (empty($video) && $contentType === 'movie') {
+            $existingCartoon = Video::where('id_VDB', $contentObj->id)
+                ->where('tupe', 'cartoon')
+                ->first();
+
+            if ($existingCartoon) {
+                $this->log("Skipping movie import - already exists as cartoon: {$existingCartoon->id} (VDB: {$contentObj->id})");
+                $video = $existingCartoon;
+                $contentType = 'cartoon';
+            }
+        }
+
         $newData = [
             'id_VDB' => $contentObj->id,
             'tupe' => $contentType,
@@ -348,12 +360,19 @@ class VideoDbSyncService
 
         $this->cleanupOrphanedFiles($video, $vdbFileIds);
 
-        $file = File::where('id_VDB', $media->id)
-            ->where('sids', 'VDB')
+        $file = File::where('id_parent', $video->id)
+            ->where('translation_id', $translation->id)
+            ->where('season', 0)
+            ->where('num', 0)
             ->first();
 
         $fileIsNew = false;
-        if (empty($file)) {
+        if ($file) {
+            if ($file->id_VDB != $media->id || $file->path != $media->path) {
+                $file->update(['id_VDB' => $media->id, 'path' => $media->path]);
+                $this->log("Updated file: {$file->id} (VDB: {$file->id_VDB} -> {$media->id})");
+            }
+        } else {
             $file = $this->timeOperation('inserts', function() use ($media, $video, $contentObj, $translation, $resolutions) {
                 return File::create([
                     'id_VDB' => $media->id,
@@ -427,12 +446,19 @@ class VideoDbSyncService
             }
         }
 
-        $file = File::where('id_VDB', $media->id)
-            ->where('sids', 'VDB')
+        $file = File::where('id_parent', $video->id)
+            ->where('translation_id', $translation->id)
+            ->where('season', $contentObj->season->num)
+            ->where('num', $contentObj->num)
             ->first();
 
         $fileIsNew = false;
-        if (empty($file)) {
+        if ($file) {
+            if ($file->id_VDB != $media->id || $file->path != $media->path) {
+                $file->update(['id_VDB' => $media->id, 'path' => $media->path]);
+                $this->log("Updated file: {$file->id} (VDB: {$file->id_VDB} -> {$media->id})");
+            }
+        } else {
             $file = $this->timeOperation('inserts', function() use ($media, $video, $contentObj, $translation, $resolutions) {
                 return File::create([
                     'id_VDB' => $media->id,

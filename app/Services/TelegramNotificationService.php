@@ -78,7 +78,7 @@ class TelegramNotificationService
         $message = "<b>Daily Payout Summary</b>\n";
         $message .= "Date: {$date}\n";
         $message .= "Total Views: " . number_format($totalViews) . "\n";
-        $message .= "Total Accruals: " . number_format($totalAccruals) . " cents";
+        $message .= "Total Accruals: $" . number_format($totalAccruals / 100);
 
         return $this->sendMessage($message);
     }
