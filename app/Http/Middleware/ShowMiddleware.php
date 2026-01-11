@@ -27,25 +27,35 @@ class ShowMiddleware{
 
         // $domain = Domain::where('name', parse_url($_SERVER['HTTP_REFERER'])['host'])->first();
 
+        $_domain = '';
+
         // логика определения домена
         // если есть параметр domain в гет и он содержит @, то берем его - приоритет гелеграм-канала
         // иначе если запрос из iframe, то берем домен из реферера - приоритет встраивания
         // иначе если есть параметр domain в гет и он валидный, то берем его - обычный приоритет
         // иначе пометим домен как неавторизованный
+        // РАБОТАЕТ ПЛОХО!!! при переходах внутри ифрейма уже не посылается sec-fetch-dest а используется явно ?domain=
+        // if (!empty($_GET['domain']) && str_contains($_GET['domain'], '@')) {
+        //     $_domain = $_GET['domain'];
+        // } else {
+        //     $dest = $_SERVER['HTTP_SEC_FETCH_DEST'] ?? '';
+        //     if($dest == 'iframe' && !empty($_SERVER['HTTP_REFERER'])) {
+        //         $_domain = parse_url($_SERVER['HTTP_REFERER'])['host'];
+        //     } else {
+        //         if (!empty($_GET['domain']) && preg_match("#^[a-z0-9-_.]+$#i", $_GET['domain'])) {
+        //             $_domain = $_GET['domain'];
+        //         }
+        //     }
+        // }
 
-        $_domain = '';
 
-        if (!empty($_GET['domain']) && str_contains($_GET['domain'], '@')) {
+    
+        if (!empty($_GET['domain'])) {
             $_domain = $_GET['domain'];
         } else {
-            $dest = $_SERVER['HTTP_SEC_FETCH_DEST'] ?? '';
-            if($dest == 'iframe' && !empty($_SERVER['HTTP_REFERER'])) {
+            if(!empty($_SERVER['HTTP_REFERER'])) {
                 $_domain = parse_url($_SERVER['HTTP_REFERER'])['host'];
-            } else {
-                if (!empty($_GET['domain']) && preg_match("#^[a-z0-9-_.]+$#i", $_GET['domain'])) {
-                    $_domain = $_GET['domain'];
-                }
-        }
+            }
         }
 
 // var_dump($dest);
@@ -69,13 +79,6 @@ class ShowMiddleware{
                 $request->player = $domain->new_player;
             }
         }
-
-        if (isset($_GET['d'])) {
-            echo $request->domain;
-            var_dump($domain);
-            die();
-        }
-
 
         $request->domain_approved = false;
         if( !empty($domain) && $domain->status == '1' ){
