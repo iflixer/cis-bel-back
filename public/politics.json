@@ -332,7 +332,9 @@
       "blacklist.get": true,
       "blacklist.search": true,
       "blacklist.add": true,
-      "blacklist.remove": true
+      "blacklist.remove": true,
+
+      "adminpaystats.exportcsv": true
     }
   }
 }

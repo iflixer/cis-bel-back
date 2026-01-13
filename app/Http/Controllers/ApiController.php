@@ -73,7 +73,13 @@ class ApiController extends Controller
 
             $tiket = app()->make($nameClass, ['request' => $this->request]);
             // return response()->json( $tiket->$metodElements[1]() );
-            return response()->json(call_user_func([$tiket, $metodElements[1]]));
+            $result = call_user_func([$tiket, $metodElements[1]]);
+
+            if ($result instanceof \Symfony\Component\HttpFoundation\Response) {
+                return $result;
+            }
+
+            return response()->json($result);
         }
 
         return  response()->json($this->$method());

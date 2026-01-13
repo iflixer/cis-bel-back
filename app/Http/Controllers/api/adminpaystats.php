@@ -220,6 +220,89 @@ class adminpaystats extends Controller
         ];
     }
 
+    public function exportcsv()
+    {
+        if (!in_array($this->user['name'], ['administrator', 'redactor'])) {
+            return response('Unauthorized', 403);
+        }
+
+        $period = $this->request->input('period', 'yesterday');
+        $customRange = $this->request->input('custom_range');
+        $userId = $this->request->input('user_id');
+        $domainId = $this->request->input('domain_id');
+        $geoGroupId = $this->request->input('geo_group_id');
+        if (is_string($customRange)) {
+            $customRange = json_decode($customRange, true);
+        }
+
+        $dateRange = $this->getDateRange($period, $customRange);
+        $startDate = $dateRange['start'];
+        $endDate = $dateRange['end'];
+
+        $query = DB::table('player_event_stats as pes')
+            ->leftJoin('domains as d', 'pes.domain_id', '=', 'd.id')
+            ->leftJoin('users as u', 'd.id_parent', '=', 'u.id')
+            ->select(
+                'u.login as user_name',
+                'd.name as domain',
+                'pes.date',
+                DB::raw("SUM(CASE WHEN pes.event_type = 'load' THEN pes.counter ELSE 0 END) as event_load"),
+                DB::raw("SUM(CASE WHEN pes.event_type = 'play' THEN pes.counter ELSE 0 END) as event_play")
+            )
+            ->whereBetween('pes.date', [$startDate, $endDate])
+            ->whereIn('pes.event_type', ['load', 'play']);
+
+        if ($userId && $userId != 'all') {
+            $query->where('d.id_parent', $userId);
+        }
+        if ($domainId && $domainId != 'all') {
+            $query->where('pes.domain_id', $domainId);
+        }
+        if ($geoGroupId && $geoGroupId != 'all') {
+            $query->where('pes.geo_group_id', $geoGroupId);
+        }
+
+        $results = $query
+            ->groupBy('u.login', 'd.name', 'pes.date')
+            ->orderBy('pes.date', 'desc')
+            ->orderBy('u.login', 'asc')
+            ->orderBy('d.name', 'asc')
+            ->get();
+
+        $csv = "user_name,domain,date,event_load,event_play\n";
+        foreach ($results as $row) {
+            $dateFormatted = '';
+            if (!empty($row['date'])) {
+                $dateObj = new DateTime($row['date']);
+                $dateFormatted = $dateObj->format('d-m-Y');
+            }
+            $csv .= sprintf(
+                "%s,%s,%s,%d,%d\n",
+                $this->escapeCsvField($row['user_name'] ?? ''),
+                $this->escapeCsvField($row['domain'] ?? ''),
+                $dateFormatted,
+                (int)($row['event_load'] ?? 0),
+                (int)($row['event_play'] ?? 0)
+            );
+        }
+
+        $filename = sprintf('event_stats_%s_%s.csv', $startDate, $endDate);
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    private function escapeCsvField($field)
+    {
+        if (strpos($field, ',') !== false || strpos($field, '"') !== false || strpos($field, "\n") !== false) {
+            return '"' . str_replace('"', '""', $field) . '"';
+        }
+
+        return $field;
+    }
+
     private function getGeoGroupLoadStats($startDate, $endDate, $userId = null, $domainId = null)
     {
         $query = DB::table('player_event_stats as pes')
