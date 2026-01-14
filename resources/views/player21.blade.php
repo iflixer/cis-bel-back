@@ -1297,10 +1297,7 @@
                     }
                 });
 
-                const select = document.getElementById("translator-name");
-                const nextIndex = (select.selectedIndex + 1) % select.options.length;
-                select.selectedIndex = nextIndex;
-                select.dispatchEvent(new Event("change"));
+                showPopupAndChangeTranslation();
             }
 
             if (event == "quartile") {
@@ -1416,25 +1413,49 @@
 
     <!--  TRANSLATION NOT FOUND - ROLLBACK  -->
     function showPopupAndChangeTranslation() {
-        const popup = document.getElementById('nomedia-message');
-        const select = document.querySelector('#translator-name');
-        const currentIndex = select.selectedIndex;
-        const lastIndex = select.options.length - 1;
+        let LIMIT = 2;
+        let key = 'popupTranslateRuns_v1';
+        let page = location.origin + location.pathname;
+
+        let d = new Date();
+        let today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+        let data;
+        try {
+            data = JSON.parse(localStorage.getItem(key)) || {};
+        } catch {
+            data = {};
+        }
+
+        if (data.date !== today || !data.pages) {
+            data = { date: today, pages: {} };
+        }
+
+        if ((data.pages[page] || 0) >= LIMIT) return;
+
+        data.pages[page] = (data.pages[page] || 0) + 1;
+        localStorage.setItem(key, JSON.stringify(data));
+
+        let popup = document.getElementById('nomedia-message');
+        let select = document.querySelector('#translator-name');
+        let currentIndex = select.selectedIndex;
+        let lastIndex = select.options.length - 1;
+
         if (currentIndex === lastIndex) {
-            popup.textContent = "Извините, файл временно недоступен.";
+            popup.textContent = 'Извините, файл временно недоступен.';
             return;
         }
+
         popup.style.display = 'block';
         popup.style.opacity = '1';
+
         setTimeout(() => {
             popup.style.opacity = '0';
             setTimeout(() => {
                 popup.style.display = 'none';
-                const select = document.querySelector('#translator-name');
-                const niceSelect = $(select).next('.nice-select');
-                const nextIndex = (currentIndex + 1) % select.options.length;
+                let nextIndex = currentIndex + 1;
                 select.selectedIndex = nextIndex;
-                niceSelect.find('span').text(select.options[nextIndex].text);
+                $(select).next('.nice-select').find('span').text(select.options[nextIndex].text);
                 $(select).trigger('change');
             }, 500);
         }, 2500);
