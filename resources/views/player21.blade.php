@@ -338,7 +338,7 @@
             @if (isset($_GET['extrans']) && $_GET['extrans'] === '1')
                 <div style="display: none !important">@endif
                     <span @if ($type === 'serial') class="sertrans" @endif<?php echo (isset($_GET['no_controls']) || isset($_GET['no_control_translations']) || isset($_GET['extrans'])) ? ' style="display:none;"' : ' style="display: inline-block;"'; ?>>
-			<select name="translator" id="translator-name" data-select="1">
+			<select name="translator" id="translator-name" data-select="1" data-tqua="<?php echo count($translations);?>">
 				@foreach ($translations as $translation)
                     <option value="{{ $translation['id'] }}" 
                             @if (!empty($translation['episodes_qty'])) data-episodes_qty="{{ $translation['episodes_qty'] }}" @endif
@@ -1799,6 +1799,9 @@
     @keyframes spin {
         to { transform: rotate(360deg); }
     }
+
+   #translator-name[data-tqua="1"] + .nice-select.open .list{overflow:hidden !important}
+   #translator-name[data-tqua="1"] + .nice-select.open .list:after{display:none}
 </style>
 <div id="popupOverlay"></div>
 <div id="popupModal">
