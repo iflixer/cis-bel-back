@@ -513,6 +513,16 @@
 
 <script>
 
+    function send_player_stat(event) {
+        $.ajax({
+            type: 'get',
+            url: '{{ $player_stat_url }}/e/'+event,
+            data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}',
+            dataType: "html",
+            cache: false,
+        });
+    }
+
     <?php if (strpos($_SERVER['REQUEST_URI'], '/show2/') === false) { ?>
     // var referrer = document.referrer;
     if (document.referrer) {
@@ -1124,15 +1134,7 @@
                     }, "*");
                 }
 
-                $.ajax({
-                    type: 'get',
-                    url: '/apishow/shows.impression',
-                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}',
-                    dataType: "html",
-                    cache: false,
-                    success: function (response) {
-                    }
-                });
+                send_player_stat('impression');
             }
 
 
@@ -1142,15 +1144,7 @@
                     var matches = $.parseJSON(info).url.match(/khtag=([0-9]+)/i);
                     var ad_id = matches[1];
                 }
-                $.ajax({
-                    type: 'get',
-                    url: '/apishow/shows.showsAd',
-                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}',
-                    dataType: "html",
-                    cache: false,
-                    success: function (response) {
-                    }
-                });
+                send_player_stat('getads');
             }
 
             if (event == "init") {
@@ -1188,15 +1182,8 @@
 
             if (event == "start") {
                 console.log('PlayerjsEvents', event);
-                $.ajax({
-                    type: 'get',
-                    url: '/apishow/shows.show',
-                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}',
-                    dataType: "html",
-                    cache: false,
-                    success: function (response) {
-                    }
-                });
+                send_player_stat('play');
+                send_player_stat('pay');
             }
 
             if (event == "pause" || event == "end") {
@@ -1230,15 +1217,7 @@
                         if (typeof gtag !== 'undefined') {
                             gtag('event', '1% of timeline completed', {'event_category': 'Videos'});
                         }
-                        $.ajax({
-                            type: 'get',
-                            url: '/apishow/shows.percent',
-                            data: 'percent=p1&domain=' + cdn.player.getVBR() + '&file_id={{ $id }}',
-                            dataType: "html",
-                            cache: false,
-                            success: function (response) {
-                            }
-                        });
+                        send_player_stat('p1');
                         if (window.self !== window.top) {
                             window.parent.postMessage({
                                 type: "CDN_PLAYER_EVENT",
@@ -1287,31 +1266,15 @@
                         action: "Load error",
                     }, "*");
                 }
-                $.ajax({
-                    type: 'get',
-                    url: '/apishow/shows.loaderror',
-                    data: 'domain=' + cdn.player.getVBR() + '&file_id={{ $id }}',
-                    dataType: "html",
-                    cache: false,
-                    success: function (response) {
-                    }
-                });
+                send_player_stat('loaderror');
 
                 showPopupAndChangeTranslation();
             }
 
             if (event == "quartile") {
-                //console.log('PlayerjsEvents', event, info);
+                console.log('PlayerjsEvents', event, info);
                 const p = ({'50%': 'p50', '75%': 'p75', '100%': 'p100'}[info]) || 'p25';
-                $.ajax({
-                    type: 'get',
-                    url: '/apishow/shows.percent',
-                    data: 'percent=' + p + '&domain=' + cdn.player.getVBR() + '&file_id={{ $id }}',
-                    dataType: "html",
-                    cache: false,
-                    success: function (response) {
-                    }
-                });
+                send_player_stat(p);
                 if (typeof gtag !== 'undefined') {
                     gtag('event', info + ' of timeline completed', {'event_category': 'Videos'});
                 }
@@ -1400,6 +1363,7 @@
         }
     }
 
+    send_player_stat('load');
 
 </script>
 

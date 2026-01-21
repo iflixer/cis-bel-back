@@ -47,6 +47,7 @@ class ShowController extends Controller{
     protected $cdn_domain;
     protected $cdnhub_player_domain;
     protected $cdnhub_public_domain;
+    protected $player_stat_url;
 
 
     public function __construct(Request $request){
@@ -64,6 +65,7 @@ class ShowController extends Controller{
         $this->tg_share_domain = Seting::where('name', 'tg_share_domain')->first()->toArray()['value'];
         $this->cdnhub_player_domain = Seting::where('name', 'cdnhub_player_domain')->first()->toArray()['value'];
         $this->cdnhub_public_domain = Seting::where('name', 'cdnhub_public_domain')->first()->toArray()['value'];
+        $this->player_stat_url = Seting::where('name', 'player_stat_url')->first()->toArray()['value'];
     }
 
     public function player($type = null, $id = 0)
@@ -74,6 +76,7 @@ class ShowController extends Controller{
 
         $data['version'] = '1.0.2';
         $data['cloudflare_captcha_public'] = $this->cloudflare_captcha_public;
+        $data['player_stat_url'] = $this->player_stat_url;
 
         $data['unapproved_domain'] = $this->request->domain_approved ? 'false' : 'true';
 
@@ -245,6 +248,7 @@ class ShowController extends Controller{
             var_dump(json_decode($d, true));
             die();
         }
+        
 
         header("X-Player-Build-Duration: " . (microtime(true) - $start_time));
         return view($player_view, $data);
