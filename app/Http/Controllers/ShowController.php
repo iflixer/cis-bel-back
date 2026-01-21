@@ -238,7 +238,7 @@ class ShowController extends Controller{
         $domain_name = $ref_host ?? $this->request->input('domain');
 
         $domain = Domain::get_main_info($domain_name);
-        PlayerPay::save_event('load', $domain, $data['media']['id'] ?? 0);
+        // PlayerPay::save_event('load', $domain, $data['media']['id'] ?? 0);
         // Debug::dump_queries(0);
         // die();
 
