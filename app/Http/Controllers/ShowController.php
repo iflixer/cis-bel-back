@@ -233,11 +233,11 @@ class ShowController extends Controller{
             dd(DB::getQueryLog());
         }
 
-        $ref = $this->request->header('referer');
-        $ref_host = $ref ? parse_url($ref, PHP_URL_HOST) : null;
-        $domain_name = $ref_host ?? $this->request->input('domain');
+        // $ref = $this->request->header('referer');
+        // $ref_host = $ref ? parse_url($ref, PHP_URL_HOST) : null;
+        // $domain_name = $ref_host ?? $this->request->input('domain');
 
-        $domain = Domain::get_main_info($domain_name);
+        // $domain = Domain::get_main_info($domain_name);
         // PlayerPay::save_event('load', $domain, $data['media']['id'] ?? 0);
         // Debug::dump_queries(0);
         // die();
