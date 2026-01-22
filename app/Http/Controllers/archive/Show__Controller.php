@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\LocationTracker;
 use Illuminate\Http\Request;
 
 use App\Http\Requests;
@@ -391,7 +390,6 @@ class ShowControllerOrig extends Controller{
         }
 
         $domain = Domain::where('name', $this->request->domain)->first();
-        LocationTracker::logPlayerRequestFromHeadersById($video->id, $domain ? $domain->id : null);
 
         // if ($this->request->domain != 'api.kholobok.biz' && $this->request->domain != 'kholobok.biz') {
             if (isset($video) && $video->lock != null && $video->lock != '') {

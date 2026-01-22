@@ -2,22 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\LocationTracker;
 use Illuminate\Http\Request;
-
-use App\Http\Requests;
-
 use App\File;
 use App\Video;
-
 use App\Seting;
-use App\Translation;
-use App\Videodb;
 use App\Ad;
 use App\Helpers\Cloudflare;
-use App\IsoCountry;
 use App\PlayerPay;
-use App\Helpers\Debug;
 use App\Helpers\Image;
 
 use App\Domain;
@@ -211,8 +202,6 @@ class ShowController extends Controller{
 
         // update stat for domain
         $this->do_stat($domain);
-
-        LocationTracker::logPlayerRequestFromHeadersById($video->id, $domain ? $domain->id : null);
 
         // get view for player
         $player_view = 'player';
