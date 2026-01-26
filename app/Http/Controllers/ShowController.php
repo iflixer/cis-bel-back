@@ -509,9 +509,9 @@ class ShowController extends Controller{
             $file = parse_url($media['path']);
 
             $file['host'] = $this->cdn_host_by_video_id($video['id'], $force_cdn);
-            if (!$file['host']) {
-                $file['host'] = "cdn0.{$this->cdn_domain}"; // fallback если не удалось найти хост
-            }
+            // if (!$file['host']) {
+            //     $file['host'] = "cdn0.{$this->cdn_domain}"; // fallback если не удалось найти хост
+            // }
 
             $date = date('YmdH', strtotime("+1 days"));
             $folder = $file['path'];
