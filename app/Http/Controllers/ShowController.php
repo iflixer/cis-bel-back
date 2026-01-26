@@ -675,8 +675,12 @@ class ShowController extends Controller{
     // cdn_host_by_video_id - возвращает хост CDN для видео
     private function cdn_host_by_video_id(int $video_id, int $force_cdn = null): ?string {
         if ($force_cdn) {
+            $cdn = Cdn::where('id', $force_cdn)->first();
             header("X-Player-cdn-method: force");
-            return "cdn{$force_cdn}.{$this->cdn_domain}";
+            if ($cdn) {
+                return $cdn->host;
+            }
+            return "cdn {$force_cdn} not found in db";
         }
 
         // есть связка видеоид-сдн?
