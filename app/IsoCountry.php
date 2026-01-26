@@ -16,11 +16,6 @@ class IsoCountry extends Model
         'geo_group_id'
     ];
 
-    public function playerLocationLogs()
-    {
-        return $this->hasMany('App\PlayerLocationLog', 'country_id');
-    }
-
     public function geoGroup()
     {
         return $this->belongsTo('App\GeoGroup', 'geo_group_id');
