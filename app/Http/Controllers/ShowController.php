@@ -509,9 +509,9 @@ class ShowController extends Controller{
             $file = parse_url($media['path']);
 
             $file['host'] = $this->cdn_host_by_video_id($video['id'], $force_cdn);
-            if (!$file['host']) {
-                $file['host'] = "cdn0.{$this->cdn_domain}"; // fallback если не удалось найти хост
-            }
+            // if (!$file['host']) {
+            //     $file['host'] = "cdn0.{$this->cdn_domain}"; // fallback если не удалось найти хост
+            // }
 
             $date = date('YmdH', strtotime("+1 days"));
             $folder = $file['path'];
@@ -664,8 +664,12 @@ class ShowController extends Controller{
     // cdn_host_by_video_id - возвращает хост CDN для видео
     private function cdn_host_by_video_id(int $video_id, int $force_cdn = null): ?string {
         if ($force_cdn) {
+            $cdn = Cdn::where('id', $force_cdn)->first();
             header("X-Player-cdn-method: force");
-            return "cdn{$force_cdn}.{$this->cdn_domain}";
+            if ($cdn) {
+                return $cdn->host;
+            }
+            return "cdn {$force_cdn} not found in db";
         }
 
         // есть связка видеоид-сдн?
@@ -884,9 +888,9 @@ class ShowController extends Controller{
         $file = parse_url($media['path']);
 
         $file['host'] = $this->cdn_host_by_video_id($video['id'] );
-        if (!$file['host']) {
-            $file['host'] = "cdn0.{$this->cdn_domain}"; // fallback если не удалось найти хост
-        }
+        // if (!$file['host']) {
+        //     $file['host'] = "cdn0.{$this->cdn_domain}"; // fallback если не удалось найти хост
+        // }
 
         $date = date('YmdH', strtotime("+1 hours"));
         $folder = $file['path'];
