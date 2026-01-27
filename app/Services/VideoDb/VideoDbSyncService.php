@@ -356,10 +356,6 @@ class VideoDbSyncService
             }
         }
 
-        $vdbFileIds = [$media->id];
-
-        $this->cleanupOrphanedFiles($video, $vdbFileIds);
-
         $file = File::where('id_parent', $video->id)
             ->where('translation_id', $translation->id)
             ->where('season', 0)
@@ -508,32 +504,6 @@ class VideoDbSyncService
         $video->updated_at = $now;
         $video->last_vdb_update = $now;
         $video->save();
-    }
-
-    protected function cleanupOrphanedFiles(Video $video, array $vdbFileIds)
-    {
-        $existingFiles = File::where('id_parent', $video->id)
-            ->where('sids', 'VDB')
-            ->get();
-
-        $removedCount = 0;
-
-        foreach ($existingFiles as $file) {
-            if (!in_array($file->id_VDB, $vdbFileIds)) {
-                $this->log("  Removing orphaned file: {$file->id} (VDB: {$file->id_VDB})");
-
-                Screenshot::where('id_file', $file->id)->delete();
-                Subtitle::where('file_id', $file->id)->delete();
-
-                $file->delete();
-                $removedCount++;
-            }
-        }
-
-        if ($removedCount > 0) {
-            $this->log("  Cleaned up {$removedCount} orphaned file(s)");
-            $this->touchVideoTimestamps($video);
-        }
     }
 
     protected function processScreenshots($media, $file, $video, ProcessingConfigInterface $config)
