@@ -46,17 +46,18 @@ class ShowController extends Controller{
         // $this->loginVDB = config('videodb.login');
         // $this->passVDB = config('videodb.password');
         // $this->keyWin = config('videodb.key_win');
-        $this->loginVDB = Seting::where('name', 'loginVDB')->first()->toArray()['value'];
-        $this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
-        $this->keyWin = Seting::where('name', 'keyWin')->first()->toArray()['value'];
-        $this->cdnhub_api_domain = Seting::where('name', 'cdnhub_api_domain')->first()->toArray()['value'];
-        $this->cdnhub_img_resizer_domain = Seting::where('name', 'cdnhub_img_resizer_domain')->first()->toArray()['value'];
-        $this->cloudflare_captcha_public = Seting::where('name', 'cloudflare_captcha_public')->first()->toArray()['value'];
-        $this->cloudflare_captcha_secret = Seting::where('name', 'cloudflare_captcha_secret')->first()->toArray()['value'];
-        $this->tg_share_domain = Seting::where('name', 'tg_share_domain')->first()->toArray()['value'];
-        $this->cdnhub_player_domain = Seting::where('name', 'cdnhub_player_domain')->first()->toArray()['value'];
-        $this->cdnhub_public_domain = Seting::where('name', 'cdnhub_public_domain')->first()->toArray()['value'];
-        $this->player_stat_url = Seting::where('name', 'player_stat_url')->first()->toArray()['value'];
+        $this->loginVDB = Seting::where('name', 'loginVDB')->value('value') ?? '';
+        $this->passVDB = Seting::where('name', 'passVDB')->value('value') ?? '';
+        $this->keyWin = Seting::where('name', 'keyWin')->value('value') ?? '';
+        $this->cdnhub_api_domain = Seting::where('name', 'cdnhub_api_domain')->value('value') ?? '';
+        $this->cdnhub_img_resizer_domain = Seting::where('name', 'cdnhub_img_resizer_domain')->value('value') ?? '';
+        $this->cloudflare_captcha_public = Seting::where('name', 'cloudflare_captcha_public')->value('value') ?? '';
+        $this->cloudflare_captcha_secret = Seting::where('name', 'cloudflare_captcha_secret')->value('value') ?? '';
+        $this->tg_share_domain = Seting::where('name', 'tg_share_domain')->value('value') ?? '';
+        $this->cdnhub_player_domain = Seting::where('name', 'cdnhub_player_domain')->value('value') ?? '';
+        $this->cdnhub_public_domain = Seting::where('name', 'cdnhub_public_domain')->value('value') ?? '';
+        $this->player_stat_url = Seting::where('name', 'player_stat_url')->value('value') ?? '';
+        $this->cdn_domain = Seting::where('name', 'cdn_domain')->value('value') ?? '';
     }
 
     public function player($type = null, $id = 0)
@@ -664,12 +665,13 @@ class ShowController extends Controller{
     // cdn_host_by_video_id - возвращает хост CDN для видео
     private function cdn_host_by_video_id(int $video_id, int $force_cdn = null): ?string {
         if ($force_cdn) {
-            $cdn = Cdn::where('id', $force_cdn)->first();
+            $cdn_host = "cdn{$force_cdn}.{$this->cdn_domain}";
+            $cdn = Cdn::where('host', $cdn_host)->first();
             header("X-Player-cdn-method: force");
             if ($cdn) {
                 return $cdn->host;
             }
-            return "cdn {$force_cdn} not found in db";
+            return "cdn {$cdn_host} not found in db";
         }
 
         // есть связка видеоид-сдн?
