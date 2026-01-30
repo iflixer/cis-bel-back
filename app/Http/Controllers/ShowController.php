@@ -679,7 +679,10 @@ class ShowController extends Controller{
         $this->reduce_all_cdns_weight();
         if ($cdnVideo) {
             // есть. проверяем живой ли сдн
-            $cdn = Cdn::where('id', $cdnVideo->cdn_id)->where('active', 1)->first();
+            $cdn = Cdn::where('id', $cdnVideo->cdn_id)
+                ->where('active', 1)
+                ->where('last_report', '>=', DB::raw('NOW() - INTERVAL 5 MINUTE'))
+                ->first();
             if ($cdn) {
                 // обновляем счетчик распределенных на этот сдн видосов
                 Cdn::where('id', $cdn->id)->update([
@@ -694,7 +697,10 @@ class ShowController extends Controller{
             }
         }
         // нет назначенного ранее сдн либо он отключен. выбираем новый
-        $cdn = Cdn::where('active', 1)->orderBy('weight_counter', 'asc')->first();
+        $cdn = Cdn::where('active', 1)
+            ->where('last_report', '>=', DB::raw('NOW() - INTERVAL 5 MINUTE'))
+            ->orderBy('weight_counter', 'asc')
+            ->first();
         if ($cdn) {
             CdnVideo::updateOrCreate(
                 ['video_id' => $video_id],    // что ищем
@@ -711,6 +717,15 @@ class ShowController extends Controller{
             return $cdn->host;
         }
         // не удалось выбрать новый
+        // резервный вариант - берем наименее нагруженную ноду не глядя на дату репорта. вдруг отчеты сломаны?
+        $cdn = Cdn::where('active', 1)
+            ->orderBy('weight_counter', 'asc')
+            ->first();
+        if ($cdn) {
+            header("X-Player-cdn-method: fallback");
+            return $cdn->host;
+        }
+        
         // TODO: логирование ошибки
         header("X-Player-cdn-method: error");
         return null;
