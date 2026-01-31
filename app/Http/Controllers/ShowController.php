@@ -663,15 +663,18 @@ class ShowController extends Controller{
     }
 
     // cdn_host_by_video_id - возвращает хост CDN для видео
-    private function cdn_host_by_video_id(int $video_id, int $force_cdn = null): ?string {
-        if ($force_cdn) {
-            $cdn_host = "cdn{$force_cdn}.{$this->cdn_domain}";
-            $cdn = Cdn::where('host', $cdn_host)->first();
-            header("X-Player-cdn-method: force");
-            if ($cdn) {
-                return $cdn->host;
+    private function cdn_host_by_video_id(int $video_id, string $force_cdn = ""): ?string {
+        if (!empty($force_cdn)) {
+            switch ($force_cdn) {
+                case $force_cdn * 1:
+                    $cdn = Cdn::where('id', $force_cdn)->first();
+                    header("X-Player-cdn-method: force-id");
+                    if ($cdn) return $cdn->host;
+                    return "cdn id {$force_cdn} not found in db";
+                default:
+                    header("X-Player-cdn-method: force-host");
+                    return $force_cdn;
             }
-            return "cdn {$cdn_host} not found in db";
         }
 
         // есть связка видеоид-сдн?
