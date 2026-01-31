@@ -133,9 +133,7 @@ class ShowController extends Controller{
         $data['id'] = $video['id'];
 
         // force use cdn
-        $data['force_cdn'] = null;
-        if ($this->request->input('cdn') && intval($this->request->input('cdn')))
-            $data['force_cdn'] = intval($this->request->input('cdn'));
+        $data['force_cdn'] = $this->request->input('cdn');
 
         // if (isset($_GET['debug']) && $_GET['debug']) {
         //     var_dump($data['force_cdn']);
