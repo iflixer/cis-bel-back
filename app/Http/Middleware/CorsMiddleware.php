@@ -26,10 +26,10 @@ class CorsMiddleware
         }
 
         $response = $next($request);
-        $response->header('Access-Control-Allow-Origin', $allowedOrigin)
-                 ->header('Access-Control-Allow-Methods', $allowedMethods)
-                 ->header('Access-Control-Allow-Headers', $allowedHeaders)
-                 ->header('Access-Control-Allow-Credentials', $allowCredentials);
+        $response->headers->set('Access-Control-Allow-Origin', $allowedOrigin)
+                 ->headers->set('Access-Control-Allow-Methods', $allowedMethods)
+                 ->headers->set('Access-Control-Allow-Headers', $allowedHeaders)
+                 ->headers->set('Access-Control-Allow-Credentials', $allowCredentials);
 
         return $response;
     }
