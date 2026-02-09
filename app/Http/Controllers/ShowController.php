@@ -46,17 +46,18 @@ class ShowController extends Controller{
         // $this->loginVDB = config('videodb.login');
         // $this->passVDB = config('videodb.password');
         // $this->keyWin = config('videodb.key_win');
-        $this->loginVDB = Seting::where('name', 'loginVDB')->first()->toArray()['value'];
-        $this->passVDB = Seting::where('name', 'passVDB')->first()->toArray()['value'];
-        $this->keyWin = Seting::where('name', 'keyWin')->first()->toArray()['value'];
-        $this->cdnhub_api_domain = Seting::where('name', 'cdnhub_api_domain')->first()->toArray()['value'];
-        $this->cdnhub_img_resizer_domain = Seting::where('name', 'cdnhub_img_resizer_domain')->first()->toArray()['value'];
-        $this->cloudflare_captcha_public = Seting::where('name', 'cloudflare_captcha_public')->first()->toArray()['value'];
-        $this->cloudflare_captcha_secret = Seting::where('name', 'cloudflare_captcha_secret')->first()->toArray()['value'];
-        $this->tg_share_domain = Seting::where('name', 'tg_share_domain')->first()->toArray()['value'];
-        $this->cdnhub_player_domain = Seting::where('name', 'cdnhub_player_domain')->first()->toArray()['value'];
-        $this->cdnhub_public_domain = Seting::where('name', 'cdnhub_public_domain')->first()->toArray()['value'];
-        $this->player_stat_url = Seting::where('name', 'player_stat_url')->first()->toArray()['value'];
+        $this->loginVDB = Seting::where('name', 'loginVDB')->value('value') ?? '';
+        $this->passVDB = Seting::where('name', 'passVDB')->value('value') ?? '';
+        $this->keyWin = Seting::where('name', 'keyWin')->value('value') ?? '';
+        $this->cdnhub_api_domain = Seting::where('name', 'cdnhub_api_domain')->value('value') ?? '';
+        $this->cdnhub_img_resizer_domain = Seting::where('name', 'cdnhub_img_resizer_domain')->value('value') ?? '';
+        $this->cloudflare_captcha_public = Seting::where('name', 'cloudflare_captcha_public')->value('value') ?? '';
+        $this->cloudflare_captcha_secret = Seting::where('name', 'cloudflare_captcha_secret')->value('value') ?? '';
+        $this->tg_share_domain = Seting::where('name', 'tg_share_domain')->value('value') ?? '';
+        $this->cdnhub_player_domain = Seting::where('name', 'cdnhub_player_domain')->value('value') ?? '';
+        $this->cdnhub_public_domain = Seting::where('name', 'cdnhub_public_domain')->value('value') ?? '';
+        $this->player_stat_url = Seting::where('name', 'player_stat_url')->value('value') ?? '';
+        $this->cdn_domain = Seting::where('name', 'cdn_domain')->value('value') ?? '';
     }
 
     public function player($type = null, $id = 0)
@@ -132,9 +133,7 @@ class ShowController extends Controller{
         $data['id'] = $video['id'];
 
         // force use cdn
-        $data['force_cdn'] = null;
-        if ($this->request->input('cdn') && intval($this->request->input('cdn')))
-            $data['force_cdn'] = intval($this->request->input('cdn'));
+        $data['force_cdn'] = $this->request->input('cdn');
 
         // if (isset($_GET['debug']) && $_GET['debug']) {
         //     var_dump($data['force_cdn']);
@@ -662,14 +661,17 @@ class ShowController extends Controller{
     }
 
     // cdn_host_by_video_id - возвращает хост CDN для видео
-    private function cdn_host_by_video_id(int $video_id, int $force_cdn = null): ?string {
-        if ($force_cdn) {
-            $cdn = Cdn::where('id', $force_cdn)->first();
-            header("X-Player-cdn-method: force");
-            if ($cdn) {
-                return $cdn->host;
+    private function cdn_host_by_video_id(int $video_id, $force_cdn = ""): ?string {
+        if (!empty($force_cdn)) {
+            if (is_numeric($force_cdn)) {
+                $cdn = Cdn::where('id', $force_cdn)->first();
+                header("X-Player-cdn-method: force-id");
+                if ($cdn) return $cdn->host;
+                return "cdn id {$force_cdn} not found in db";
+            } else {
+                header("X-Player-cdn-method: force-host");
+                return $force_cdn;
             }
-            return "cdn {$force_cdn} not found in db";
         }
 
         // есть связка видеоид-сдн?
@@ -677,7 +679,10 @@ class ShowController extends Controller{
         $this->reduce_all_cdns_weight();
         if ($cdnVideo) {
             // есть. проверяем живой ли сдн
-            $cdn = Cdn::where('id', $cdnVideo->cdn_id)->where('active', 1)->first();
+            $cdn = Cdn::where('id', $cdnVideo->cdn_id)
+                ->where('active', 1)
+                ->where('last_report', '>=', DB::raw('NOW() - INTERVAL 5 MINUTE'))
+                ->first();
             if ($cdn) {
                 // обновляем счетчик распределенных на этот сдн видосов
                 Cdn::where('id', $cdn->id)->update([
@@ -692,7 +697,10 @@ class ShowController extends Controller{
             }
         }
         // нет назначенного ранее сдн либо он отключен. выбираем новый
-        $cdn = Cdn::where('active', 1)->orderBy('weight_counter', 'asc')->first();
+        $cdn = Cdn::where('active', 1)
+            ->where('last_report', '>=', DB::raw('NOW() - INTERVAL 5 MINUTE'))
+            ->orderBy('weight_counter', 'asc')
+            ->first();
         if ($cdn) {
             CdnVideo::updateOrCreate(
                 ['video_id' => $video_id],    // что ищем
@@ -709,6 +717,15 @@ class ShowController extends Controller{
             return $cdn->host;
         }
         // не удалось выбрать новый
+        // резервный вариант - берем наименее нагруженную ноду не глядя на дату репорта. вдруг отчеты сломаны?
+        $cdn = Cdn::where('active', 1)
+            ->orderBy('weight_counter', 'asc')
+            ->first();
+        if ($cdn) {
+            header("X-Player-cdn-method: fallback");
+            return $cdn->host;
+        }
+        
         // TODO: логирование ошибки
         header("X-Player-cdn-method: error");
         return null;

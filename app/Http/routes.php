@@ -154,3 +154,5 @@ Route::get('/test/import_thetvdb', ['middleware' => [], 'uses' => 'TestControlle
 // Route::get('/show2/{id}', ['middleware'=>[], 'uses'=>'ShowController@player2'])->where('id', '[0-9]+');
 // Route::get('/test/export', ['middleware' => [], 'uses' => 'TestController@export']);
 // Route::get('/test/filterNetworkTraffic', ['middleware' => [], 'uses' => 'TestController@filterNetworkTraffic']);
+
+Route::get('/monitoring', ['middleware' => [], 'uses' => 'TestController@monitoring']);

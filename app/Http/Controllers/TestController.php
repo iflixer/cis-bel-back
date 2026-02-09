@@ -19,6 +19,7 @@ use App\Seting;
 
 use App\Translation;
 use App\Videodb;
+use App\Cdn;
 
 use App\Country;
 use App\Genre;
@@ -1248,5 +1249,28 @@ class TestController extends Controller
 		return json_encode($resp);
         
     }
+
+	public function monitoring() {
+		$mode = $this->request->input('mode');
+		$token = $this->request->input('token');
+
+		if ($token !== 'fdfsdeiuuehHDHHhj437shHH') {
+			return response('unauthorized', 401);
+		}
+
+		switch ($mode) {
+			case 'health':
+				return response('ok', 200);
+				break;
+			case 'cdns':
+				$cdns = Cdn::where('active', 1)->orderBy('id')->get()->toArray();
+				// return json_encode($cdns);
+				return ['ok' => true, 'data' => $cdns];
+				break;
+
+			default:
+				return response('unknown mode', 400);	
+		}
+	}
 
 }

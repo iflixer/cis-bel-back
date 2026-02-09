@@ -368,6 +368,7 @@
             }
 
             @if (!isset($_GET['extepi']))
+           /**
             if (eselect && eselect.options.length > 0 && !isLastSelected()) {
                 const nextdiv = document.createElement("div");
                 nextdiv.id = "nextepisode";
@@ -383,7 +384,7 @@
                         eselect.dispatchEvent(eevent);
                     }
                 });
-            }
+            }**/
             @endif
         });
     </script>
