@@ -35,6 +35,9 @@
 <pre class="html-syntax">
 <?php echo htmlspecialchars('<iframe src="//player0.flixcdn.space/show/') . '<span style="color:#0d6efd">{resource}</span>/<span style="color:#198754">{id}</span>' . htmlspecialchars('" width="640" height="480" frameborder="0" allowfullscreen></iframe>'); ?>
 </pre>
+<pre class="html-syntax">
+Responsive плеер 16/9: <?php echo htmlspecialchars('<iframe src="//player0.flixcdn.space/show/') . '<span style="color:#0d6efd">{resource}</span>/<span style="color:#198754">{id}</span>' . htmlspecialchars('style="width:100%;height:auto;aspect-ratio:16/9" frameborder="0" allowfullscreen></iframe>'); ?>
+</pre>
 
 <br>
 
