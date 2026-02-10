@@ -390,8 +390,11 @@
     </script>
 @endif
 
-
+@if (isset($_GET['fullheight']) && $_GET['fullheight'] == 1)
+<div id="player" class="player" style="height:100%"></div>
+@else
 <div id="player" class="player"></div>
+@endif
 
 {{-- UNFOLDED SEASONS --}}
 @if ($type === 'serial' && isset($_GET['unfseason']) && $_GET['unfseason'] == '1')
