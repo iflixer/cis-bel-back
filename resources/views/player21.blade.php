@@ -839,6 +839,10 @@
                             _url_params.push('unfseason=1');
                             _url_params.push('autoplay=0');
                             <?php endif; ?>
+                            <?php if (isset($_GET['fullheight'])): ?>
+                            _url_params.push('fullheight=1');
+                            <?php endif; ?>
+
 
                             if (_save.t === 0 && _save.tn === null) {
                                 if (_save.time)
@@ -848,7 +852,7 @@
                             } else {
                                 _url_params.push('start=' + _save.time);
 
-                                _url_params.push('autoplay=1');
+                                _url_params.push('autoplay=0');
 
                                 _url_params = '/show/' + _save.p + ((_url_params.length > 0) ? '?' + _url_params.join('&') : '');
                             }
@@ -983,7 +987,11 @@
 
         $('#translator-name').change(function () {
             var t = $(this).find(':selected').attr('value');
-            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&translation=' + t;
+            let fh = '';
+           <?php if (isset($_GET['fullheight'])): ?>
+            fh = '&fullheight=1';
+            <?php endif; ?>
+            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=0&translation=' + t+fh;
         });
 
         @elseif ($type === 'serial')
@@ -1076,12 +1084,15 @@
             <?php if (isset($_GET['unfseason'])): ?>
             _url_params.push('unfseason=1');
             <?php endif; ?>
+            <?php if (isset($_GET['fullheight'])): ?>
+            _url_params.push('fullheight=1');
+            <?php endif; ?>
 
             //if(forceauto){
             <?php if (isset($_GET['unfseason']) && $_GET['unfseason'] == '1' ): ?>
             _url_params.push('autoplay=0');
             <?php else: ?>
-            _url_params.push('autoplay=1');
+            _url_params.push('autoplay=0');
             <?php endif; ?>
             //}
             if (m_s == 'auto') {
