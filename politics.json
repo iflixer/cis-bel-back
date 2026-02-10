@@ -44,7 +44,10 @@
 
             "system.getMessage": true,
 
-            "stats.get": true
+            "stats.get": true,
+
+            "livestats.getDomains": true,
+            "livestats.getLive": true
         }
     },
 
@@ -272,7 +275,10 @@
             "blacklist.get": true,
             "blacklist.search": true,
             "blacklist.add": true,
-            "blacklist.remove": true
+            "blacklist.remove": true,
+
+            "livestats.getDomains": true,
+            "livestats.getLive": true
 
         }
     }

@@ -62,7 +62,9 @@
       "domaintags.getAll": true,
       "domaintypes.getAll": true,
       "domains.importFromCsv": true,
-      "clientpaystats.get": true
+      "clientpaystats.get": true,
+      "livestats.getDomains": true,
+      "livestats.getLive": true
     }
   },
   "redactor": {
@@ -326,6 +328,8 @@
       "prices.clearCache": true,
 
       "clientpaystats.get": true,
+      "livestats.getDomains": true,
+      "livestats.getLive": true,
       "adminpaystats.get": true,
       "domains.updateDomainType": true,
 
