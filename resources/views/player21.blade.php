@@ -972,8 +972,12 @@
 
         $('#continue-play').on('click', function (e) {
             e.preventDefault();
-            window.location.href = $(this).data('url');
+            let cpurl = new URL($(this).data('url'), location.origin);
+            cpurl.searchParams.set('autoplay', '1');
+            cpurl = cpurl.toString();
+            window.location.href = cpurl;
         });
+
 
         @if ($type === 'movie')
 
@@ -1390,7 +1394,7 @@
 
 <script>
 
-    <!--  TRANSLATION NOT FOUND - ROLLBACK  -->
+    <!--  TRANSLATION_NOT_FOUND - ROLLBACK  -->
     function showPopupAndChangeTranslation() {
         let LIMIT = 2;
         let key = 'popupTranslateRuns_v1';
@@ -1454,15 +1458,7 @@
             let hoveringPlayer = $('#player').length && $('#player').is(':hover');
             let hoveringSelectors = $('#selectors').length && $('#selectors').is(':hover');
             let hoveringShare = $('.share-container').length && $('.share-container').is(':hover');
-            @if ($type === 'serial')
-            let hoveringNextEpisode   = $('#nextepisode').length   && $('#nextepisode').is(':hover');
-            @endif
-            if (!hoveringPlayer && !hoveringSelectors && !hoveringShare
-                    @if ($type === 'serial')
-                    && !hoveringNextEpisode
-                    @endif
-                    )
-            {
+            if (!hoveringPlayer && !hoveringSelectors && !hoveringShare){
                 $('#selectors, #nextepisode, #shareBlock').fadeOut('fast');
             }
         }, 200);
