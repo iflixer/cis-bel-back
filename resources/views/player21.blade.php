@@ -1746,7 +1746,7 @@
     }
 </script>
 <style>
-    #downloadBtn{position:absolute;right:10px;top:35px;}
+    #downloadBtn{position:absolute;right:11px;top:37px;}
     #turnstile-container{margin-bottom: 8px}
     #popupOverlay {
         display: none;
