@@ -35,6 +35,10 @@ class PayoutCalculationService
                 ];
             }
 
+            // Clean old data only when we have log data to recalculate from.
+            PlayerPayStat::where('date', $date)->delete();
+            UserTransaction::where('date', $date)->where('type', 'accrual')->delete();
+
             foreach ($logEntries as $entry) {
                 $this->processGroupedEntries($date, $entry);
             }
