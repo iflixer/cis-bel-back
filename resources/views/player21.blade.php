@@ -390,8 +390,11 @@
     </script>
 @endif
 
-
+@if (isset($_GET['fullheight']) && $_GET['fullheight'] == 1)
+<div id="player" class="player" style="height:100%"></div>
+@else
 <div id="player" class="player"></div>
+@endif
 
 {{-- UNFOLDED SEASONS --}}
 @if ($type === 'serial' && isset($_GET['unfseason']) && $_GET['unfseason'] == '1')
@@ -836,6 +839,10 @@
                             _url_params.push('unfseason=1');
                             _url_params.push('autoplay=0');
                             <?php endif; ?>
+                            <?php if (isset($_GET['fullheight'])): ?>
+                            _url_params.push('fullheight=1');
+                            <?php endif; ?>
+
 
                             if (_save.t === 0 && _save.tn === null) {
                                 if (_save.time)
@@ -845,7 +852,7 @@
                             } else {
                                 _url_params.push('start=' + _save.time);
 
-                                _url_params.push('autoplay=1');
+                                _url_params.push('autoplay=0');
 
                                 _url_params = '/show/' + _save.p + ((_url_params.length > 0) ? '?' + _url_params.join('&') : '');
                             }
@@ -965,8 +972,12 @@
 
         $('#continue-play').on('click', function (e) {
             e.preventDefault();
-            window.location.href = $(this).data('url');
+            let cpurl = new URL($(this).data('url'), location.origin);
+            cpurl.searchParams.set('autoplay', '1');
+            cpurl = cpurl.toString();
+            window.location.href = cpurl;
         });
+
 
         @if ($type === 'movie')
 
@@ -980,7 +991,11 @@
 
         $('#translator-name').change(function () {
             var t = $(this).find(':selected').attr('value');
-            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=1&translation=' + t;
+            let fh = '';
+           <?php if (isset($_GET['fullheight'])): ?>
+            fh = '&fullheight=1';
+            <?php endif; ?>
+            window.location.href = '/show/' + p_id + '?domain=' + iframeReferer + '&autoplay=0&translation=' + t+fh;
         });
 
         @elseif ($type === 'serial')
@@ -1073,12 +1088,15 @@
             <?php if (isset($_GET['unfseason'])): ?>
             _url_params.push('unfseason=1');
             <?php endif; ?>
+            <?php if (isset($_GET['fullheight'])): ?>
+            _url_params.push('fullheight=1');
+            <?php endif; ?>
 
             //if(forceauto){
             <?php if (isset($_GET['unfseason']) && $_GET['unfseason'] == '1' ): ?>
             _url_params.push('autoplay=0');
             <?php else: ?>
-            _url_params.push('autoplay=1');
+            _url_params.push('autoplay=0');
             <?php endif; ?>
             //}
             if (m_s == 'auto') {
@@ -1376,7 +1394,7 @@
 
 <script>
 
-    <!--  TRANSLATION NOT FOUND - ROLLBACK  -->
+    <!--  TRANSLATION_NOT_FOUND - ROLLBACK  -->
     function showPopupAndChangeTranslation() {
         let LIMIT = 2;
         let key = 'popupTranslateRuns_v1';
@@ -1440,15 +1458,7 @@
             let hoveringPlayer = $('#player').length && $('#player').is(':hover');
             let hoveringSelectors = $('#selectors').length && $('#selectors').is(':hover');
             let hoveringShare = $('.share-container').length && $('.share-container').is(':hover');
-            @if ($type === 'serial')
-            let hoveringNextEpisode   = $('#nextepisode').length   && $('#nextepisode').is(':hover');
-            @endif
-            if (!hoveringPlayer && !hoveringSelectors && !hoveringShare
-                    @if ($type === 'serial')
-                    && !hoveringNextEpisode
-                    @endif
-                    )
-            {
+            if (!hoveringPlayer && !hoveringSelectors && !hoveringShare){
                 $('#selectors, #nextepisode, #shareBlock').fadeOut('fast');
             }
         }, 200);
@@ -1732,7 +1742,7 @@
     }
 </script>
 <style>
-    #downloadBtn{position:absolute;right:10px;top:35px;}
+    #downloadBtn{position:absolute;right:11px;top:37px;}
     #turnstile-container{margin-bottom: 8px}
     #popupOverlay {
         display: none;

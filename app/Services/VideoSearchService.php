@@ -54,7 +54,11 @@ class VideoSearchService
 
     private function validateSearchParams(array $params): array
     {
-        $limit_max = 200;
+        $limit_max = 500;
+        $for_realnie_pacany = $params['for_realnie_pacany'] ?? 0;
+        if ($for_realnie_pacany == 0) {
+            $limit_max = 10000;
+        }
 
         $kinopoisk_id = $params['kinopoisk_id'] ?? null;
         $imdb_id = $params['imdb_id'] ?? null;
