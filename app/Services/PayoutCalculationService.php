@@ -68,7 +68,7 @@ class PayoutCalculationService
             ->selectRaw('COUNT(*) as count')
             ->whereBetween('created_at', [$startDate, $endDate])
             ->where('event', 'pay')
-            ->groupBy('domain_type_id', 'geo_group_id')
+            ->groupBy('domain_id','domain_type_id', 'geo_group_id')
             ->get();
     }
 
