@@ -29,6 +29,8 @@ class PlayerEventStatsService
                 ];
             }
 
+            PlayerEventStat::where('date', $date)->delete();
+
             $processedCount = 0;
             foreach ($logEntries as $entry) {
                 try {

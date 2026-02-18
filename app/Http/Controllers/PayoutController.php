@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\PlayerEventStat;
 use App\PlayerPayStat;
 use App\Services\PayoutCalculationService;
 use App\Services\PlayerEventStatsService;
@@ -28,6 +27,45 @@ class PayoutController extends Controller
     }
 
     public function triggerDailyPayout(Request $request)
+    {
+        return $this->handleDateRequest($request, function (string $date) {
+            $result = $this->payoutService->calculateDailyPayouts($date);
+            if ($result['success']) {
+                $this->sendPayoutNotification($date);
+            }
+            return $result;
+        });
+    }
+
+    private function sendPayoutNotification(string $date): void
+    {
+        try {
+            $stats = PlayerPayStat::where('date', $date)
+                ->selectRaw('SUM(counter) as total_views')
+                ->selectRaw('SUM(counter * watch_price) as total_accruals')
+                ->first();
+
+            $this->telegramService->sendPayoutSummary($date, [
+                'total_views' => $stats->total_views ?? 0,
+                'total_accruals' => $stats->total_accruals ?? 0,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Failed to send payout Telegram notification: " . $e->getMessage());
+        }
+    }
+
+    public function triggerDailyEventStats(Request $request)
+    {
+        return $this->handleDateRequest($request, function (string $date) {
+            $result = $this->eventStatsService->calculateDailyStats($date);
+            if ($result['success']) {
+                $this->sendEventStatsNotification($date, $result['processed_count'] ?? 0);
+            }
+            return $result;
+        });
+    }
+
+    private function handleDateRequest(Request $request, callable $processor)
     {
         $from = $request->input('from');
         $to = $request->input('to');
@@ -63,7 +101,31 @@ class PayoutController extends Controller
                 ], 400);
             }
 
-            return $this->processDateRange($fromDate, $toDate);
+            $failedDates = [];
+            $total = 0;
+            $current = $fromDate->copy();
+
+            while ($current->lte($toDate)) {
+                $result = $processor($current->format('Y-m-d'));
+                $total++;
+                if (!$result['success']) {
+                    $failedDates[] = $current->format('Y-m-d');
+                }
+                $current->addDay();
+            }
+
+            $failed = count($failedDates);
+
+            return response()->json([
+                'success' => $failed === 0,
+                'message' => $failed === 0
+                    ? "All {$total} dates processed successfully"
+                    : "{$failed} of {$total} dates failed",
+                'from' => $fromDate->format('Y-m-d'),
+                'to' => $toDate->format('Y-m-d'),
+                'total' => $total,
+                'failed_dates' => $failedDates,
+            ], $failed === 0 ? 200 : 207);
         }
 
         $date = $date ?: Carbon::yesterday()->format('Y-m-d');
@@ -76,63 +138,23 @@ class PayoutController extends Controller
             ], 400);
         }
 
-        return $this->processSingleDate($parsedDate->format('Y-m-d'));
-    }
-
-    private function processDateRange(Carbon $fromDate, Carbon $toDate)
-    {
-        $results = [];
-        $failedDates = [];
-        $current = $fromDate->copy();
-
-        while ($current->lte($toDate)) {
-            $date = $current->format('Y-m-d');
-            $result = $this->payoutService->calculateDailyPayouts($date);
-
-            $results[$date] = $result['success'];
-            if (!$result['success']) {
-                $failedDates[] = $date;
-            }
-
-            $current->addDay();
-        }
-
-        $total = count($results);
-        $failed = count($failedDates);
-
-        return response()->json([
-            'success' => $failed === 0,
-            'message' => $failed === 0
-                ? "All {$total} dates processed successfully"
-                : "{$failed} of {$total} dates failed",
-            'from' => $fromDate->format('Y-m-d'),
-            'to' => $toDate->format('Y-m-d'),
-            'total' => $total,
-            'failed_dates' => $failedDates,
-        ], $failed === 0 ? 200 : 207);
-    }
-
-    private function processSingleDate(string $date)
-    {
-        $result = $this->payoutService->calculateDailyPayouts($date);
+        $result = $processor($parsedDate->format('Y-m-d'));
 
         if ($result['success']) {
-            $this->sendPayoutNotification($date);
-
             return response()->json([
                 'success' => true,
-                'message' => 'Payout calculation completed successfully',
-                'date' => $date,
+                'message' => 'Calculation completed successfully',
+                'date' => $parsedDate->format('Y-m-d'),
                 'errors' => $result['errors'] ?? []
             ]);
-        } else {
-            return response()->json([
-                'success' => false,
-                'message' => 'Payout calculation failed',
-                'date' => $date,
-                'error' => $result['error']
-            ], 500);
         }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Calculation failed',
+            'date' => $parsedDate->format('Y-m-d'),
+            'error' => $result['error']
+        ], 500);
     }
 
     private function parseDate(string $value)
@@ -145,64 +167,6 @@ class PayoutController extends Controller
             return $parsed;
         } catch (\Exception $e) {
             return null;
-        }
-    }
-
-    private function sendPayoutNotification(string $date): void
-    {
-        try {
-            $stats = PlayerPayStat::where('date', $date)
-                ->selectRaw('SUM(counter) as total_views')
-                ->selectRaw('SUM(counter * watch_price) as total_accruals')
-                ->first();
-
-            $this->telegramService->sendPayoutSummary($date, [
-                'total_views' => $stats->total_views ?? 0,
-                'total_accruals' => $stats->total_accruals ?? 0,
-            ]);
-        } catch (\Exception $e) {
-            Log::error("Failed to send payout Telegram notification: " . $e->getMessage());
-        }
-    }
-
-    public function triggerDailyEventStats(Request $request)
-    {
-        $date = $request->input('date', Carbon::yesterday()->format('Y-m-d'));
-
-        try {
-            $parsedDate = Carbon::createFromFormat('Y-m-d', $date);
-            if (!$parsedDate || $parsedDate->format('Y-m-d') !== $date) {
-                throw new \InvalidArgumentException();
-            }
-            $date = $parsedDate->format('Y-m-d');
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid date format. Use Y-m-d (e.g., 2025-12-15)',
-                'date' => $request->input('date')
-            ], 400);
-        }
-
-        PlayerEventStat::where('date', $date)->delete();
-
-        $result = $this->eventStatsService->calculateDailyStats($date);
-
-        if ($result['success']) {
-            $this->sendEventStatsNotification($date, $result['processed_count'] ?? 0);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Player event stats calculation completed successfully',
-                'date' => $date,
-                'processed_count' => $result['processed_count'] ?? 0
-            ]);
-        } else {
-            return response()->json([
-                'success' => false,
-                'message' => 'Player event stats calculation failed',
-                'date' => $date,
-                'error' => $result['error']
-            ], 500);
         }
     }
 
