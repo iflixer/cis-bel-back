@@ -681,7 +681,7 @@ class ShowController extends Controller{
             // есть. проверяем живой ли сдн
             $cdn = Cdn::where('id', $cdnVideo->cdn_id)
                 ->where('active', 1)
-                ->where('last_report', '>=', DB::raw('NOW() - INTERVAL 5 MINUTE'))
+                // ->where('last_report', '>=', DB::raw('NOW() - INTERVAL 5 MINUTE'))
                 ->first();
             if ($cdn) {
                 // обновляем счетчик распределенных на этот сдн видосов
@@ -698,7 +698,7 @@ class ShowController extends Controller{
         }
         // нет назначенного ранее сдн либо он отключен. выбираем новый
         $cdn = Cdn::where('active', 1)
-            ->where('last_report', '>=', DB::raw('NOW() - INTERVAL 5 MINUTE'))
+            // ->where('last_report', '>=', DB::raw('NOW() - INTERVAL 5 MINUTE'))
             ->orderBy('weight_counter', 'asc')
             ->first();
         if ($cdn) {
@@ -718,10 +718,24 @@ class ShowController extends Controller{
         }
         // не удалось выбрать новый
         // резервный вариант - берем наименее нагруженную ноду не глядя на дату репорта. вдруг отчеты сломаны?
+        // $cdn = Cdn::where('active', 1)
+        //     ->orderBy('weight_counter', 'asc')
+        //     ->first();
         $cdn = Cdn::where('active', 1)
-            ->orderBy('weight_counter', 'asc')
+            ->inRandomOrder()
             ->first();
         if ($cdn) {
+            CdnVideo::updateOrCreate(
+                ['video_id' => $video_id],    // что ищем
+                ['cdn_id'   => $cdn->id]      // что обновляем
+            );
+            CdnVideo::where('video_id', $video_id)->update([
+                'counter' => DB::raw('counter+1')
+            ]); 
+            Cdn::where('id', $cdn->id)->update([
+                'counter' => DB::raw('counter+1'),
+                'weight_counter' => DB::raw('weight_counter+1')
+            ]);
             header("X-Player-cdn-method: fallback");
             return $cdn->host;
         }
