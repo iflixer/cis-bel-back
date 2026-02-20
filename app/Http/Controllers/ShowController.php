@@ -518,7 +518,8 @@ class ShowController extends Controller{
             foreach ($resolutions as $rKey => $resolution) {
                 // $hash = md5($folder.'-'.$ip.'-'.$date.'-'.$susuritiKey);
                 $hash = md5($folder.'--'.$date.'-'.$susuritiKey);
-                $result[] = "[{$resolution}]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$resolution}.mp4:hls:manifest.m3u8 or {$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$resolution}.mp4";
+                // $result[] = "[{$resolution}]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$resolution}.mp4:hls:manifest.m3u8 or {$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$resolution}.mp4";
+                $result[] = "[{$resolution}]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$resolution}.mp4:hls:manifest.m3u8";
                 header("X-Player-".$hash.": ".$folder.'--'.$date.'-'.$susuritiKey);
 
                 if ($resolution == '720') {
@@ -531,7 +532,8 @@ class ShowController extends Controller{
             }
 
             if (!$p1080 && $p720)
-                $result[] = "[1080]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/720.mp4:hls:manifest.m3u8 or {$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/720.mp4";
+                // $result[] = "[1080]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/720.mp4:hls:manifest.m3u8 or {$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/720.mp4";
+                $result[] = "[1080]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/720.mp4:hls:manifest.m3u8";
         }
 
         // ZCDN
