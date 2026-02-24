@@ -518,7 +518,8 @@ class ShowController extends Controller{
             foreach ($resolutions as $rKey => $resolution) {
                 // $hash = md5($folder.'-'.$ip.'-'.$date.'-'.$susuritiKey);
                 $hash = md5($folder.'--'.$date.'-'.$susuritiKey);
-                $result[] = "[{$resolution}]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$resolution}.mp4:hls:manifest.m3u8 or {$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$resolution}.mp4";
+                // $result[] = "[{$resolution}]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$resolution}.mp4:hls:manifest.m3u8 or {$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$resolution}.mp4";
+                $result[] = "[{$resolution}]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$resolution}.mp4:hls:manifest.m3u8";
                 header("X-Player-".$hash.": ".$folder.'--'.$date.'-'.$susuritiKey);
 
                 if ($resolution == '720') {
@@ -531,7 +532,8 @@ class ShowController extends Controller{
             }
 
             if (!$p1080 && $p720)
-                $result[] = "[1080]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/720.mp4:hls:manifest.m3u8 or {$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/720.mp4";
+                // $result[] = "[1080]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/720.mp4:hls:manifest.m3u8 or {$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/720.mp4";
+                $result[] = "[1080]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/720.mp4:hls:manifest.m3u8";
         }
 
         // ZCDN
@@ -681,7 +683,7 @@ class ShowController extends Controller{
             // есть. проверяем живой ли сдн
             $cdn = Cdn::where('id', $cdnVideo->cdn_id)
                 ->where('active', 1)
-                ->where('last_report', '>=', DB::raw('NOW() - INTERVAL 5 MINUTE'))
+                // ->where('last_report', '>=', DB::raw('NOW() - INTERVAL 5 MINUTE'))
                 ->first();
             if ($cdn) {
                 // обновляем счетчик распределенных на этот сдн видосов
@@ -698,7 +700,7 @@ class ShowController extends Controller{
         }
         // нет назначенного ранее сдн либо он отключен. выбираем новый
         $cdn = Cdn::where('active', 1)
-            ->where('last_report', '>=', DB::raw('NOW() - INTERVAL 5 MINUTE'))
+            // ->where('last_report', '>=', DB::raw('NOW() - INTERVAL 5 MINUTE'))
             ->orderBy('weight_counter', 'asc')
             ->first();
         if ($cdn) {
@@ -718,10 +720,24 @@ class ShowController extends Controller{
         }
         // не удалось выбрать новый
         // резервный вариант - берем наименее нагруженную ноду не глядя на дату репорта. вдруг отчеты сломаны?
+        // $cdn = Cdn::where('active', 1)
+        //     ->orderBy('weight_counter', 'asc')
+        //     ->first();
         $cdn = Cdn::where('active', 1)
-            ->orderBy('weight_counter', 'asc')
+            ->inRandomOrder()
             ->first();
         if ($cdn) {
+            CdnVideo::updateOrCreate(
+                ['video_id' => $video_id],    // что ищем
+                ['cdn_id'   => $cdn->id]      // что обновляем
+            );
+            CdnVideo::where('video_id', $video_id)->update([
+                'counter' => DB::raw('counter+1')
+            ]); 
+            Cdn::where('id', $cdn->id)->update([
+                'counter' => DB::raw('counter+1'),
+                'weight_counter' => DB::raw('weight_counter+1')
+            ]);
             header("X-Player-cdn-method: fallback");
             return $cdn->host;
         }
