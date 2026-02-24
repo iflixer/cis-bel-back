@@ -110,7 +110,7 @@ class PayoutCalculationService
         }
 
         $userId = $domain['id_parent'];
-        $totalAccrual = $watchPrice * $entry['count'];
+        $totalAccrual = (int) round(($watchPrice * $entry['count']) / 1000);
 
         if ($totalAccrual > 0) {
             UserTransaction::createAccrual($userId, $totalAccrual, $date);
