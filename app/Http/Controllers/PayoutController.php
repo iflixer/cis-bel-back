@@ -42,7 +42,7 @@ class PayoutController extends Controller
         try {
             $stats = PlayerPayStat::where('date', $date)
                 ->selectRaw('SUM(counter) as total_views')
-                ->selectRaw('SUM(counter * watch_price) as total_accruals')
+                ->selectRaw('SUM(counter * watch_price) / 1000 as total_accruals')
                 ->first();
 
             $this->telegramService->sendPayoutSummary($date, [
