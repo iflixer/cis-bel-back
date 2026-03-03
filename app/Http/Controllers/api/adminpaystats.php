@@ -242,12 +242,15 @@ class adminpaystats extends Controller
         $query = DB::table('player_event_stats as pes')
             ->leftJoin('domains as d', 'pes.domain_id', '=', 'd.id')
             ->leftJoin('users as u', 'd.id_parent', '=', 'u.id')
+            ->leftJoin('geo_groups as gg', 'pes.geo_group_id', '=', 'gg.id')
             ->select(
                 'u.login as user_name',
                 'd.name as domain',
                 'pes.date',
+                'gg.name as geo_group_name',
                 DB::raw("SUM(CASE WHEN pes.event_type = 'load' THEN pes.counter ELSE 0 END) as event_load"),
-                DB::raw("SUM(CASE WHEN pes.event_type = 'play' THEN pes.counter ELSE 0 END) as event_play")
+                DB::raw("SUM(CASE WHEN pes.event_type = 'play' THEN pes.counter ELSE 0 END) as event_play"),
+                DB::raw('(SELECT COALESCE(SUM(pps.counter * pps.watch_price) / 1000, 0) FROM player_pay_stats pps WHERE pps.domain_id = pes.domain_id AND pps.date = pes.date AND pps.geo_group_id = pes.geo_group_id AND pps.watch_price > 0) as money_amount')
             )
             ->whereBetween('pes.date', [$startDate, $endDate])
             ->whereIn('pes.event_type', ['load', 'play']);
@@ -263,13 +266,13 @@ class adminpaystats extends Controller
         }
 
         $results = $query
-            ->groupBy('u.login', 'd.name', 'pes.date')
+            ->groupBy('u.login', 'd.name', 'pes.date', 'pes.geo_group_id', 'gg.name')
             ->orderBy('pes.date', 'desc')
             ->orderBy('u.login', 'asc')
             ->orderBy('d.name', 'asc')
             ->get();
 
-        $csv = "user_name,domain,date,event_load,event_play\n";
+        $csv = "date,user_name,domain,geo_group,event_load,event_play,money_amount\n";
         foreach ($results as $row) {
             $dateFormatted = '';
             if (!empty($row['date'])) {
@@ -277,12 +280,14 @@ class adminpaystats extends Controller
                 $dateFormatted = $dateObj->format('d-m-Y');
             }
             $csv .= sprintf(
-                "%s,%s,%s,%d,%d\n",
+                "%s,%s,%s,%s,%d,%d,%s\n",
+                $dateFormatted,
                 $this->escapeCsvField($row['user_name'] ?? ''),
                 $this->escapeCsvField($row['domain'] ?? ''),
-                $dateFormatted,
+                $this->escapeCsvField($row['geo_group_name'] ?? ''),
                 (int)($row['event_load'] ?? 0),
-                (int)($row['event_play'] ?? 0)
+                (int)($row['event_play'] ?? 0),
+                number_format((float)($row['money_amount'] ?? 0), 2, '.', '')
             );
         }
 
