@@ -542,12 +542,12 @@ class ShowController extends Controller{
                 $result[] = "[720]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/480.mp4:hls:manifest.m3u8";
                 $p720 = true;
             }
-            if (!$p1080 && $p720) {
-                $result[] = "[1080]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/720.mp4:hls:manifest.m3u8";
-                $p1080 = true;
-            }
             if (!$p1080 && $p480) {
                 $result[] = "[1080]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/480.mp4:hls:manifest.m3u8";
+                $p1080 = true;
+            }
+            if (!$p1080 && $p720) {
+                $result[] = "[1080]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/720.mp4:hls:manifest.m3u8";
                 $p1080 = true;
             }
         }
