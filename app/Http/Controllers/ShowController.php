@@ -516,6 +516,8 @@ class ShowController extends Controller{
             $folder = $file['path'];
     
             foreach ($resolutions as $rKey => $resolution) {
+                if ($resolution == '1080') continue;
+                if ($resolution == '720') continue;
                 // $hash = md5($folder.'-'.$ip.'-'.$date.'-'.$susuritiKey);
                 $hash = md5($folder.'--'.$date.'-'.$susuritiKey);
                 // $result[] = "[{$resolution}]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$resolution}.mp4:hls:manifest.m3u8 or {$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$resolution}.mp4";
@@ -527,45 +529,58 @@ class ShowController extends Controller{
                     $p720Key = $rKey;
                 }
 
-                if ($resolution == '1080')
-                    $p1080 = true;
-            }
-
-            if (!$p1080 && $p720)
-                // $result[] = "[1080]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/720.mp4:hls:manifest.m3u8 or {$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/720.mp4";
-                $result[] = "[1080]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/720.mp4:hls:manifest.m3u8";
-        }
-
-        // ZCDN
-
-        if ($media['sids'] == 'ZCDN') {
-            $p720 = false;
-            $p720Key = 0;
-            $p1080 = false;
-
-            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-            $deadline = date('YmdH', strtotime('+5 hour'));
-
-            foreach ($resolutions as $rKey => $resolution) {
-                $hash = md5("/{$media['path']}_{$resolution}.mp4-{$ip}-{$deadline}-superduperyourcinema");
-
-                $result[] = "[{$resolution}]https://kholoload.acheron.zerocdn.com/{$hash}:{$deadline}/{$media['path']}_{$resolution}.mp4:hls:manifest.m3u8";
-
-                if ($resolution == '720') {
-                    $p720 = true;
-                    $p720Key = $rKey;
+                if ($resolution == '480') {
+                    $p480 = true;
+                    $p480Key = $rKey;
                 }
 
                 if ($resolution == '1080')
                     $p1080 = true;
             }
 
+            if (!$p720 && $p480) {
+                $result[] = "[720]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/480.mp4:hls:manifest.m3u8";
+                $p720 = true;
+            }
             if (!$p1080 && $p720) {
-                $hash = md5("/{$media['path']}_720.mp4-{$ip}-{$deadline}-superduperyourcinema");
-
-                $result[] = "[1080]https://kholoload.acheron.zerocdn.com/{$hash}:{$deadline}/{$media['path']}_720.mp4:hls:manifest.m3u8";
+                $result[] = "[1080]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/720.mp4:hls:manifest.m3u8";
+                $p1080 = true;
+            }
+            if (!$p1080 && $p480) {
+                $result[] = "[1080]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/480.mp4:hls:manifest.m3u8";
+                $p1080 = true;
             }
         }
+
+        // ZCDN
+        // if ($media['sids'] == 'ZCDN') {
+        //     $p720 = false;
+        //     $p720Key = 0;
+        //     $p1080 = false;
+
+        //     $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        //     $deadline = date('YmdH', strtotime('+5 hour'));
+
+        //     foreach ($resolutions as $rKey => $resolution) {
+        //         $hash = md5("/{$media['path']}_{$resolution}.mp4-{$ip}-{$deadline}-superduperyourcinema");
+
+        //         $result[] = "[{$resolution}]https://kholoload.acheron.zerocdn.com/{$hash}:{$deadline}/{$media['path']}_{$resolution}.mp4:hls:manifest.m3u8";
+
+        //         if ($resolution == '720') {
+        //             $p720 = true;
+        //             $p720Key = $rKey;
+        //         }
+
+        //         if ($resolution == '1080')
+        //             $p1080 = true;
+        //     }
+
+        //     if (!$p1080 && $p720) {
+        //         $hash = md5("/{$media['path']}_720.mp4-{$ip}-{$deadline}-superduperyourcinema");
+
+        //         $result[] = "[1080]https://kholoload.acheron.zerocdn.com/{$hash}:{$deadline}/{$media['path']}_720.mp4:hls:manifest.m3u8";
+        //     }
+        // }
 
         $result = implode(',', $result);
 
