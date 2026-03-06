@@ -691,7 +691,8 @@ class ShowController extends Controller{
             }
         }
 
-        $country = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? null;
+        $country = $_SERVER['HTTP_CF_IPCOUNTRY'] ?? null;
+        $country = "RU";
 
         $allowed_cdns = $this->get_cdns_for_country("cis", $country);
 
