@@ -677,7 +677,7 @@ class ShowController extends Controller{
         Domain::where('id', $domain->id)->update(['show' => $stats ]);
     }
 
-    // cdn_host_by_video_id - возвращает хост CDN для видео
+    // cdn_host_by_video_id - возвращает хост CDN для видео $_SERVER['HTTP_CF_CONNECTING_IP']
     private function cdn_host_by_video_id(int $video_id, $force_cdn = ""): ?string {
         if (!empty($force_cdn)) {
             if (is_numeric($force_cdn)) {
@@ -691,8 +691,16 @@ class ShowController extends Controller{
             }
         }
 
+        $country = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? null;
+
+        $allowed_cdns = $this->get_cdns_for_country("cis", $country);
+
         // есть связка видеоид-сдн?
-        $cdnVideo = CdnVideo::select('cdn_id')->where('video_id', $video_id)->first();
+        $cdnVideo = CdnVideo::select('cdn_id')
+            ->where('video_id', $video_id)
+            ->whereIn('cdn_id', $allowed_cdns)
+            ->orderBy('counter', 'asc')
+            ->first();
         $this->reduce_all_cdns_weight();
         if ($cdnVideo) {
             // есть. проверяем живой ли сдн
@@ -706,26 +714,29 @@ class ShowController extends Controller{
                     'counter' => DB::raw('counter+1'),
                     'weight_counter' => DB::raw('weight_counter+1')
                 ]);
-                CdnVideo::where('video_id', $video_id)->update([
-                    'counter' => DB::raw('counter+1')
-                ]);
+                DB::statement(
+                    'INSERT INTO cdn_videos (video_id, cdn_id, counter, created_at, updated_at)
+                    VALUES (?, ?, 1, NOW(), NOW())
+                    ON DUPLICATE KEY UPDATE counter = counter + 1, updated_at = NOW()',
+                    [$video_id, $cdn->id]
+                );
                 header("X-Player-cdn-method: stale");
                 return $cdn->host;
             }
         }
         // нет назначенного ранее сдн либо он отключен. выбираем новый
-        $cdn = Cdn::where('active', 1)
-            // ->where('last_report', '>=', DB::raw('NOW() - INTERVAL 5 MINUTE'))
-            ->orderBy('weight_counter', 'asc')
-            ->first();
+        // $cdn = Cdn::where('active', 1)
+        //     // ->where('last_report', '>=', DB::raw('NOW() - INTERVAL 5 MINUTE'))
+        //     ->orderBy('weight_counter', 'asc')
+        //     ->first();
+        $cdn = $allowed_cdns[0];
         if ($cdn) {
-            CdnVideo::updateOrCreate(
-                ['video_id' => $video_id],    // что ищем
-                ['cdn_id'   => $cdn->id]      // что обновляем
+            DB::statement(
+                'INSERT INTO cdn_videos (video_id, cdn_id, counter, created_at, updated_at)
+                VALUES (?, ?, 1, NOW(), NOW())
+                ON DUPLICATE KEY UPDATE counter = counter + 1, updated_at = NOW()',
+                [$video_id, $cdn->id]
             );
-            CdnVideo::where('video_id', $video_id)->update([
-                'counter' => DB::raw('counter+1')
-            ]); 
             Cdn::where('id', $cdn->id)->update([
                 'counter' => DB::raw('counter+1'),
                 'weight_counter' => DB::raw('weight_counter+1')
@@ -733,33 +744,28 @@ class ShowController extends Controller{
             header("X-Player-cdn-method: new");
             return $cdn->host;
         }
-        // не удалось выбрать новый
-        // резервный вариант - берем наименее нагруженную ноду не глядя на дату репорта. вдруг отчеты сломаны?
-        // $cdn = Cdn::where('active', 1)
-        //     ->orderBy('weight_counter', 'asc')
-        //     ->first();
-        $cdn = Cdn::where('active', 1)
-            ->inRandomOrder()
-            ->first();
-        if ($cdn) {
-            CdnVideo::updateOrCreate(
-                ['video_id' => $video_id],    // что ищем
-                ['cdn_id'   => $cdn->id]      // что обновляем
-            );
-            CdnVideo::where('video_id', $video_id)->update([
-                'counter' => DB::raw('counter+1')
-            ]); 
-            Cdn::where('id', $cdn->id)->update([
-                'counter' => DB::raw('counter+1'),
-                'weight_counter' => DB::raw('weight_counter+1')
-            ]);
-            header("X-Player-cdn-method: fallback");
-            return $cdn->host;
-        }
+
         
         // TODO: логирование ошибки
         header("X-Player-cdn-method: error");
         return null;
+    }
+
+    private function get_cdns_for_country($geo, $country): object {
+        if (!empty($country)) {
+            $cdns = Cdn::where('active', 1)
+                ->where('geo', $geo)
+                ->where('country', 'like', "%{$country}%")
+                ->inRandomOrder()
+                ->get();
+            if (!$cdns->isEmpty()) return $cdns; // found cdns for this country
+        } 
+        $cdns = Cdn::where('active', 1)
+            ->where('geo', $geo)
+            ->where('country', '')
+            ->inRandomOrder()
+            ->get();
+        return $cdns;
     }
 
     // reduce_cdn_weight уменьгает взвешенный счетчик примерно каждый 100 вызов
