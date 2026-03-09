@@ -150,6 +150,12 @@ Responsive плеер 16/9: <?php echo htmlspecialchars('<iframe src="//player0.
         <td>Число</td>
         <td><code>1</code></td>
     </tr>
+    <tr>
+        <td>fullheight</td>
+        <td>Вывод плеера на всю высоту родительского блока, используется при соотношении сторон окна плеера отличного от 16/9</td>
+        <td>Число</td>
+        <td><code>1</code></td>
+    </tr>
     </tbody>
 </table>
 
