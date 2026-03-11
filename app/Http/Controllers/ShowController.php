@@ -40,7 +40,6 @@ class ShowController extends Controller{
     protected $cdnhub_public_domain;
     protected $player_stat_url;
 
-
     public function __construct(Request $request){
         $this->request = $request;
         // $this->loginVDB = config('videodb.login');
@@ -679,6 +678,9 @@ class ShowController extends Controller{
 
     // cdn_host_by_video_id - возвращает хост CDN для видео $_SERVER['HTTP_CF_CONNECTING_IP']
     private function cdn_host_by_video_id(int $video_id, $force_cdn = ""): ?string {
+        if (!empty($this->cdn_domain)) {
+            return $this->cdn_domain;
+        }
         if (!empty($force_cdn)) {
             if (is_numeric($force_cdn)) {
                 $cdn = Cdn::where('id', $force_cdn)->first();
