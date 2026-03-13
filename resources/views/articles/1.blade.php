@@ -357,7 +357,7 @@
 <div class="apicontent">
 
     <section class="hero" id="overview">
-        <p>Эндпоинты /api/{method} требуют авторизации по API-ключу (token).<br><br>Эндпоинты /api/public/* работают без авторизации.</p>
+        <p>Эндпоинты /api/{method} требуют авторизации по API-ключу (token).<br></p>
         <div class="stats">
             <div class="stat"><strong>https://api0.flixcdn.biz/</strong><span>базовый URL</span></div>
             <div class="stat"><strong>{!! $token !!}</strong><span>Ваш API-токен</span></div>
@@ -722,27 +722,21 @@
 }</code></pre>
             </div>
         </details>
-    </section>
-
-    <section class="doc-section" id="section-2">
-        <div class="section-head">
-            <h2>Публичные эндпоинты (без авторизации)</h2>
-            <p>Эндпоинты, не требующие API-ключ</p>
-        </div>
 
         <details class="endpoint-card" id="section-2-ep-1">
             <summary class="endpoint-top">
                 <span class="method">GET</span>
                 <h3>actors — Список актёров</h3>
             </summary>
-            <div class="urlbox"><code>https://api0.flixcdn.biz/api/public/actors?page=1&amp;limit=50</code></div>
-            <p>Пагинированный список актёров с привязкой к видео. Авторизация не требуется.</p>
+            <div class="urlbox"><code>https://api0.flixcdn.biz/api/actors?token={!! $token !!}&amp;page=1&amp;limit=50</code></div>
+            <p>Пагинированный список актёров с привязкой к видео.</p>
             <h4>Параметры запроса</h4>
             <table>
                 <thead>
                 <tr><th>Параметр</th><th>Пример</th><th>Описание</th></tr>
                 </thead>
                 <tbody>
+                <tr><td><code>token</code></td><td><code>{!! $token !!}</code></td><td>API-ключ</td></tr>
                 <tr><td><code>page</code></td><td><code>1</code></td><td>Номер страницы (по умолчанию 1)</td></tr>
                 <tr><td><code>limit</code></td><td><code>50</code></td><td>Количество на странице (по умолчанию 50, максимум 500)</td></tr>
                 </tbody>
@@ -776,14 +770,15 @@
                 <span class="method">GET</span>
                 <h3>directors — Список режиссёров</h3>
             </summary>
-            <div class="urlbox"><code>https://api0.flixcdn.biz/api/public/directors?page=1&amp;limit=50</code></div>
-            <p>Пагинированный список режиссёров с привязкой к видео (массив ID). Авторизация не требуется.</p>
+            <div class="urlbox"><code>https://api0.flixcdn.biz/api/directors?token={!! $token !!}&amp;page=1&amp;limit=50</code></div>
+            <p>Пагинированный список режиссёров с привязкой к видео (массив ID).</p>
             <h4>Параметры запроса</h4>
             <table>
                 <thead>
                 <tr><th>Параметр</th><th>Пример</th><th>Описание</th></tr>
                 </thead>
                 <tbody>
+                <tr><td><code>token</code></td><td><code>{!! $token !!}</code></td><td>API-ключ</td></tr>
                 <tr><td><code>page</code></td><td><code>1</code></td><td>Номер страницы (по умолчанию 1)</td></tr>
                 <tr><td><code>limit</code></td><td><code>50</code></td><td>Количество на странице (по умолчанию 50, максимум 500)</td></tr>
                 </tbody>
