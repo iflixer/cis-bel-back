@@ -61,8 +61,13 @@ class articles extends Controller
 
         $response = Article::where('id', $id)->first()->toArray();
 
+        $api_url = Seting::where('name', 'cdnhub_api_domain')->value('value') ?? '';
+        $iframe_url = Seting::where('name', 'cdnhub_player_domain')->value('value') ?? '';
+
         $template = view("articles.{$id}", [
-            'token' => $this->user['api_key']
+            'token' => $this->user['api_key'],
+            'api_url' => $api_url,
+            'iframe_url' => $iframe_url,
         ])->render();
 
         $response['body'] .= $template;
