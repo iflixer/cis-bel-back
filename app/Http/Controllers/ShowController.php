@@ -189,6 +189,22 @@ class ShowController extends Controller{
         }
         $this->inject_translations($data);
         $this->inject_files($data);
+
+        // only file string requested, check captcha and return file string or error
+        if (!empty($this->request->input('stream'))) {
+            if (empty($data['file'])) {
+                header("X-CDNHub-error: No media file found for streaming");
+                return json_encode(['error' => 'No media file found']);
+            }
+            $captcha_ok = $this->request->attributes->get('turnstile_ok');
+            if (!$captcha_ok) {
+                header("X-CDNHub-error: Captcha verification failed");
+                return json_encode(['error' => $this->request->attributes->get('turnstile_error_codes')]);
+            }
+            $stream_url = $data['file'];
+            return json_encode(['file_string' => $stream_url]);
+        }
+
         $this->inject_ads($data);
 
         $domain = Domain::where('name', $this->request->domain)->first();

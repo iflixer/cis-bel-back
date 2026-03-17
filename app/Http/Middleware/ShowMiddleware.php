@@ -84,6 +84,58 @@ class ShowMiddleware{
         if( !empty($domain) && $domain->status == '1' ){
             $request->domain_approved = true;
         }
+
+
+        // проверяем капчу, если она есть
+        $token = $request->input('cf-turnstile-response');
+
+        // по умолчанию считаем что не ок
+        $request->attributes->set('turnstile_ok', false);
+        $request->attributes->set('turnstile_error_codes', []);
+        $request->attributes->set('turnstile_raw', null);
+
+        if ($token) {
+            try {
+                $ch = curl_init('https://challenges.cloudflare.com/turnstile/v0/siteverify');
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+                    // 'secret'   => config('services.turnstile.secret'),
+                    'secret'   => '0x4AAAAAACESmSt84Qw8SmDtvgEiD9DGirQ',
+                    'response' => $token,
+                    'remoteip' => $request->ip(), // опционально
+                ]));
+
+                $raw = curl_exec($ch);
+                $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $curlErr = curl_error($ch);
+                curl_close($ch);
+
+                if ($raw !== false && $status >= 200 && $status < 300) {
+                    $data = json_decode($raw, true);
+                    if (!is_array($data)) {
+                        $request->attributes->set('turnstile_error_codes', ['verify_invalid_json']);
+                        return $next($request);
+                    }
+                    $request->attributes->set('turnstile_raw', $data);
+
+                    $ok = !empty($data['success']);
+                    $request->attributes->set('turnstile_ok', $ok);
+                    $request->attributes->set('turnstile_error_codes', $data['error-codes'] ?? []);
+                } else {
+                    if (!empty($curlErr)) {
+                        $request->attributes->set('turnstile_raw', ['curl_error' => $curlErr]);
+                    }
+                    $request->attributes->set('turnstile_error_codes', ['verify_http_failed']);
+                }
+            } catch (\Throwable $e) {
+                $request->attributes->set('turnstile_error_codes', ['verify_exception']);
+            }
+        }
+
         return $next($request);
 
         //}
