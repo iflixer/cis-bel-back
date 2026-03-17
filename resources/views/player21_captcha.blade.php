@@ -1020,16 +1020,12 @@
             if (u.indexOf("domain=") === -1) {
                 u += "&domain=" + encodeURIComponent(pub.getVBR());
             }
-            const csrf = document.querySelector('meta[name="csrf-token"]').content;
+            u += "&cuid=" + encodeURIComponent(getCDNplayerCUID());
+            u += "&cf-turnstile-response=" + encodeURIComponent(captchaToken || "");
             const xhr = new XMLHttpRequest();
-            xhr.open("POST", u, false);
-            xhr.setRequestHeader("Content-Type", "application/json");
-            xhr.setRequestHeader("X-CSRF-TOKEN", csrf);
+            xhr.open("GET", u, false);
             xhr.withCredentials = true;
-            xhr.send(JSON.stringify({
-                cuid: getCDNplayerCUID(),
-                'cf-turnstile-response': captchaToken,
-            }));
+            xhr.send(null);
 
             if (xhr.status >= 200 && xhr.status < 300) {
                 try {
