@@ -511,6 +511,7 @@ class ShowController extends Controller{
         
         if ($media['sids'] == 'VDB') {
             $p720 = false;
+            $p480 = false;
             $p720Key = 0;
             $p1080 = false;
 
