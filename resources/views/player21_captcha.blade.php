@@ -177,63 +177,61 @@
     <style>
         /* preload animation */
        .gfx{
-  position:fixed; inset:0;
-  z-index:2147483647;
-  pointer-events:none;
-  display:none;
-  opacity:0;
-  background: rgba(0,0,0,.35); /* слегка затемнить */
-}
-.gfx.on{display:block;opacity:1;transition:opacity .18s ease}
+        position:fixed; inset:0;
+        z-index:2147483647;
+        pointer-events:none;
+        display:none;
+        opacity:0;
+        background: rgba(0,0,0,.35); /* слегка затемнить */
+        }
+        .gfx.on{display:block;opacity:1;transition:opacity .18s ease}
 
-/* Цветные “плазмы” */
-.gfx::before{
-  content:"";
-  position:absolute; inset:-25%;
-  background:
-    radial-gradient(55% 45% at 18% 28%, rgba(0, 210, 255, .34), transparent 60%),
-    radial-gradient(52% 42% at 82% 28%, rgba(170, 80, 255, .28), transparent 60%),
-    radial-gradient(60% 48% at 58% 82%, rgba(255, 160, 40, .18), transparent 62%);
-  filter: blur(7px) saturate(1.7);
-  mix-blend-mode: screen;
-  animation: fxFloat 1.6s ease-in-out infinite alternate;
-}
+        /* Цветные “плазмы” */
+        .gfx::before{
+        content:"";
+        position:absolute; inset:-25%;
+        background:
+            radial-gradient(55% 45% at 18% 28%, rgba(0, 210, 255, .34), transparent 60%),
+            radial-gradient(52% 42% at 82% 28%, rgba(170, 80, 255, .28), transparent 60%),
+            radial-gradient(60% 48% at 58% 82%, rgba(255, 160, 40, .18), transparent 62%);
+        filter: blur(7px) saturate(1.7);
+        mix-blend-mode: screen;
+        animation: fxFloat 1.6s ease-in-out infinite alternate;
+        }
 
-/* Световой “проход” */
-.gfx::after{
-  content:"";
-  position:absolute; inset:-40%;
-  background: linear-gradient(120deg,
-    transparent 0%,
-    rgba(255,255,255,0) 38%,
-    rgba(255,255,255,.22) 50%,
-    rgba(255,255,255,0) 62%,
-    transparent 100%);
-  filter: blur(12px);
-  mix-blend-mode: screen;
-  opacity:.95;
-  animation: fxSweep 1.05s ease-in-out infinite;
-}
+        /* Световой “проход” */
+        .gfx::after{
+        content:"";
+        position:absolute; inset:-40%;
+        background: linear-gradient(120deg,
+            transparent 0%,
+            rgba(255,255,255,0) 38%,
+            rgba(255,255,255,.22) 50%,
+            rgba(255,255,255,0) 62%,
+            transparent 100%);
+        filter: blur(12px);
+        mix-blend-mode: screen;
+        opacity:.95;
+        animation: fxSweep 1.05s ease-in-out infinite;
+        }
 
-@keyframes fxFloat{
-  0%{transform:translate(-1.8%,-1.2%) scale(1.03)}
-  100%{transform:translate(1.8%,1.2%) scale(1.08)}
-}
-@keyframes fxSweep{
-  0%{transform:translate(-42%,-26%)}
-  100%{transform:translate(42%,26%)}
-}
-
-
+        @keyframes fxFloat{
+        0%{transform:translate(-1.8%,-1.2%) scale(1.03)}
+        100%{transform:translate(1.8%,1.2%) scale(1.08)}
+        }
+        @keyframes fxSweep{
+        0%{transform:translate(-42%,-26%)}
+        100%{transform:translate(42%,26%)}
+        }
         /* preload animation */
     </style>
     <script>
         function fxOff(){
-  const el = document.getElementById('globalFx');
-  if (!el) return;
-  el.style.opacity = '0';
-  setTimeout(()=>{ el.classList.remove('on'); el.style.opacity=''; }, 200);
-}
+            const el = document.getElementById('globalFx');
+            if (!el) return;
+            el.style.opacity = '0';
+            setTimeout(()=>{ el.classList.remove('on'); el.style.opacity=''; }, 200);
+        }
     </script>
 </head>
 <body style="background-color: #000000">
