@@ -164,13 +164,16 @@
         const unapproved_domain = {{ $unapproved_domain }};
 
     </script>
+
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=tsOnLoad" defer></script>
+    <script>
+        function tsOnLoad() {
+            __tsPlaybackInit();
+            __tsDownloadInit();
+        }
+    </script>
 </head>
 <body style="background-color: #000000">
-
-{{-- <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-<div id="ts" class="cf-turnstile"
-     data-sitekey="0x4AAAAAACsFHsCPK9hDN8VF">
-</div> --}}
 
 @php
     if (isset($_GET['debug_data']) && $_GET['debug_data'] == '1') {
@@ -929,41 +932,66 @@
         }
 
         function getTurnstileTokenForPlayback(done) {
-            const captchaInput = document.querySelector('#ts input[name="cf-turnstile-response"]')
+            const captchaInput = document.querySelector('#tsPlayback input[name="cf-turnstile-response"]')
                 || document.querySelector('input[name="cf-turnstile-response"]');
             if (captchaInput && captchaInput.value) {
                 done(captchaInput.value);
                 return;
             }
 
+            window.__tsPlaybackWaiters = window.__tsPlaybackWaiters || [];
+            window.__tsPlaybackWaiters.push(done);
+
+            if (window.__tsPlaybackExecuting) {
+                return;
+            }
+
+            const finish = function (token) {
+                window.__tsPlaybackExecuting = false;
+                const waiters = window.__tsPlaybackWaiters || [];
+                window.__tsPlaybackWaiters = [];
+                for (let i = 0; i < waiters.length; i++) {
+                    try {
+                        waiters[i](token || "");
+                    } catch (e) {
+                    }
+                }
+            };
+
             const renderAndExecute = function () {
                 try {
-                    if (!document.getElementById("ts")) {
+                    if (!document.getElementById("tsPlayback")) {
                         const ts = document.createElement("div");
-                        ts.id = "ts";
+                        ts.id = "tsPlayback";
                         ts.className = "cf-turnstile";
                         ts.style.display = "none";
                         document.body.appendChild(ts);
                     }
 
-                    const widgetId = turnstile.render("#ts", {
-                        sitekey: "{{ $cloudflare_captcha_public }}",
-                        size: "invisible",
-                        callback: function (token) {
-                            done(token || "");
-                        },
-                        "error-callback": function () {
-                            done("");
-                        },
-                        "expired-callback": function () {
-                            done("");
-                        }
-                    });
+                    if (typeof window.__tsPlaybackWidgetId === "undefined") {
+                        window.__tsPlaybackWidgetId = turnstile.render("#tsPlayback", {
+                            sitekey: "{{ $cloudflare_captcha_public }}",
+                            size: "flexible",
+                            execution: "execute",
+                            callback: function (token) {
+                                finish(token || "");
+                            },
+                            "error-callback": function () {
+                                finish("");
+                            },
+                            "expired-callback": function () {
+                                finish("");
+                            }
+                        });
+                    }
 
-                    turnstile.execute(widgetId);
+                    window.__tsPlaybackExecuting = true;
+                    turnstile.reset(window.__tsPlaybackWidgetId);
+                    turnstile.execute(window.__tsPlaybackWidgetId);
+                    
                 } catch (e) {
                     console.error("Turnstile init failed", e);
-                    done("");
+                    finish("");
                 }
             };
 
@@ -973,11 +1001,13 @@
             }
 
             window.__tsPlaybackInit = renderAndExecute;
-            const script = document.createElement("script");
-            script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__tsPlaybackInit";
-            script.async = true;
-            script.defer = true;
-            document.head.appendChild(script);
+            /* if (!document.querySelector('script[src*="challenges.cloudflare.com/turnstile/v0/api.js"]')) {
+                const script = document.createElement("script");
+                script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__tsPlaybackInit";
+                script.async = true;
+                script.defer = true;
+                document.head.appendChild(script);
+            } */
         }
 
         function fetchPlaybackUrls(captchaToken) {
@@ -986,6 +1016,9 @@
                 u += "&stream=1";
             } else {
                 u += "?stream=1";
+            }
+            if (u.indexOf("domain=") === -1) {
+                u += "&domain=" + encodeURIComponent(pub.getVBR());
             }
             const csrf = document.querySelector('meta[name="csrf-token"]').content;
             const xhr = new XMLHttpRequest();
@@ -1758,7 +1791,7 @@
             currentItemId = $(this).data("itemid"); // take id from clicked element
             $("#popupOverlay, #popupModal").fadeIn(200);
             if (!turnstileLoaded) {
-                loadTurnstileScript();
+                //loadTurnstileScript();
                 turnstileLoaded = true;
             } else {
                 renderTurnstileWidget();
@@ -1819,15 +1852,15 @@
     // -------------------------------------------
     // Load Turnstile Script
     // -------------------------------------------
-    function loadTurnstileScript() {
+    /* function loadTurnstileScript() {
         const script = document.createElement("script");
         script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=tsInit";
         script.async = true;
         script.defer = true;
         document.head.appendChild(script);
-    }
+    } */
     // Called when Turnstile script is loaded
-    function tsInit() {
+    function __tsDownloadInit() {
         renderTurnstileWidget();
     }
 
@@ -1835,8 +1868,8 @@
     // Render widget 
     // -------------------------------------------
     function renderTurnstileWidget() {
-        $("#turnstile-container").html(""); // reset container
-        turnstile.render("#turnstile-container", {
+        $("#tsDownload").html(""); // reset container
+        turnstile.render("#tsDownload", {
             sitekey: "{{ $cloudflare_captcha_public }}",
             callback: function (token) {
                 turnstileToken = token;
@@ -1847,7 +1880,7 @@
 </script>
 <style>
     #downloadBtn{position:absolute;right:11px;top:37px;}
-    #turnstile-container{margin-bottom: 8px}
+    #tsDownload{margin-bottom: 8px}
     #popupOverlay {
         display: none;
         position: fixed;
@@ -1907,7 +1940,7 @@
 <div id="popupModal">
     <div id="popupContent">
         <h3>Загрузка</h3>
-        <div id="turnstile-container"></div>
+        <div id="tsDownload"></div>
         <button id="closePopup">Закрыть</button>
         <button id="getdwnlink" disabled>Скачать</button>
     </div>
