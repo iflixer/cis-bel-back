@@ -359,7 +359,7 @@
     <section class="hero" id="overview">
         <p>Эндпоинты /api/{method} требуют авторизации по API-ключу (token).<br></p>
         <div class="stats">
-            <div class="stat"><strong>https://api0.flixcdn.biz/</strong><span>базовый URL</span></div>
+            <div class="stat"><strong>https://{!! $api_url !!}</strong><span>базовый URL</span></div>
             <div class="stat"><strong>{!! $token !!}</strong><span>Ваш API-токен</span></div>
         </div>
         <div class="actions">
@@ -378,7 +378,7 @@
                 <span class="method">GET</span>
                 <h3>search — Поиск видео</h3>
             </summary>
-            <div class="urlbox"><code>https://api0.flixcdn.biz/api/search?token={!! $token !!}&amp;kinopoisk_id=&amp;imdb_id=&amp;title=&amp;type=&amp;offset=0&amp;limit=50&amp;orderby=id&amp;orderby_direction=desc</code></div>
+            <div class="urlbox"><code>https://{!! $api_url !!}/api/search?token={!! $token !!}&amp;kinopoisk_id=&amp;imdb_id=&amp;title=&amp;type=&amp;offset=0&amp;limit=50&amp;orderby=id&amp;orderby_direction=desc</code></div>
             <p>Поиск видео по Кинопоиск ID, IMDB ID или названию. Приоритет: kinopoisk_id &gt; imdb_id &gt; title. Возвращает обогащённые данные: жанры, страны, актёры, режиссёры, озвучки, скриншоты.</p>
             <h4>Параметры запроса</h4>
             <table>
@@ -479,7 +479,7 @@
                 <span class="method">GET</span>
                 <h3>getVideo — Получение списка видео</h3>
             </summary>
-            <div class="urlbox"><code>https://api0.flixcdn.biz/api/getVideo?token={!! $token !!}&amp;search=&amp;genres=&amp;countries=&amp;years=&amp;type=&amp;kino_poisk=&amp;lock=&amp;offset=0&amp;limit=200</code></div>
+            <div class="urlbox"><code>https://{!! $api_url !!}/api/getVideo?token={!! $token !!}&amp;search=&amp;genres=&amp;countries=&amp;years=&amp;type=&amp;kino_poisk=&amp;lock=&amp;offset=0&amp;limit=200</code></div>
             <p>Получение списка видео с фильтрацией по жанрам, странам, годам и типу. Возвращает полные данные с жанрами, странами, актёрами, режиссёрами и озвучками.</p>
             <h4>Параметры запроса</h4>
             <table>
@@ -550,7 +550,7 @@
                 <span class="method">GET</span>
                 <h3>translations — Список озвучек</h3>
             </summary>
-            <div class="urlbox"><code>https://api0.flixcdn.biz/api/translations?token={!! $token !!}</code></div>
+            <div class="urlbox"><code>https://{!! $api_url !!}/api/translations?token={!! $token !!}</code></div>
             <p>Получение полного списка доступных озвучек/переводов. Если у озвучки задан tag, он используется вместо title.</p>
             <h4>Параметры запроса</h4>
             <table>
@@ -582,7 +582,7 @@
                 <span class="method">GET</span>
                 <h3>genres — Список жанров</h3>
             </summary>
-            <div class="urlbox"><code>https://api0.flixcdn.biz/api/genres?token={!! $token !!}</code></div>
+            <div class="urlbox"><code>https://{!! $api_url !!}/api/genres?token={!! $token !!}</code></div>
             <p>Получение полного списка жанров.</p>
             <h4>Параметры запроса</h4>
             <table>
@@ -614,7 +614,7 @@
                 <span class="method">GET</span>
                 <h3>updates — Последние обновления</h3>
             </summary>
-            <div class="urlbox"><code>https://api0.flixcdn.biz/api/updates?token={!! $token !!}&amp;force_rebuild=</code></div>
+            <div class="urlbox"><code>https://{!! $api_url !!}/api/updates?token={!! $token !!}&amp;force_rebuild=</code></div>
             <p>Получение последних обновлений контента (новые фильмы и серии). Результат кешируется на 1 час.</p>
             <h4>Параметры запроса</h4>
             <table>
@@ -688,7 +688,7 @@
                 <span class="method">GET</span>
                 <h3>kpids — Список Кинопоиск ID</h3>
             </summary>
-            <div class="urlbox"><code>https://api0.flixcdn.biz/api/kpids?token={!! $token !!}&amp;type=movies</code></div>
+            <div class="urlbox"><code>https://{!! $api_url !!}/api/kpids?token={!! $token !!}&amp;type=movies</code></div>
             <p>Получение массива всех уникальных Кинопоиск ID по типу контента.</p>
             <h4>Параметры запроса</h4>
             <table>
@@ -728,7 +728,7 @@
                 <span class="method">GET</span>
                 <h3>actors — Список актёров</h3>
             </summary>
-            <div class="urlbox"><code>https://api0.flixcdn.biz/api/actors?token={!! $token !!}&amp;page=1&amp;limit=50</code></div>
+            <div class="urlbox"><code>https://{!! $api_url !!}/api/actors?token={!! $token !!}&amp;page=1&amp;limit=50</code></div>
             <p>Пагинированный список актёров с привязкой к видео.</p>
             <h4>Параметры запроса</h4>
             <table>
@@ -770,7 +770,7 @@
                 <span class="method">GET</span>
                 <h3>directors — Список режиссёров</h3>
             </summary>
-            <div class="urlbox"><code>https://api0.flixcdn.biz/api/directors?token={!! $token !!}&amp;page=1&amp;limit=50</code></div>
+            <div class="urlbox"><code>https://{!! $api_url !!}/api/directors?token={!! $token !!}&amp;page=1&amp;limit=50</code></div>
             <p>Пагинированный список режиссёров с привязкой к видео (массив ID).</p>
             <h4>Параметры запроса</h4>
             <table>
@@ -819,7 +819,7 @@
                 <span class="method">GET</span>
                 <h3>Без токена</h3>
             </summary>
-            <div class="urlbox"><code>https://api0.flixcdn.biz/api/search</code></div>
+            <div class="urlbox"><code>https://{!! $api_url !!}/api/search</code></div>
             <p>Запрос без API-ключа — вернёт ошибку.</p>
             <h4>Параметры запроса</h4>
             <p class="muted">Параметры не указаны.</p>
@@ -842,7 +842,7 @@
                 <span class="method">GET</span>
                 <h3>Неверный токен</h3>
             </summary>
-            <div class="urlbox"><code>https://api0.flixcdn.biz/api/search?token=invalid_key</code></div>
+            <div class="urlbox"><code>https://{!! $api_url !!}/api/search?token=invalid_key</code></div>
             <p>Запрос с невалидным API-ключом.</p>
             <h4>Параметры запроса</h4>
             <table>
