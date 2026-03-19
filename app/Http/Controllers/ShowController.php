@@ -194,8 +194,8 @@ class ShowController extends Controller{
             return redirect()->to($target, 301);
         }
         $this->inject_translations($data);
+        $this->inject_files($data);
 
-        $data['file'] = '';
         // only file string requested, check captcha and return file string or error
         if (!empty($this->request->input('stream'))) {
             $this->inject_files($data);
