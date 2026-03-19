@@ -194,10 +194,10 @@ class ShowController extends Controller{
             return redirect()->to($target, 301);
         }
         $this->inject_translations($data);
-        $this->inject_files($data);
 
         // only file string requested, check captcha and return file string or error
         if (!empty($this->request->input('stream'))) {
+            $this->inject_files($data);
             if (empty($data['file'])) {
                 header("X-CDNHub-error: No media file found for streaming");
                 return json_encode(['error' => 'No media file found']);
