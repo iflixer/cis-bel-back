@@ -61,6 +61,12 @@ class ShowController extends Controller{
 
     public function player($type = null, $id = 0)
     {
+        $domain = Domain::where('name', $this->request->domain)->first();
+
+        if (!empty($domain['cdn_domain'])) {// override cdn domain
+            $this->cdn_domain = $domain['cdn_domain'];
+        }
+
         $start_time = microtime(true);
 
         $data = [];
@@ -207,7 +213,6 @@ class ShowController extends Controller{
 
         $this->inject_ads($data);
 
-        $domain = Domain::where('name', $this->request->domain)->first();
 
         $data['domain'] = '';
         if (!empty($domain)) {
@@ -708,7 +713,7 @@ class ShowController extends Controller{
             }
         }
 
-        if (!empty($this->cdn_domain)) {
+        if (!empty($this->cdn_domain) && $this->cdn_domain != 'flixcdn') {
             return $this->cdn_domain;
         }
         
