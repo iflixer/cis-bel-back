@@ -195,6 +195,7 @@ class ShowController extends Controller{
         }
         $this->inject_translations($data);
 
+        $data['file'] = '';
         // only file string requested, check captcha and return file string or error
         if (!empty($this->request->input('stream'))) {
             $this->inject_files($data);
