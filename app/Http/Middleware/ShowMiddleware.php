@@ -6,6 +6,7 @@ use Closure;
 
 use App\Domain;
 use App\Helpers\Debug;
+use App\Seting;
 
 class ShowMiddleware{
 
@@ -96,6 +97,8 @@ class ShowMiddleware{
 
         if ($token) {
             try {
+                $secret = Seting::where('name', 'cloudflare_captcha_secret')->value('value') ?? '';
+
                 $ch = curl_init('https://challenges.cloudflare.com/turnstile/v0/siteverify');
                 curl_setopt($ch, CURLOPT_POST, true);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -104,7 +107,7 @@ class ShowMiddleware{
                 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
                     // 'secret'   => config('services.turnstile.secret'),
-                    'secret'   => '0x4AAAAAACESmSt84Qw8SmDtvgEiD9DGirQ',
+                    'secret'   => $secret,
                     'response' => $token,
                     'remoteip' => $request->ip(), // опционально
                 ]));
