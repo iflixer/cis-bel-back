@@ -463,9 +463,9 @@
 @endif
 
 @if (isset($_GET['fullheight']) && $_GET['fullheight'] == 1)
-<div id="player" class="player" style="height:100%"></div>
+    <div id="player" class="player" style="background: url({{ $cover_url }}@h500) center / cover no-repeat;height:100%"></div>
 @else
-<div id="player" class="player"></div>
+    <div id="player" class="player" style="background: url({{ $cover_url }}@h500) center / cover no-repeat"></div>
 @endif
 
 {{-- UNFOLDED SEASONS --}}
