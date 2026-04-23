@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libzip-dev \
     libbz2-dev \
+    libicu-dev \
     zip \
     unzip \
     libfreetype6-dev \
@@ -21,7 +22,7 @@ RUN apt-get update && apt-get install -y \
     libmagickwand-dev --no-install-recommends \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath zip bz2 \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath zip bz2 intl \
     && pecl install imagick redis \
     && docker-php-ext-enable imagick redis \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
