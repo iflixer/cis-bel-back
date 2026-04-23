@@ -545,7 +545,7 @@ class ShowController extends Controller{
                 $hash = md5($folder.'--'.$date.'-'.$susuritiKey);
                 // $result[] = "[{$resolution}]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$resolution}.mp4:hls:manifest.m3u8 or {$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$resolution}.mp4";
                 $result[] = "[{$resolution}]{$file['scheme']}://{$file['host']}{$folder}" . $hash . ":{$date}/{$resolution}.mp4:hls:manifest.m3u8";
-                header("X-Player-".$hash.": ".$folder.'--'.$date.'-'.$susuritiKey);
+                // header("X-Player-".$hash.": ".$folder.'--'.$date.'-'.$susuritiKey);
 
                 if ($resolution == '720') {
                     $p720 = true;
