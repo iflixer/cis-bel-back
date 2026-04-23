@@ -896,11 +896,11 @@ class ApiController extends Controller
 
 
     public function show($method){
-        $domain = $this->request->input('domain');
+        $domain = Domain::normalizeName($this->request->input('domain'));
         $dateNow = date("Y-m-d");
 
         if($method == "show"){
-            $domainStats = Domain::select('show')->where('name', $domain)->first();
+            $domainStats = Domain::select('show')->whereIn('name', Domain::lookupCandidates($domain))->first();
             $stats = [];
             if($domainStats->show != ''){
                 $stats = json_decode($domainStats->show, true);
@@ -913,15 +913,15 @@ class ApiController extends Controller
                 $stats[$dateNow]['lowshow'] = 1;
             }
             $stats = json_encode($stats);
-            Domain::where('name', $domain)->update(['show' => $stats ]);
+            Domain::whereIn('name', Domain::lookupCandidates($domain))->update(['show' => $stats ]);
         }
 
         if($method == "fullshow"){
-            $domainStats = Domain::select('show')->where('name', $domain)->first();
+            $domainStats = Domain::select('show')->whereIn('name', Domain::lookupCandidates($domain))->first();
             $stats = json_decode($domainStats->show, true);
             $stats[$dateNow]['lowshow'] -= 1;
             $stats = json_encode($stats);
-            Domain::where('name', $domain)->update(['show' => $stats ]);
+            Domain::whereIn('name', Domain::lookupCandidates($domain))->update(['show' => $stats ]);
         }
 
         if($method == "start"){

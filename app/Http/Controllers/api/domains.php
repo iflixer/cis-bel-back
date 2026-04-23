@@ -80,7 +80,9 @@ class domains extends Controller
             $tg = true;
         }
 
-        $domainDB = Domain::where('name', $domain)->first();
+        $domain = Domain::normalizeName($domain);
+
+        $domainDB = Domain::whereIn('name', Domain::lookupCandidates($domain))->first();
 
         // Проверка наличия домена в базе
         if(!isset($domainDB)){
@@ -277,8 +279,10 @@ class domains extends Controller
                 } else {
                     $tg = true;
                 }
-                
-                $existingDomain = Domain::where('name', $domain)->first();
+
+                $domain = Domain::normalizeName($domain);
+
+                $existingDomain = Domain::whereIn('name', Domain::lookupCandidates($domain))->first();
                 if ($existingDomain) {
                     $errors[] = "Домен уже существует: {$domain}";
                     continue;

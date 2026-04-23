@@ -66,14 +66,16 @@ class ShowMiddleware{
             header('X-back-reason: ShowMiddleware domain not set');
             //abort(404); 
         } else {
+            $_domain = Domain::normalizeName($_domain);
             $request->domain = $_domain;
-            $domain = Domain::where('name', $_domain)->first();
+            $domain = Domain::whereIn('name', Domain::lookupCandidates($_domain))->first();
 
             // check if subdomain
-            if (empty($domain)) { 
+            if (empty($domain)) {
                 $__domain = substr($_domain, strpos($_domain, '.') + 1, strlen($_domain));
                 if (strpos($__domain, '.') !== false) {
-                    $domain = Domain::where('name', $__domain)->first();
+                    $__domain = Domain::normalizeName($__domain);
+                    $domain = Domain::whereIn('name', Domain::lookupCandidates($__domain))->first();
                     $request->domain = $__domain;
                 }
             } else {

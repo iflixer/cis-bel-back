@@ -39,7 +39,7 @@ class shows extends Controller{
         $messages = [];
         $response = [];
 
-        $domain_name = $this->request->input('domain') ?? null;
+        $domain_name = Domain::normalizeName($this->request->input('domain') ?? null);
         $tgc = $this->request->input('tgc') ?? null;
         if ($tgc) $domain_name = "@{$tgc}";
 
@@ -58,11 +58,11 @@ class shows extends Controller{
         if (empty($id)) {
             return;
         }
-        $id_domain = Domain::select('id', 'show')->where('name', $domain_name)->first();
+        $id_domain = Domain::select('id', 'show')->whereIn('name', Domain::lookupCandidates($domain_name))->first();
 
         if (!$id_domain) {
             $domain_name = substr($domain_name, strpos($domain_name, '.') + 1, strlen($domain_name));
-            $id_domain = Domain::select('id', 'show')->where('name', $domain_name)->first();
+            $id_domain = Domain::select('id', 'show')->whereIn('name', Domain::lookupCandidates($domain_name))->first();
         }
 
         $shows = Show::where('id_ad', $id)->where('id_domain', $id_domain->id)->whereBetween('updated_at', [ date('Y-m-d'), date('Y-m-d', strtotime("+1 days")) ])->first();
@@ -73,12 +73,12 @@ class shows extends Controller{
         else
             $stats[$dateNow]['showads'] = 1;
         $stats = json_encode($stats);
-        Domain::where('name', $domain_name)->update(['show' => $stats ]);
+        Domain::whereIn('name', Domain::lookupCandidates($domain_name))->update(['show' => $stats ]);
 
         $ad = Ad::select('sale', 'procent')->where('id', $id)->first();
         $summ = ($ad->sale * ($ad->procent / 100)) / 1000;
 
-        $idUser = Domain::select('id_parent')->where('name', $domain_name)->first();
+        $idUser = Domain::select('id_parent')->whereIn('name', Domain::lookupCandidates($domain_name))->first();
         $scoreUser = User::select('score')->where('id', $idUser->id_parent)->first();
 
         User::where('id', $idUser->id_parent)->update(['score' => $scoreUser->score + $summ]);
@@ -99,7 +99,7 @@ class shows extends Controller{
         $messages = [];
         $response = [];
 
-        $domain_name = $this->request->input('domain');
+        $domain_name = Domain::normalizeName($this->request->input('domain'));
         $fullTime = $this->request->input('fullTime');
 
         $domain = Domain::get_main_info($domain_name);
@@ -118,7 +118,7 @@ class shows extends Controller{
         $countAds = round($fullTime / $duration, 0, PHP_ROUND_HALF_DOWN);
 
 
-        $dataDomain = Domain::select('id', 'black_ad_on')->where('name', $domain_name)->first();
+        $dataDomain = Domain::select('id', 'black_ad_on')->whereIn('name', Domain::lookupCandidates($domain_name))->first();
 
         $qweryAds = Ad::where('on', '1');
         if($dataDomain && !($dataDomain->black_ad_on)){ $qweryAds = $qweryAds->where('black_ad', '0');  }
@@ -170,7 +170,7 @@ class shows extends Controller{
         return ['data' => $response,'messages' => $messages];
     }
     public function show(){
-        $domain_name = $this->request->input('domain') ?? null;
+        $domain_name = Domain::normalizeName($this->request->input('domain') ?? null);
         $tgc = $this->request->input('tgc') ?? null;
         if ($tgc) $domain_name = "@{$tgc}";
 
@@ -188,11 +188,11 @@ class shows extends Controller{
 
         // это пиздец. будем удалять
         $dateNow = date("Y-m-d");
-        $domainStats = Domain::select('show')->where('name', $domain_name)->first();
+        $domainStats = Domain::select('show')->whereIn('name', Domain::lookupCandidates($domain_name))->first();
 
         if (!$domainStats) {
             $domain_name = substr($domain_name, strpos($domain_name, '.') + 1, strlen($domain_name));
-            $domainStats = Domain::select('show')->where('name', $domain_name)->first();
+            $domainStats = Domain::select('show')->whereIn('name', Domain::lookupCandidates($domain_name))->first();
         }
 
         $stats = [];
@@ -207,11 +207,11 @@ class shows extends Controller{
             $stats[$dateNow]['showads'] = 0;
         }
         $stats = json_encode($stats);
-        Domain::where('name', $domain_name)->update(['show' => $stats ]);
+        Domain::whereIn('name', Domain::lookupCandidates($domain_name))->update(['show' => $stats ]);
     }
 
     public function loaderror(){
-        $domain_name = $this->request->input('domain') ?? null;
+        $domain_name = Domain::normalizeName($this->request->input('domain') ?? null);
         $tgc = $this->request->input('tgc') ?? null;
         if ($tgc) $domain_name = "@{$tgc}";
 
@@ -225,7 +225,7 @@ class shows extends Controller{
         if (empty($percent)) {
             return;
         }
-        $domain_name = $this->request->input('domain') ?? null;
+        $domain_name = Domain::normalizeName($this->request->input('domain') ?? null);
         $tgc = $this->request->input('tgc') ?? null;
         if ($tgc) $domain_name = "@{$tgc}";
 
@@ -234,7 +234,7 @@ class shows extends Controller{
         PlayerPay::save_event($percent, $domain, $file_id);
     }
     public function impression(){
-        $domain_name = $this->request->input('domain') ?? null;
+        $domain_name = Domain::normalizeName($this->request->input('domain') ?? null);
         $tgc = $this->request->input('tgc') ?? null;
         if ($tgc) $domain_name = "@{$tgc}";
 

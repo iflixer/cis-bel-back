@@ -61,7 +61,7 @@ class ShowController extends Controller{
 
     public function player($type = null, $id = 0)
     {
-        $domain = Domain::where('name', $this->request->domain)->first();
+        $domain = Domain::whereIn('name', Domain::lookupCandidates($this->request->domain))->first();
 
         if (!empty($domain['cdn_domain'])) {// override cdn domain
             $this->cdn_domain = $domain['cdn_domain'];
@@ -214,6 +214,7 @@ class ShowController extends Controller{
 
         $this->inject_ads($data);
 
+        $domain = Domain::whereIn('name', Domain::lookupCandidates($this->request->domain))->first();
 
         $data['domain'] = '';
         if (!empty($domain)) {
